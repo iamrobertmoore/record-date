@@ -34,6 +34,12 @@ RPC = "https://api.mainnet-beta.solana.com"
 JUPITER = "https://api.jup.ag/price/v3"
 TOKEN_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 
+# The US regular trading session in UTC, stated generously. It runs 13:30 to 20:00 UTC under EDT
+# and 14:30 to 21:00 under EST, so this window covers both with an hour to spare at each end. A
+# wider window can only make the finding below harder to reach, which is the direction to err in.
+US_SESSION_OPEN_UTC = 13 * 60          # 13:00
+US_SESSION_CLOSE_UTC = 21 * 60         # 21:00
+
 
 def usd(value, places=0):
     """A dollar figure with thousands separators, for anything a reader will see.
@@ -768,12 +774,26 @@ def main():
         s for s in {a["xstockSymbol"] for a in scheduled_cash}
         if symbol_to_mint.get(s) and (prices.get(symbol_to_mint[s]) or {}).get("usd")
     ]
+    # Every activation timestamp the issuer publishes, collected here because the history is
+    # already being fetched. This is the raw material for the timing measurement below, and it is
+    # gathered before `reconcile` filters, so the sample is every activation on every candidate
+    # name rather than only the ones that happened to match a dividend row.
+    activation_minutes = []
     for symbol in sorted(candidates):
         try:
             history = fetch_multiplier_history(symbol)
         except Exception as exc:  # noqa: BLE001 - one name failing must not kill the run
             print("  no multiplier history for %s: %s" % (symbol, exc))
             continue
+        for node in history:
+            stamp = node.get("activationDateTime") or ""
+            if len(stamp) < 16:
+                continue
+            try:
+                hh, mm = int(stamp[11:13]), int(stamp[14:16])
+            except ValueError:
+                continue
+            activation_minutes.append(hh * 60 + mm)
         for row in reconcile(symbol, actions, history):
             activated = (row["effective_at"] or "")[:10]
             try:
@@ -822,6 +842,32 @@ def main():
             )
         print("  read multiplier history for %s" % symbol)
     print("  %d reconciliations across %d names" % (len(recon), len({r["symbol"] for r in recon})))
+
+    # ------------------------------------------------------------- when the multiplier moves
+    # The issuer's docs tell venues to pause for fifteen minutes around each activation and say
+    # nothing enforces it. Whether that matters depends entirely on when the activations happen,
+    # which the issuer publishes and nobody has counted. So count them.
+    timing = {"n": len(activation_minutes), "inside": 0, "by_minute": {}}
+    for m in activation_minutes:
+        timing["by_minute"]["%02d:%02d" % (m // 60, m % 60)] = (
+            timing["by_minute"].get("%02d:%02d" % (m // 60, m % 60), 0) + 1
+        )
+        if US_SESSION_OPEN_UTC <= m <= US_SESSION_CLOSE_UTC:
+            timing["inside"] += 1
+    timing["inside_share"] = (
+        round(timing["inside"] / timing["n"], 4) if timing["n"] else None
+    )
+    timing["outside"] = timing["n"] - timing["inside"]
+    # The modal times, because "23:55 and 00:30" is the shape of the finding and a bare
+    # percentage hides it.
+    timing["top_times"] = sorted(
+        timing["by_minute"].items(), key=lambda kv: (-kv[1], kv[0])
+    )[:4]
+    print(
+        "  activations: %d, of which %d (%.1f%%) inside the US session, %d outside"
+        % (timing["n"], timing["inside"],
+           (timing["inside_share"] or 0) * 100, timing["outside"])
+    )
 
     # Buckets of age, so the prediction is visible as a shape rather than an anecdote.
     AGE_BUCKETS = [(0, 2, "0-2 days"), (3, 10, "3-10 days"), (11, 30, "11-30 days"),
@@ -1015,6 +1061,16 @@ def main():
     # The decisive test. If the two records describe the same events, then dividing net by the
     # step recovers the price on the activation date, so the gap against today's price is the
     # stock's own movement and must grow with age. It does, and this check fails if it stops.
+    # The timing measurement, asserted. The claim is that the multiplier moves while the US market
+    # is shut, which is why the issuer's fifteen minute pause is not a formality: there is no
+    # closing auction to absorb it and no continuous price to settle against. A share below 25%
+    # would mean activations are not concentrated outside the session and the claim is wrong.
+    check("the multiplier moves while the US market is shut",
+          timing["n"] >= 100 and timing["inside_share"] is not None
+          and timing["inside_share"] < 0.25,
+          "%d activations, %d (%.1f%%) inside 13:00-21:00 UTC; most common times %s"
+          % (timing["n"], timing["inside"], (timing["inside_share"] or 0) * 100,
+             ", ".join("%s x%d" % (k, v) for k, v in timing["top_times"])))
     check("a fresh activation reconciles tighter than an old one",
           len(fresh) >= 5 and len(stale) >= 5
           and median(fresh) < 0.05 and median(stale) > 2 * median(fresh),
@@ -1201,6 +1257,7 @@ def main():
         },
         "read_rule": read_rule,
         "supply_witness": supply_witness,
+        "activation_timing": timing,
         "price_diverged": [
             {"mint": m, "reference": r, "pool": p} for m, r, p in price_diverged[:20]
         ],

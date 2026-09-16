@@ -91,6 +91,29 @@ def multiplier(value):
     return trim(repr(float(value)), 10)
 
 
+def timing_slots(timing):
+    """The four modal activation times, each labelled with the New York clock.
+
+    The label is what makes the block land: a reader who knows when the US market trades can see
+    the problem from `23:55 -> 19:55 ET` without doing arithmetic. Eastern time is computed as
+    UTC-4, which is daylight time and applies to every activation in the window this build reads.
+    """
+    slots = []
+    for clock, count in timing.get("top_times", []):
+        hh, mm = int(clock[:2]), int(clock[3:])
+        et = hh * 60 + mm - 4 * 60
+        if et < 0:
+            et += 24 * 60
+            when = "%02d:%02d ET the previous day" % (et // 60, et % 60)
+        else:
+            when = "%02d:%02d ET, after the close" % (et // 60, et % 60)
+        slots.append(
+            '<div class="slot off"><b>{clock}</b><i>{count} activations</i>'
+            "<u>{when}</u></div>".format(clock=esc(clock), count=count, when=esc(when))
+        )
+    return "\n".join(slots)
+
+
 def recon_rows(rows):
     """The reconciliation, as rows: the arithmetic and the gap against the market.
 
@@ -261,6 +284,7 @@ def render(data):
     money_block = data["money"]
     actions = data["actions"]
     recon = data["reconciliation"]
+    timing = data["activation_timing"]
 
     # The other rates, so the page does not hardcode "twenty at 0%". JSON turns the numeric keys
     # into strings, hence the float round trip.
@@ -293,6 +317,19 @@ def render(data):
         "READ_RULE_AGREED": str(read_rule["agreed"]),
         "READ_RULE_DISAGREED": str(read_rule["disagreed"]),
         "READ_RULE_NO_VALUE": str(read_rule["no_value"]),
+        "TIMING_N": str(timing["n"]),
+        "TIMING_INSIDE": str(timing["inside"]),
+        "TIMING_OUTSIDE": str(timing["outside"]),
+        # `pct` takes a fraction and does the scaling, so passing a percentage here double-counts
+        # it. It did, and the page read "9808.0% outside US trading hours".
+        "TIMING_INSIDE_PCT": pct(timing["inside_share"]),
+        "TIMING_OUTSIDE_PCT": pct(1 - timing["inside_share"]),
+        # The share of the sample sitting on the four modal minutes, so the block cannot claim
+        # "most activations land here" without saying how much of the field that actually is.
+        "TIMING_TOP_SHARE": pct(
+            sum(count for _, count in timing["top_times"]) / timing["n"]
+        ),
+        "TIMING_SLOTS": timing_slots(timing),
         "RATED_SYMBOLS": str(with_holding["rated_symbols"]),
         "TOP_RATE_SYMBOLS": str(with_holding["top_rate_symbols"]),
         "TOP_RATE_PCT": pct(with_holding["top_rate_share"]),

@@ -224,6 +224,23 @@ pre .k{color:#d9b06a}
 /* ---------- checks ---------- */
 .checks{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(max-width:760px){.checks{grid-template-columns:1fr}}
+
+/* ---------- when the multiplier moves ---------- */
+.timing{margin-top:26px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--card);overflow:hidden}
+.timing .hd{padding:15px 20px 14px;border-bottom:1px solid var(--line);background:var(--wash)}
+.timing .hd p{margin:0;font-size:13.5px;color:var(--muted);max-width:62em}
+.timing .hd b{color:var(--ink)}
+.timing .row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+.timing .slot{background:var(--card);padding:16px 20px}
+.timing .slot b{display:block;font-family:var(--mono);font-size:23px;color:var(--ink);
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.timing .slot i{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:6px}
+.timing .slot u{display:block;text-decoration:none;font-family:var(--mono);font-size:11.5px;
+  color:var(--faint);margin-top:2px}
+.timing .slot.off b{color:var(--withheld)}
+.timing .slot.on b{color:var(--paid)}
+@media(max-width:640px){.timing .row{grid-template-columns:repeat(2,1fr)}}
 .check{display:flex;gap:12px;align-items:flex-start;background:var(--card);
   border:1px solid var(--line);border-radius:var(--r);padding:15px 17px}
 .check .tick{width:18px;height:18px;border-radius:50%;background:var(--paid);flex:none;
@@ -396,10 +413,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           HTTP API and in transaction logs.</p>
       </div>
       <div class="card">
-        <h3>Why the pause is unenforceable</h3>
+        <h3>Why the pause is the only control</h3>
         <p>The issuer's own docs recommend that venues and protocols pause for fifteen minutes
           around each activation. Nothing in a mint account can enforce that, and the
-          recommendation is the whole of the mechanism.</p>
+          recommendation is the whole of the mechanism. It is not a formality that could be
+          dropped either, because of when the activations land.</p>
       </div>
     </div>
 
@@ -409,6 +427,29 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       effect… we <b>recommend</b> that trading venues and protocols pause all interactions with
       the token for a brief window (e.g., 15 minutes) before and after each activation
       timestamp.”</p>
+
+    <div class="timing">
+      <div class="hd">
+        <p><b>When the multiplier actually moves.</b> {{TIMING_N}} activations the issuer has
+          published, counted by the minute of the day they take effect.
+          <b>{{TIMING_OUTSIDE}} of them, {{TIMING_OUTSIDE_PCT}}%, fall outside US trading
+          hours</b>, and {{TIMING_TOP_SHARE}}% of the whole sample lands on the four minutes
+          below. The US regular session runs 13:30 to 20:00 UTC in summer and 14:30 to 21:00 in
+          winter; the window used here is drawn wide, 13:00 to 21:00, to cover both, so the
+          split is stated against the most generous definition of the session available.</p>
+      </div>
+      <div class="row">
+{{TIMING_SLOTS}}
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:18px">This is the part of the story that is not a bug in
+      anyone's code. The issuer schedules activation for 00:30 UTC the day after the ex-date,
+      which is four and a half hours after the US close and ten hours before the next open. So
+      the multiplier changes when there is no continuous price to settle against and no closing
+      auction to absorb it, and the fifteen minute pause is what stands in for both. A venue that
+      does not pause is not making a mistake about a number. It is settling against a position
+      whose entitlement moved while it was not looking.</p>
   </div>
 </section>
 

@@ -69,6 +69,23 @@ The arithmetic is identical in every bucket. The only thing that changed is how 
 
 ---
 
+## When the multiplier moves
+
+The issuer's own docs tell venues and protocols to pause for fifteen minutes around each activation, and say nothing enforces it. Whether that matters depends entirely on when the activations land, which the issuer publishes and, as far as I can find, nobody has counted. So I counted them. All **624** activations the feed and multiplier history carry, by the minute of the day they take effect:
+
+| Time (UTC) | Activations | New York clock |
+|---|---:|---|
+| 00:30 | 392 | 20:30 ET the previous day |
+| 23:55 | 177 | 19:55 ET, after the close |
+| 00:15 | 11 | 20:15 ET the previous day |
+| 01:15 | 5 | 21:15 ET the previous day |
+
+**612 of the 624, or 98.1%, fall outside US trading hours, and 93.8% of the sample lands on those four minutes.** The window used is 13:00 to 21:00 UTC, drawn deliberately wide so it covers the US session under both daylight time and standard time, because a wider window can only make the finding harder to reach.
+
+This is the part of the story that is not a bug in anyone's code. Activation is scheduled for 00:30 UTC the day after the ex-date, four and a half hours after the US close and ten hours before the next open. So the multiplier changes when there is no continuous price to settle against and no closing auction to absorb it. The fifteen minute pause is what stands in for both, and it is a recommendation in a document rather than a constraint in a program.
+
+---
+
 ## Two price fields, and one of them is not a price
 
 A tokenized stock on Jupiter carries two prices. `usdPrice` is the pool quote. `stockData.price` is a reference feed. They are not interchangeable, and on 16 September 2026 they differed by more than 20% on **nine** mints.
