@@ -1,0 +1,14 @@
+.anchor
+.DS_Store
+target
+**/*.rs.bk
+node_modules
+test-ledger
+.yarn
+.surfpool
+
+# The demo remembers the mint and receipt it created so a second run reads them back
+# instead of making new ones. That is local state, not a deliverable.
+scripts/.demo-state.json
+__pycache__/
+*.pyc

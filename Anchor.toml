@@ -1,0 +1,24 @@
+skip_local_validator = true
+
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+record_date = "ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG"
+
+[programs.devnet]
+record_date = "ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+# The tests drive the program through LiteSVM, so they need no validator, no airdrop and no
+# network. `anchor test` would start a validator first, which is why this is cargo directly.
+test = "cargo test"
+
+[hooks]
