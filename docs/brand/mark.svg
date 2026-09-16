@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Record Date">
+  <title>Record Date</title>
+  <circle cx="32" cy="34" r="21" fill="none" stroke="#15171b" stroke-width="3.4"/>
+  <path d="M32 13 A21 21 0 0 1 53 34" fill="none" stroke="#9a7318" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M32 13V6" stroke="#9a7318" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M22 34h20" stroke="#15171b" stroke-width="3.4" stroke-linecap="round"/>
+</svg>

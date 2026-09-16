@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" width="1200" height="720" role="img"
+     aria-label="Architecture: a Token-2022 mint account is read by the record_date program, which writes receipts that readers consume">
+  <title>Record Date architecture</title>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 1.5 9 5 0 8.5z" fill="#989ea6"/>
+    </marker>
+    <style>
+      .t   { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+      .m   { font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace; }
+      .eyebrow { font:650 10px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+                 letter-spacing:.19em; text-transform:uppercase; fill:#989ea6; }
+      .h   { font:400 26px/1.1 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; fill:#15171b; }
+      .sub { font:400 13.5px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; fill:#6b7078; }
+      .ph  { font:650 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+             letter-spacing:.14em; text-transform:uppercase; fill:#15171b; }
+      .lb  { font:500 12px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; fill:#3a3f47; }
+      .sm  { font:400 11.5px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; fill:#6b7078; }
+      .mo  { font:400 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; fill:#6b7078; }
+      .mov { font:600 11.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; fill:#15171b; }
+      .paid { fill:#1c7a58; } .take { fill:#b0321c; } .brass { fill:#9a7318; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="720" fill="#fbfaf7"/>
+
+  <text x="48" y="56" class="eyebrow">Record Date / architecture</text>
+  <text x="48" y="92" class="h">The multiplier lives in the mint. Nothing reads it.</text>
+  <text x="48" y="118" class="sub">One program reads the mint account directly and turns each corporate action into a receipt any reader can consume in a single call.</text>
+
+  <!-- ============ panel 1: the mint ============ -->
+  <rect x="48" y="150" width="344" height="520" rx="4" fill="#ffffff" stroke="#e7e4dd"/>
+  <text x="72" y="182" class="ph">the mint account</text>
+  <text x="72" y="202" class="sm">Owned by Token-2022. 679 bytes,</text>
+
+  <text x="72" y="220" class="sm">read as raw bytes.</text>
+
+  <g>
+    <rect x="72" y="226" width="296" height="34" rx="3" fill="#f5f2ec" stroke="#e7e4dd"/>
+    <text x="84" y="247" class="lb">Mint base state</text>
+    <text x="356" y="247" class="mo" text-anchor="end">0&#8211;81</text>
+
+    <rect x="72" y="266" width="296" height="15" rx="2" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="84" y="277" class="lb" font-size="10.5">padding, must be zero</text>
+    <text x="356" y="277" class="mo" text-anchor="end">82&#8211;164</text>
+
+    <rect x="72" y="285" width="296" height="13" rx="2" fill="#f5f2ec" stroke="#e7e4dd"/>
+    <text x="84" y="295" class="lb" font-size="10.5">account-type byte = 1</text>
+    <text x="356" y="295" class="mo" text-anchor="end">165</text>
+
+    <rect x="72" y="302" width="296" height="30" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="84" y="321" class="lb">MetadataPointer</text>
+    <text x="356" y="321" class="mo" text-anchor="end">166</text>
+
+    <rect x="72" y="338" width="296" height="30" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="84" y="357" class="lb">PermanentDelegate</text>
+    <text x="356" y="357" class="mo" text-anchor="end">234</text>
+
+    <rect x="72" y="374" width="296" height="30" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="84" y="393" class="lb">DefaultAccountState</text>
+    <text x="356" y="393" class="mo" text-anchor="end">270</text>
+
+    <!-- the one that matters -->
+    <rect x="66" y="410" width="308" height="112" rx="4" fill="#fdf8ee" stroke="#9a7318" stroke-width="1.5"/>
+    <text x="84" y="432" class="mov">ScaledUiAmountConfig</text>
+    <text x="362" y="432" class="mo" text-anchor="end">275</text>
+    <text x="84" y="456" class="sm">authority</text>
+    <text x="84" y="476" class="sm">multiplier</text>
+    <text x="84" y="496" class="sm">new_multiplier_effective_timestamp</text>
+    <text x="84" y="516" class="sm">new_multiplier</text>
+    <text x="362" y="476" class="mo take" text-anchor="end">previous</text>
+    <text x="362" y="516" class="mo paid" text-anchor="end">live</text>
+
+    <rect x="72" y="530" width="296" height="30" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="84" y="549" class="lb">PausableConfig</text>
+    <text x="356" y="549" class="mo" text-anchor="end">335</text>
+
+    <rect x="72" y="566" width="296" height="30" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="84" y="585" class="lb">ConfidentialTransferMint</text>
+    <text x="356" y="585" class="mo" text-anchor="end">372</text>
+
+    <rect x="72" y="602" width="296" height="30" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="84" y="621" class="lb">TransferHook, TokenMetadata</text>
+    <text x="356" y="621" class="mo" text-anchor="end">441+</text>
+  </g>
+
+  <text x="72" y="644" class="sm">The base region is a fixed 165 bytes.</text>
+  <text x="72" y="660" class="sm">So the header is at 275 on all 777 mints.</text>
+
+  <!-- arrow 1 -->
+  <line x1="400" y1="410" x2="428" y2="410" stroke="#989ea6" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="414" y="398" class="mo" text-anchor="middle">read</text>
+
+  <!-- ============ panel 2: the program ============ -->
+  <rect x="436" y="150" width="344" height="520" rx="4" fill="#ffffff" stroke="#e7e4dd"/>
+  <text x="460" y="182" class="ph">record_date</text>
+  <text x="460" y="202" class="sm">Anchor, devnet. No spl-token-2022</text>
+
+  <text x="460" y="220" class="sm">dependency: it does not own the mint.</text>
+
+  <g>
+    <rect x="460" y="226" width="296" height="72" rx="3" fill="#f5f2ec" stroke="#e7e4dd"/>
+    <text x="474" y="248" class="mov">1. compute the offset</text>
+    <text x="474" y="268" class="sm">The base region is 165 bytes, so the</text>
+    <text x="474" y="284" class="sm">TLV starts at 166. Not 83.</text>
+
+    <rect x="460" y="308" width="296" height="88" rx="3" fill="#f5f2ec" stroke="#e7e4dd"/>
+    <text x="474" y="330" class="mov">2. resolve the multiplier</text>
+    <text x="474" y="350" class="sm">live = new_multiplier if its timestamp</text>
+    <text x="474" y="366" class="sm">has passed, else multiplier.</text>
+    <text x="474" y="386" class="mo" fill="#b0321c">357 of 777 mints differ here</text>
+
+    <rect x="460" y="406" width="296" height="72" rx="3" fill="#f5f2ec" stroke="#e7e4dd"/>
+    <text x="474" y="428" class="mov">3. convert once</text>
+    <text x="474" y="448" class="sm">f64 &#8594; u128 at 1e18. Integer</text>
+    <text x="474" y="464" class="sm">arithmetic from here on.</text>
+
+    <rect x="460" y="488" width="296" height="72" rx="3" fill="#eef6f1" stroke="#1c7a58"/>
+    <text x="474" y="510" class="mov">4. write a receipt</text>
+    <text x="474" y="530" class="sm">previous, new, the issuer's own</text>
+    <text x="474" y="546" class="sm">timestamp, the supply. Ordered, final.</text>
+  </g>
+
+  <text x="460" y="592" class="sm">Also read-only: entitlement,</text>
+  <text x="460" y="608" class="sm">activation_pending, settlement_window.</text>
+  <text x="460" y="634" class="mo" fill="#6b7078">Receipt PDA: [&quot;receipt&quot;, mint, seq]</text>
+
+  <!-- arrow 2 -->
+  <line x1="788" y1="410" x2="816" y2="410" stroke="#989ea6" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="802" y="398" class="mo" text-anchor="middle">read</text>
+
+  <!-- ============ panel 3: the readers ============ -->
+  <rect x="824" y="150" width="328" height="520" rx="4" fill="#ffffff" stroke="#e7e4dd"/>
+  <text x="848" y="182" class="ph">who reads it</text>
+  <text x="848" y="202" class="sm">One account per activation, instead</text>
+
+  <text x="848" y="220" class="sm">of an API and a float in a mint.</text>
+
+  <g>
+    <rect x="848" y="226" width="280" height="76" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="862" y="248" class="lb">A wallet showing a balance</text>
+    <text x="862" y="268" class="sm">raw &#215; effective multiplier, not the</text>
+    <text x="862" y="284" class="sm">raw amount and not the stale field.</text>
+
+    <rect x="848" y="312" width="280" height="76" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="862" y="334" class="lb">A venue settling a trade</text>
+    <text x="862" y="354" class="sm">Refuses to settle inside the 15 minute</text>
+    <text x="862" y="370" class="sm">window the issuer asks for and cannot enforce.</text>
+
+    <rect x="848" y="398" width="280" height="76" rx="3" fill="#fbfaf7" stroke="#e7e4dd"/>
+    <text x="862" y="420" class="lb">A lending market taking collateral</text>
+    <text x="862" y="440" class="sm">Values a position in equity units, so a</text>
+    <text x="862" y="456" class="sm">dividend is credited to whoever earned it.</text>
+
+    <rect x="848" y="484" width="280" height="76" rx="3" fill="#fdf8ee" stroke="#9a7318"/>
+    <text x="862" y="506" class="lb">The ledger on this page</text>
+    <text x="862" y="526" class="sm">Every activation the chain has seen,</text>
+    <text x="862" y="542" class="sm">with what was withheld before it.</text>
+  </g>
+
+  <text x="848" y="592" class="sm">On EVM the contract adjusts balances</text>
+  <text x="848" y="608" class="sm">itself, so none of this is needed there.</text>
+  <text x="848" y="634" class="sm">On Solana it is every integrator's job.</text>
+
+  <!-- footer strip -->
+  <line x1="48" y1="690" x2="1152" y2="690" stroke="#e7e4dd"/>
+  <text x="48" y="710" class="mo">sources: api.xstocks.fi &#183; api.mainnet-beta.solana.com &#183; api.jup.ag &#183; docs.xstocks.fi</text>
+</svg>

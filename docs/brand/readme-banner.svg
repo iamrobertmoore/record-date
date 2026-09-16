@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320"
+     role="img" aria-label="Record Date: the dividend is a number in the Token-2022 mint account, and nothing on Solana reads it">
+  <title>Record Date</title>
+  <defs>
+    <style>
+      .sans{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace}
+      .eyebrow{font-size:10px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;fill:#8b8f97}
+      .pill{font-size:12.5px;font-weight:600;fill:#3a3d44}
+      .chip{fill:#fff;stroke:#e6e1d6;stroke-width:1}
+    </style>
+  </defs>
+
+  <rect width="1200" height="320" fill="#fbfaf7"/>
+  <rect x="0" y="0" width="1200" height="320" fill="none" stroke="#e6e1d6" stroke-width="1"/>
+
+  <!-- the mark -->
+  <g transform="translate(72,52)">
+    <circle cx="30" cy="32" r="25" fill="none" stroke="#15171b" stroke-width="4"/>
+    <path d="M30 7 A25 25 0 0 1 55 32" fill="none" stroke="#9a7318" stroke-width="4"
+          stroke-linecap="round"/>
+    <path d="M30 7V-2" stroke="#9a7318" stroke-width="4" stroke-linecap="round"/>
+    <path d="M18 32h24" stroke="#15171b" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <text class="eyebrow" x="146" y="76">SOLANA MAINNET · TOKEN-2022</text>
+  <text class="sans" x="144" y="120" font-size="40" font-weight="680" letter-spacing="-1.1"
+        fill="#15171b">Record Date</text>
+
+  <!-- what it does. Kept to two short lines so it cannot run under the receipt card, which
+       starts at x=716. -->
+  <text class="sans" x="72" y="184" font-size="19" font-weight="500" fill="#3a3d44">
+    A tokenized stock pays its dividend by raising a multiplier
+  </text>
+  <text class="sans" x="72" y="210" font-size="19" font-weight="500" fill="#3a3d44">
+    inside the mint account. Nothing on Solana reads it.
+  </text>
+
+  <!-- three figures, in pills -->
+  <rect class="chip" x="72" y="240" width="188" height="30" rx="15"/>
+  <text class="pill" x="88" y="259">777 mints read on chain</text>
+
+  <rect class="chip" x="272" y="240" width="216" height="30" rx="15"/>
+  <text class="pill" x="288" y="259">$6,495,809 withheld in 6.6 months</text>
+
+  <rect class="chip" x="500" y="240" width="168" height="30" rx="15"/>
+  <text class="pill" x="516" y="259">357 of 777 mints stale</text>
+
+  <!-- the receipt: the two candidate values -->
+  <rect x="716" y="44" width="412" height="232" rx="14" fill="#fff" stroke="#e6e1d6"/>
+
+  <text class="eyebrow" x="748" y="78">THE VALUE THAT IS LIVE</text>
+  <text class="mono" x="748" y="112" font-size="27" font-weight="600" fill="#15171b"
+        letter-spacing="-1">1.0344000942</text>
+
+  <line x1="748" y1="132" x2="1096" y2="132" stroke="#efeae0"/>
+
+  <text class="eyebrow" x="748" y="158">THE FIELD NAMED multiplier</text>
+  <text class="mono" x="748" y="188" font-size="20" font-weight="600" fill="#b0321c"
+        letter-spacing="-.6">1.0268028385</text>
+
+  <text class="sans" x="748" y="214" font-size="13" fill="#6c7078">
+    A reader that takes this one is one corporate action behind.
+  </text>
+
+  <!-- the split: 74.3% reinvested, 25.7% withheld -->
+  <g>
+    <rect x="748" y="234" width="264.5" height="10" rx="5" fill="#1c7a58"/>
+    <rect x="1012.5" y="234" width="83.5" height="10" rx="5" fill="#b0321c"/>
+    <text class="eyebrow" x="748" y="264" style="fill:#1c7a58">74.3% reinvested</text>
+    <text class="eyebrow" x="1012" y="264" style="fill:#b0321c">25.7% withheld</text>
+  </g>
+</svg>
