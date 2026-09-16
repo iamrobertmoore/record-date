@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Record Date: the dividend is in the mint account, and nothing reads it</title>
+<meta name="description" content="94.2% of tokenized US stocks on Solana have 30% of their dividend withheld before it is reinvested. The reinvestment is a multiplier in the Token-2022 mint account that no wallet, DEX or protocol applies.">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="docs/brand/mark.svg" type="image/svg+xml">
+<style>
+:root{
+  --paper:#fbfaf7; --card:#fff; --wash:#f5f2ec; --inset:#f0ece4;
+  --ink:#15171b; --body:#3a3f47; --muted:#6b7078; --faint:#989ea6;
+  --line:#e7e4dd; --rule:#d6d2c9;
+  --paid:#1c7a58; --withheld:#b0321c; --brass:#9a7318;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --shadow:0 1px 2px rgba(21,23,27,.04),0 12px 32px -18px rgba(21,23,27,.22);
+  --shadow-lift:0 1px 2px rgba(21,23,27,.05),0 24px 48px -24px rgba(21,23,27,.3);
+  --r:3px; --wrap:1080px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--body);
+  font:16px/1.62 var(--sans);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 32px}
+a{color:inherit;text-decoration:none}
+a:hover{color:var(--brass)}
+h1,h2,h3{color:var(--ink);margin:0}
+p{margin:0}
+
+/* ---------- type ---------- */
+h1{font:400 clamp(34px,5.2vw,58px)/1.06 var(--serif);letter-spacing:-.018em}
+h2{font:400 clamp(26px,3.2vw,36px)/1.14 var(--serif);letter-spacing:-.012em}
+h3{font:650 15px/1.35 var(--sans);letter-spacing:-.005em}
+.lede{font:400 clamp(17px,1.55vw,20.5px)/1.55 var(--serif);color:var(--body);max-width:44em}
+.lede b{color:var(--ink);font-weight:400;box-shadow:inset 0 -.42em 0 rgba(154,115,24,.16)}
+.small{font-size:13.5px;color:var(--muted)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+/* ---------- the eyebrow device ---------- */
+.eyebrow{
+  display:flex;align-items:center;gap:9px;margin:0 0 20px;
+  font:650 10px/1 var(--sans);letter-spacing:.19em;text-transform:uppercase;color:var(--faint);
+}
+.eyebrow::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--brass);flex:none}
+.eyebrow .n{color:var(--brass)}
+.eyebrow .sep{color:var(--rule)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:20;background:rgba(251,250,247,.88);
+  backdrop-filter:saturate(1.6) blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:58px}
+.brand{display:flex;align-items:center;gap:9px;font:650 13.5px/1 var(--sans);
+  letter-spacing:-.005em;color:var(--ink);flex:none}
+.brand svg{display:block}
+.top nav{margin-left:auto;display:flex;gap:22px;font:500 12.5px/1 var(--sans);color:var(--muted)}
+.top nav a:hover{color:var(--ink)}
+@media(max-width:720px){.top nav{display:none}}
+
+/* ---------- hero ---------- */
+header.hero{padding:76px 0 8px;border-bottom:1px solid var(--line)}
+.hero .stamp{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:100px;
+  background:var(--card);border:1px solid var(--line);font:500 11.5px/1 var(--sans);color:var(--muted)}
+.chip b{font-family:var(--mono);font-weight:600;color:var(--ink)}
+.chip.hot{border-color:#eccfc8;background:#fdf6f4;color:var(--withheld)}
+.chip.hot b{color:var(--withheld)}
+.hero h1{max-width:20em}
+.hero .lede{margin-top:26px}
+.hero .byline{margin-top:30px;padding-bottom:34px;display:flex;flex-wrap:wrap;gap:26px;
+  font:500 12.5px/1.5 var(--sans);color:var(--faint)}
+.hero .byline b{display:block;font:650 10px/1 var(--sans);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.hero .byline span{color:var(--body)}
+
+/* ---------- sections ---------- */
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.head{max-width:46em;margin-bottom:40px}
+.head p{margin-top:16px;font-size:16.5px;color:var(--body)}
+
+/* ---------- stat strip ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.stats div{background:var(--card);padding:24px 22px 22px}
+.stats b{display:block;font:400 30px/1 var(--serif);color:var(--ink);letter-spacing:-.02em}
+.stats b .u{font:500 14px/1 var(--sans);color:var(--muted);margin-left:3px}
+.stats em{display:block;margin-top:10px;font:400 12.5px/1.45 var(--sans);
+  font-style:normal;color:var(--muted)}
+.stats .taken b{color:var(--withheld)}
+.stats .paid b{color:var(--paid)}
+@media(max-width:820px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.stats{grid-template-columns:1fr}}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:900px){.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:22px;box-shadow:var(--shadow)}
+.card h3{margin-bottom:8px}
+.card p{font-size:14px;color:var(--muted)}
+.card .big{display:block;font:400 34px/1 var(--serif);color:var(--ink);
+  letter-spacing:-.02em;margin-bottom:12px}
+.card .big.taken{color:var(--withheld)}
+.card .big.paid{color:var(--paid)}
+
+/* ---------- the multiplier figure ---------- */
+.pair{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  background:var(--card);box-shadow:var(--shadow);margin-top:8px}
+.pair>div{padding:24px 22px}
+.pair>div:last-child{background:var(--wash)}
+.pair .k{font:650 10px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:12px}
+.pair .v{font:400 25px/1.1 var(--mono);letter-spacing:-.03em;color:var(--ink);
+  word-break:break-all}
+.pair .v.wrong{color:var(--withheld)}
+.pair .note{margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.pair .mid{display:flex;align-items:center;justify-content:center;padding:0 18px;
+  background:var(--wash);border-left:1px solid var(--line);border-right:1px solid var(--line);
+  font:650 11px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+@media(max-width:760px){.pair{grid-template-columns:1fr}.pair .mid{padding:12px;border:0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}}
+
+/* ---------- meter ---------- */
+.meter{display:flex;height:34px;border-radius:var(--r);overflow:hidden;
+  border:1px solid var(--line);margin:26px 0 14px;background:var(--card)}
+.meter i{display:block;height:100%}
+.meter i.keep{background:linear-gradient(180deg,#2b8f68,#1c7a58)}
+.meter i.take{background:linear-gradient(180deg,#c4422b,#b0321c)}
+.meter i+ i{border-left:1px solid rgba(255,255,255,.55)}
+.key{display:flex;flex-wrap:wrap;gap:20px;font:500 12.5px/1 var(--sans);color:var(--muted)}
+.key span{display:flex;align-items:center;gap:8px}
+.key i{width:11px;height:11px;border-radius:2px;flex:none;display:block}
+
+/* ---------- proof ---------- */
+.proof{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  overflow-x:auto;box-shadow:var(--shadow)}
+.proof table{border-collapse:collapse;width:100%;min-width:720px}
+.proof th,.proof td{text-align:left;padding:15px 18px;border-bottom:1px solid var(--line);
+  font-size:13.5px;vertical-align:top}
+.proof th{font:650 10px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--faint);background:var(--wash);white-space:nowrap}
+.proof tr:last-child td{border-bottom:0}
+.proof td.m{font-family:var(--mono);font-size:12.5px;color:var(--body);
+  letter-spacing:-.01em;white-space:nowrap}
+.proof td.sym{font:650 13px/1.4 var(--sans);color:var(--ink)}
+.proof td.imp{font-family:var(--mono);font-size:14px;color:var(--paid);font-weight:600}
+.proof .eq{color:var(--faint)}
+.proof .age{display:block;font-size:10.5px;color:var(--faint);letter-spacing:.04em}
+.proof td.good{color:var(--paid)}
+.proof td.mid{color:var(--brass)}
+.proof td.off{color:var(--withheld)}
+
+/* ---------- the age buckets: the evidence for the section above ---------- */
+.buckets{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  overflow-x:auto;box-shadow:var(--shadow);margin-top:26px}
+.buckets table{border-collapse:collapse;width:100%;min-width:520px}
+.buckets th,.buckets td{text-align:left;padding:13px 18px;border-bottom:1px solid var(--line)}
+.buckets th{font:650 10px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--faint);background:var(--wash);white-space:nowrap}
+.buckets tr:last-child td{border-bottom:0}
+.buckets td.m{font-family:var(--mono);font-size:12.5px;color:var(--body);white-space:nowrap}
+.buckets td:last-child{width:62%}
+/* The bar lives inside a wrapper so that a full-width bar cannot push the label out of the
+   cell. The wrapper is a fixed track rather than a percentage: at 66% of the cell the label
+   floated to the far right of the table, hundreds of pixels from the bar it belongs to. */
+.buckets .dwrap{display:inline-block;width:220px;max-width:46%;vertical-align:middle}
+.buckets .dbar{display:block;height:9px;border-radius:2px;background:var(--brass);min-width:2px}
+.buckets .dpct{font-family:var(--mono);font-size:12.5px;color:var(--ink);margin-left:14px;
+  vertical-align:middle}
+
+/* ---------- ledger ---------- */
+.ledger{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:900px){.ledger{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.ledger{grid-template-columns:1fr}}
+.ledger li{list-style:none;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 17px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.ledger li:hover{box-shadow:var(--shadow-lift)}
+.lg-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.lg-top b{font:650 13px/1 var(--sans);color:var(--ink)}
+.lg-top em{font:400 10.5px/1 var(--mono);font-style:normal;color:var(--faint)}
+.lg-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:5px 0;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+.lg-row:first-of-type{border-top:0}
+.lg-row b{font-family:var(--mono);font-size:13px;color:var(--ink);font-weight:600;
+  letter-spacing:-.02em}
+.lg-row b.taken{color:var(--withheld)}
+/* display:block matters. As an inline span the height:4px was ignored, so the bar took the
+   height of its own child, whose height:100% resolved against the whole card. The result was a
+   vertical red block instead of a strip, and it only showed up in a render. */
+.lg-bar{display:block;height:4px;border-radius:2px;background:var(--inset);margin-top:12px;
+  overflow:hidden}
+.lg-bar i{display:block;height:100%;background:var(--withheld)}
+
+/* ---------- limits ---------- */
+.limits{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media(max-width:760px){.limits{grid-template-columns:1fr}}
+.limits div{background:var(--card);padding:22px}
+.limits h3{margin-bottom:7px}
+.limits p{font-size:13.5px;color:var(--muted)}
+
+/* ---------- code ---------- */
+pre{background:var(--ink);color:#e8e6e0;border-radius:var(--r);padding:20px 22px;
+  overflow-x:auto;font:12.5px/1.7 var(--mono);margin:0;box-shadow:var(--shadow)}
+pre .c{color:#8d8a83}
+pre .g{color:#6fce a0}
+pre .k{color:#d9b06a}
+.ix{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+@media(max-width:760px){.ix{grid-template-columns:1fr}}
+.ix div{border:1px solid var(--line);border-radius:var(--r);padding:16px 17px;background:var(--card)}
+.ix b{display:block;font:600 12.5px/1.3 var(--mono);color:var(--ink);margin-bottom:7px}
+.ix p{font-size:12.5px;color:var(--muted)}
+
+/* ---------- checks ---------- */
+.checks{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:760px){.checks{grid-template-columns:1fr}}
+.check{display:flex;gap:12px;align-items:flex-start;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--r);padding:15px 17px}
+.check .tick{width:18px;height:18px;border-radius:50%;background:var(--paid);flex:none;
+  display:flex;align-items:center;justify-content:center;margin-top:1px}
+.check .tick svg{display:block}
+.check p{font-size:13px;color:var(--body)}
+.check b{display:block;font:650 12.5px/1.4 var(--sans);color:var(--ink);margin-bottom:4px}
+.check em{font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* ---------- sources ---------- */
+.srcs{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden}
+.srcs div{background:var(--card);padding:14px 18px;display:flex;gap:18px;
+  align-items:baseline;flex-wrap:wrap}
+.srcs b{font:650 12px/1.4 var(--sans);color:var(--ink);min-width:170px}
+.srcs code{font:12px/1.5 var(--mono);color:var(--muted);word-break:break-all}
+
+/* ---------- footer ---------- */
+footer{padding:56px 0 72px;background:var(--wash);border-top:1px solid var(--line)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+footer .mark{flex:none}
+footer .txt{flex:1;min-width:280px}
+footer p{font-size:13px;color:var(--muted);max-width:52em}
+footer .links{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;
+  font:600 12.5px/1 var(--sans);color:var(--ink)}
+footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
+
+/* ---------- motion, scoped to .js ---------- */
+.js .reveal{opacity:0;transform:translateY(14px)}
+.js .reveal.in{opacity:1;transform:none;
+  transition:opacity .6s cubic-bezier(.2,.7,.3,1),transform .6s cubic-bezier(.2,.7,.3,1)}
+.js .meter i,.js .lg-bar i{transition:width .9s cubic-bezier(.2,.7,.3,1)}
+@media(prefers-reduced-motion:reduce){
+  .js .reveal{opacity:1;transform:none}
+  .js .meter i,.js .lg-bar i{transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap">
+    <span class="brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12.6" r="8.2" stroke="#15171b" stroke-width="1.5"/>
+        <path d="M12 4.4V1.6" stroke="#9a7318" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M8.1 12.6h7.8" stroke="#15171b" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Record&nbsp;Date
+    </span>
+    <nav>
+      <a href="#claim">The claim</a>
+      <a href="#chain">The chain</a>
+      <a href="#taken">What was taken</a>
+      <a href="#proof">The proof</a>
+      <a href="#ledger">The ledger</a>
+      <a href="#program">The program</a>
+      <a href="#checks">The checks</a>
+      <a href="#limits">The limits</a>
+      <a href="#sources">The sources</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="stamp">
+      <span class="chip">Solana mainnet · read <b>16 September 2026</b></span>
+      <span class="chip">Token-2022 mints <b>777</b></span>
+      <span class="chip hot">withheld <b>26.1%</b> of dividend income</span>
+    </div>
+
+    <h1>The dividend is a number in the mint account, and nothing on Solana reads it.</h1>
+
+    <p class="lede">A tokenized US stock pays its dividend by quietly raising a multiplier stored in
+      the token's Token-2022 mint account. The balance does not move. No wallet, exchange,
+      aggregator or DeFi protocol applies the multiplier, and the field named
+      <b>multiplier</b> is the wrong one. <b>375 of the 398
+      tokenized stocks that publish a withholding rate lose 30% of the dividend before
+      it is reinvested</b>, and about <b>$11.5m a year</b> is withheld before
+      the reinvestment, on a surface no holder is shown.</p>
+
+    <div class="byline">
+      <span><b>Read from</b><span>the mint accounts, the issuer's own feed, and the price API</span></span>
+      <span><b>Reproduce with</b><span class="num">python3 scripts/fetch.py</span></span>
+      <span><b>Built for</b><span>Stocklana, Solana Foundation</span></span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="claim">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the claim</p>
+    <div class="head">
+      <h2>Four numbers, each from a source you can fetch yourself.</h2>
+      <p>The issuer publishes a corporate-action feed. The chain publishes a multiplier. They are
+        independent records of the same events, and until you put them side by side, neither one
+        tells you what a holder was actually paid.</p>
+    </div>
+
+    <div class="stats">
+      <div class="taken"><b>94.2<span class="u">%</span></b>
+        <em>of the 398 tokenized stocks with a published rate are taxed at
+          30%. 20 are at 0% and 3 at 5%, which is
+          all this feed says about why.</em></div>
+      <div class="taken"><b>$11,518,640</b>
+        <em>a year, withheld from holders of tokenized stocks on Solana. Measured, not
+          estimated: per-unit dividends times supply.</em></div>
+      <div><b>357</b>
+        <em>of 777 mints store a value in the field named <span class="num">multiplier</span>
+          that is not the multiplier. A reader that takes it is one corporate action behind.</em></div>
+      <div class="paid"><b>530<span class="u">/530</span></b>
+        <em>corporate-action records reconcile exactly to net = gross × (1 − rate). Zero
+          exceptions, at the precision the issuer publishes.</em></div>
+    </div>
+  </div>
+</section>
+
+<section id="chain">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">02</span><span class="sep">/</span> what the chain says</p>
+    <div class="head">
+      <h2>One raw token is not one share, and the obvious field is the previous value.</h2>
+      <p>On EVM chains the contract adjusts balances itself, so <span class="num">balanceOf()</span>
+        is already correct. On Solana the balance stays put and every integrator is individually
+        responsible for applying the multiplier. The extension gives you two candidate values and
+        only one of them is live.</p>
+    </div>
+
+    <div class="pair">
+      <div>
+        <p class="k">multiplier</p>
+        <p class="v wrong">1.0268028384</p>
+        <p class="note">The field a reader reaches for first. It is the value in force
+          <em>before</em> the most recent corporate action. For 357 of
+          777 mints it is not the multiplier.</p>
+      </div>
+      <div class="mid">effective</div>
+      <div>
+        <p class="k">new_multiplier</p>
+        <p class="v">1.0344000941</p>
+        <p class="note">Live from
+          <span class="num">unix 1788481800</span>. This is the value a wallet must
+          multiply a raw balance by, and the value this program records.</p>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:22px">The rule applied here is: the live value is
+      <span class="num">new_multiplier</span> once its timestamp has passed, and
+      <span class="num">multiplier</span> otherwise. That is what Token-2022's own
+      <span class="num">process_update_multiplier</span> does, and it is not taken on trust. The
+      issuer publishes its own view of the live value, and the rule was compared against it on
+      every mint rather than a sample: <b>777 agreed, 0
+      disagreed</b>, 0 publishing nothing to compare against. The comparison
+      is one of the build's own checks and it stops the page if it ever fails.</p>
+
+    <div class="grid g3" style="margin-top:26px">
+      <div class="card">
+        <h3>Why the balance cannot help you</h3>
+        <p>Token-2022's scaled-ui-amount extension leaves the raw amount alone. A holder's
+          balance is identical before and after a dividend, so a wallet that shows raw amounts
+          shows a position that has not moved when it has.</p>
+      </div>
+      <div class="card">
+        <h3>Why the history is not on chain</h3>
+        <p>A mint stores the current multiplier and nothing else. There is no event log, no
+          sequence, no account per activation. The record of what a token has paid lives in an
+          HTTP API and in transaction logs.</p>
+      </div>
+      <div class="card">
+        <h3>Why the pause is unenforceable</h3>
+        <p>The issuer's own docs recommend that venues and protocols pause for fifteen minutes
+          around each activation. Nothing in a mint account can enforce that, and the
+          recommendation is the whole of the mechanism.</p>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:22px">Quoted from
+      <a href="https://docs.xstocks.fi/developers/multipliers"><b>docs.xstocks.fi/developers/multipliers</b></a>,
+      not paraphrased: “The multiplier is published on-chain before each corporate event takes
+      effect… we <b>recommend</b> that trading venues and protocols pause all interactions with
+      the token for a brief window (e.g., 15 minutes) before and after each activation
+      timestamp.”</p>
+  </div>
+</section>
+
+<section id="taken">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> what was taken</p>
+    <div class="head">
+      <h2>The dividend is reinvested net of tax, and the net is 73.9% of the gross.</h2>
+      <p>Across the 537 scheduled cash dividends the issuer has published, the
+        arithmetic closes exactly: <span class="num">net = gross × (1 − rate)</span> on all
+        530 records that carry both figures. The withheld part never reaches the token,
+        so it never reaches the multiplier, so it never appears anywhere a holder would look.</p>
+    </div>
+
+    <div class="meter" role="img"
+         aria-label="Of 24,134,135 dollars of gross dividend, 17,827,680 arrived and 6,306,456 was withheld">
+      <i class="keep" data-w="73.869" style="width:73.869%"></i>
+      <i class="take" data-w="26.131" style="width:26.131%"></i>
+    </div>
+    <div class="key">
+      <span><i style="background:#1c7a58"></i> reinvested into the token · $17,827,680</span>
+      <span><i style="background:#b0321c"></i> withheld at source · $6,306,456</span>
+    </div>
+
+    <div class="stats" style="margin-top:38px">
+      <div><b>$24,134,135</b><em>gross dividends published across the window
+        2026-03-06 to 2026-09-23, 6.57 months</em></div>
+      <div class="paid"><b>$17,827,680</b><em>the part that became more token</em></div>
+      <div class="taken"><b>$6,306,456</b><em>the part that did not</em></div>
+      <div class="taken"><b>0.71<span class="u">%</span></b><em>implied gross yield on
+        the 358 symbols that both pay and quote, the check that the total is not an
+        order of magnitude out</em></div>
+    </div>
+
+    <p class="small" style="margin-top:24px"><b>Method and its limits.</b> Per-unit dividend times
+      scaled supply, at today's price, over the window the issuer's feed covers. Supply is today's
+      rather than time-weighted, so a token that minted heavily after its dividend is
+      over-counted. The feed is an upcoming feed, so the window runs a few days past today:
+      <span class="num">$23,387,847</span> of the $24,134,135 gross is dated on or before today
+      and <span class="num">$746,288</span> is still forward. Read the annual figure as
+      an order of magnitude, not a ledger. The full arithmetic is in
+      <span class="num">scripts/fetch.py</span>.</p>
+  </div>
+</section>
+
+<section id="proof">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> the proof</p>
+    <div class="head">
+      <h2>Divide the net dividend by the multiplier step and you get the share price.</h2>
+      <p>The corporate-action feed and the mint account are separate records. If they describe the
+        same event, then <span class="num">net per unit ÷ (new multiplier − previous multiplier)</span>
+        is the price of one share of the underlying on that date, recovered with no oracle and no
+        price feed, from the chain and the issuer's feed alone.</p>
+      <p>That claim makes a prediction you can test. The implied price is fixed on the activation
+        date; the market price is today's. So the gap between them has to be the stock's own
+        movement, which means the gap must <em>grow</em> with the age of the activation. If the
+        identity were an artefact of how the feed is written, the gap would be noise and the same
+        size in every bucket. It grows.</p>
+    </div>
+
+    <div class="proof">
+      <table>
+        <thead>
+          <tr>
+            <th>Token</th><th>Activation</th><th>Multiplier step</th>
+            <th>Net dividend / unit</th><th>Implied price</th><th>Market price today</th><th>Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+<tr><td class="sym">AIGx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.0046064753</td><td class="m">0.35</td><td class="imp">$75.98</td><td class="m">$76.03</td><td class="m good">-0.1%</td></tr>
+<tr><td class="sym">ARESx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.007319907</td><td class="m">0.945</td><td class="imp">$129.10</td><td class="m">$125.82</td><td class="m good">+2.6%</td></tr>
+<tr><td class="sym">FNFx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.0083447959</td><td class="m">0.364</td><td class="imp">$43.62</td><td class="m">$42.61</td><td class="m good">+2.4%</td></tr>
+<tr><td class="sym">HCAx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.0012882827</td><td class="m">0.546</td><td class="imp">$423.82</td><td class="m">$432.10</td><td class="m good">-1.9%</td></tr>
+<tr><td class="sym">ICEx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.002319949</td><td class="m">0.364</td><td class="imp">$156.90</td><td class="m">$153.60</td><td class="m good">+2.1%</td></tr>
+<tr><td class="sym">MSIx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.0018054312</td><td class="m">0.847</td><td class="imp">$469.14</td><td class="m">$466.73</td><td class="m good">+0.5%</td></tr>
+<tr><td class="sym">PLDx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.0055138398</td><td class="m">0.749</td><td class="imp">$135.84</td><td class="m">$133.93</td><td class="m good">+1.4%</td></tr>
+<tr><td class="sym">PRx</td><td class="m">2026-09-16<span class="age">0d</span></td><td class="m">0.0045732952</td><td class="m">0.112</td><td class="imp">$24.49</td><td class="m">$22.93</td><td class="m mid">+6.8%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small" style="margin-top:16px">The eight most recent activations, ordered by age and
+      not selected for how well they agree. The market price is the token's quoted price divided by
+      the multiplier the chain reports, which is a third source neither of the other two has seen.</p>
+
+    <div class="buckets">
+      <table>
+        <thead>
+          <tr><th>Age of the activation</th><th>Events</th><th>Median gap against today's price</th></tr>
+        </thead>
+        <tbody>
+<tr><td class="m">0-2 days</td><td class="m">35</td><td class="m"><span class="dwrap"><i class="dbar" style="width:20.6%"></i></span><span class="dpct">1.4%</span></td></tr>
+<tr><td class="m">3-10 days</td><td class="m">34</td><td class="m"><span class="dwrap"><i class="dbar" style="width:42.1%"></i></span><span class="dpct">2.9%</span></td></tr>
+<tr><td class="m">11-30 days</td><td class="m">151</td><td class="m"><span class="dwrap"><i class="dbar" style="width:59.6%"></i></span><span class="dpct">4.1%</span></td></tr>
+<tr><td class="m">31-60 days</td><td class="m">119</td><td class="m"><span class="dwrap"><i class="dbar" style="width:100.0%"></i></span><span class="dpct">6.9%</span></td></tr>
+<tr><td class="m">over 60 days</td><td class="m">90</td><td class="m"><span class="dwrap"><i class="dbar" style="width:76.5%"></i></span><span class="dpct">5.3%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="small" style="margin-top:16px">Across 429 reconciliations on
+      338 names the median gap is <b>2.0%</b> where the activation is within
+      ten days (69 events) and <b>5.3%</b> where it is more than sixty
+      (90). The arithmetic is identical in both buckets. The only thing that changed
+      is how long the stock has had to move, which is what makes this evidence rather than a
+      coincidence. The overall median is 4.3%.</p>
+  </div>
+</section>
+
+<section id="ledger">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> the ledger</p>
+    <div class="head">
+      <h2>The tokens where the most was withheld.</h2>
+      <p>Withheld dollars per token over the window, from per-unit dividends the issuer published
+        times the scaled supply the chain reports. The bar is scaled to the largest here.</p>
+    </div>
+    <ul class="ledger">
+<li title="Xs78JED6PFZxWc2wCEPspZW9kL3Se5J7L5TChKgsidH"><span class="lg-top"><b>STRCx</b><em>7 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$223,344</b></span><span class="lg-row"><span>per unit</span><b>0.437499</b></span><span class="lg-row"><span>multiplier</span><b>1.0863570205</b></span><span class="lg-row"><span>price</span><b>$97.91</b></span><span class="lg-bar"><i data-w="100.0" style="width:100.0%"></i></span></li>
+<li title="XsAtbqkAP1HJxy7hFDeq7ok6yM43DQ9mQ1Rh861X8rw"><span class="lg-top"><b>PFEx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$165,753</b></span><span class="lg-row"><span>per unit</span><b>0.258</b></span><span class="lg-row"><span>multiplier</span><b>1.0537129709</b></span><span class="lg-row"><span>price</span><b>$27.53</b></span><span class="lg-bar"><i data-w="74.2" style="width:74.2%"></i></span></li>
+<li title="XsfAzPzYrYjd4Dpa9BU3cusBsvWfVB9gBcyGC87S57n"><span class="lg-top"><b>NVOx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$130,148</b></span><span class="lg-row"><span>per unit</span><b>0.396955</b></span><span class="lg-row"><span>multiplier</span><b>1.0370549907</b></span><span class="lg-row"><span>price</span><b>$41.90</b></span><span class="lg-bar"><i data-w="58.3" style="width:58.3%"></i></span></li>
+<li title="XsvKCaNsxg2GN8jjUmq71qukMJr7Q1c5R2Mk9P8kcS8"><span class="lg-top"><b>CMCSAx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$113,925</b></span><span class="lg-row"><span>per unit</span><b>0.198</b></span><span class="lg-row"><span>multiplier</span><b>1.0876797409</b></span><span class="lg-row"><span>price</span><b>$24.03</b></span><span class="lg-bar"><i data-w="51.0" style="width:51.0%"></i></span></li>
+<li title="XsqBC5tcVQLYt8wqGCHRnAUUecbRYXoJCReD6w7QEKp"><span class="lg-top"><b>TBLLx</b><em>5 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$113,672</b></span><span class="lg-row"><span>per unit</span><b>0.451278</b></span><span class="lg-row"><span>multiplier</span><b>1.0187608513</b></span><span class="lg-row"><span>price</span><b>$105.75</b></span><span class="lg-bar"><i data-w="50.9" style="width:50.9%"></i></span></li>
+<li title="XsaHND8sHyfMfsWPj6kSdd5VwvCayZvjYgKmmcNL5qh"><span class="lg-top"><b>XOMx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$112,966</b></span><span class="lg-row"><span>per unit</span><b>0.927</b></span><span class="lg-row"><span>multiplier</span><b>1.0176489705</b></span><span class="lg-row"><span>price</span><b>$164.97</b></span><span class="lg-bar"><i data-w="50.6" style="width:50.6%"></i></span></li>
+<li title="XsnQnU7AdbRZYe2akqqpibDdXjkieGFfSkbkjX1Sd1X"><span class="lg-top"><b>MRKx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$108,611</b></span><span class="lg-row"><span>per unit</span><b>0.765</b></span><span class="lg-row"><span>multiplier</span><b>1.0258591861</b></span><span class="lg-row"><span>price</span><b>$144.57</b></span><span class="lg-bar"><i data-w="48.6" style="width:48.6%"></i></span></li>
+<li title="Xs4uZnG2mzZQKgnmuYboj1PRBtascAvWh5NdVMfz2aW"><span class="lg-top"><b>YLDEx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$105,875</b></span><span class="lg-row"><span>per unit</span><b>0.477105</b></span><span class="lg-row"><span>multiplier</span><b>1.0194749276</b></span><span class="lg-row"><span>price</span><b>$56.08</b></span><span class="lg-bar"><i data-w="47.4" style="width:47.4%"></i></span></li>
+<li title="XsNNMt7WTNA2sV3jrb1NNfNgapxRF5i4i6GcnTRRHts"><span class="lg-top"><b>CVXx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$104,221</b></span><span class="lg-row"><span>per unit</span><b>1.068</b></span><span class="lg-row"><span>multiplier</span><b>1.0295541831</b></span><span class="lg-row"><span>price</span><b>$213.38</b></span><span class="lg-bar"><i data-w="46.7" style="width:46.7%"></i></span></li>
+<li title="XsaBXg8dU5cPM6ehmVctMkVqoiRG2ZjMo1cyBJ3AykQ"><span class="lg-top"><b>KOx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$103,027</b></span><span class="lg-row"><span>per unit</span><b>0.477</b></span><span class="lg-row"><span>multiplier</span><b>1.0225601246</b></span><span class="lg-row"><span>price</span><b>$88.46</b></span><span class="lg-bar"><i data-w="46.1" style="width:46.1%"></i></span></li>
+<li title="XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3"><span class="lg-top"><b>HDx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$97,202</b></span><span class="lg-row"><span>per unit</span><b>2.097</b></span><span class="lg-row"><span>multiplier</span><b>1.0232993457</b></span><span class="lg-row"><span>price</span><b>$307.30</b></span><span class="lg-bar"><i data-w="43.5" style="width:43.5%"></i></span></li>
+<li title="Xsv99frTRUeornyvCfvhnDesQDWuvns1M852Pez91vF"><span class="lg-top"><b>PEPx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$95,765</b></span><span class="lg-row"><span>per unit</span><b>0.888</b></span><span class="lg-row"><span>multiplier</span><b>1.0344000941</b></span><span class="lg-row"><span>price</span><b>$135.27</b></span><span class="lg-bar"><i data-w="42.9" style="width:42.9%"></i></span></li>
+<li title="XsCZJYnCmjs5cYZDMLVxVzvMy5AK2oqsWpobS6SYno8"><span class="lg-top"><b>FLBLx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$91,403</b></span><span class="lg-row"><span>per unit</span><b>0.172777</b></span><span class="lg-row"><span>multiplier</span><b>1.0171047698</b></span><span class="lg-row"><span>price</span><b>$23.00</b></span><span class="lg-bar"><i data-w="40.9" style="width:40.9%"></i></span></li>
+<li title="Xs1neEMHNaDDSHqE9nvDGkmuX73ZASKcLtQqwmVAQde"><span class="lg-top"><b>EWQx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$88,751</b></span><span class="lg-row"><span>per unit</span><b>0.3262</b></span><span class="lg-row"><span>multiplier</span><b>1.0163263663</b></span><span class="lg-row"><span>price</span><b>$44.41</b></span><span class="lg-bar"><i data-w="39.7" style="width:39.7%"></i></span></li>
+<li title="XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX"><span class="lg-top"><b>MSFTx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$86,479</b></span><span class="lg-row"><span>per unit</span><b>0.819</b></span><span class="lg-row"><span>multiplier</span><b>1.0059033904</b></span><span class="lg-row"><span>price</span><b>$493.84</b></span><span class="lg-bar"><i data-w="38.7" style="width:38.7%"></i></span></li>
+<li title="XsEYQJtVa51Ww3y28jV1FwheMgmDj8BpxYiCPThcLWW"><span class="lg-top"><b>JAAAx</b><em>5 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$72,815</b></span><span class="lg-row"><span>per unit</span><b>0.301845</b></span><span class="lg-row"><span>multiplier</span><b>1.0111858841</b></span><span class="lg-row"><span>price</span><b>$50.64</b></span><span class="lg-bar"><i data-w="32.6" style="width:32.6%"></i></span></li>
+<li title="XsM51PKxDNQBZR65VRxRjNqcMWUBoYwHeVn2FR6WXi9"><span class="lg-top"><b>EWGx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$72,334</b></span><span class="lg-row"><span>per unit</span><b>0.249474</b></span><span class="lg-row"><span>multiplier</span><b>1.0137581351</b></span><span class="lg-row"><span>price</span><b>$42.66</b></span><span class="lg-bar"><i data-w="32.4" style="width:32.4%"></i></span></li>
+<li title="XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe"><span class="lg-top"><b>UNHx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$68,958</b></span><span class="lg-row"><span>per unit</span><b>1.359</b></span><span class="lg-row"><span>multiplier</span><b>1.0273478685</b></span><span class="lg-row"><span>price</span><b>$378.58</b></span><span class="lg-bar"><i data-w="30.9" style="width:30.9%"></i></span></li>
+<li title="XsqE9cRRpzxcGKDXj1BJ7Xmg4GRhZoyY1KpmGSxAWT2"><span class="lg-top"><b>MCDx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$62,270</b></span><span class="lg-row"><span>per unit</span><b>1.116</b></span><span class="lg-row"><span>multiplier</span><b>1.0211807004</b></span><span class="lg-row"><span>price</span><b>$251.28</b></span><span class="lg-bar"><i data-w="27.9" style="width:27.9%"></i></span></li>
+<li title="XsbZDdYJKxEBQASz4KBj23NRgymXw2NK6mbNQ6PYhC7"><span class="lg-top"><b>FEZx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$62,099</b></span><span class="lg-row"><span>per unit</span><b>0.333487</b></span><span class="lg-row"><span>multiplier</span><b>1.0111067299</b></span><span class="lg-row"><span>price</span><b>$68.65</b></span><span class="lg-bar"><i data-w="27.8" style="width:27.8%"></i></span></li>
+<li title="XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn"><span class="lg-top"><b>JNJx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$58,697</b></span><span class="lg-row"><span>per unit</span><b>0.804</b></span><span class="lg-row"><span>multiplier</span><b>1.0195885202</b></span><span class="lg-row"><span>price</span><b>$268.25</b></span><span class="lg-bar"><i data-w="26.3" style="width:26.3%"></i></span></li>
+<li title="XspwhyYPdWVM8XBHZnpS9hgyag9MKjLRyE3tVfmCbSr"><span class="lg-top"><b>IBMx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$56,149</b></span><span class="lg-row"><span>per unit</span><b>1.011</b></span><span class="lg-row"><span>multiplier</span><b>1.0204029187</b></span><span class="lg-row"><span>price</span><b>$240.35</b></span><span class="lg-bar"><i data-w="25.1" style="width:25.1%"></i></span></li>
+<li title="XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W"><span class="lg-top"><b>SPYx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$54,693</b></span><span class="lg-row"><span>per unit</span><b>0.571054</b></span><span class="lg-row"><span>multiplier</span><b>1.0057145602</b></span><span class="lg-row"><span>price</span><b>$760.45</b></span><span class="lg-bar"><i data-w="24.5" style="width:24.5%"></i></span></li>
+<li title="XsbWCMXPzLdZMLpPtiiWE7M99fySmsnK5eFCWGWfDQ8"><span class="lg-top"><b>EWUx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$52,233</b></span><span class="lg-row"><span>per unit</span><b>0.199875</b></span><span class="lg-row"><span>multiplier</span><b>1.0098892366</b></span><span class="lg-row"><span>price</span><b>$47.69</b></span><span class="lg-bar"><i data-w="23.4" style="width:23.4%"></i></span></li>
+<li title="Xs8rb8QG9mEuQ41g2cUzuJLZt3xEPQFhvgb9s4obXSn"><span class="lg-top"><b>FAAAx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$52,153</b></span><span class="lg-row"><span>per unit</span><b>0.2157</b></span><span class="lg-row"><span>multiplier</span><b>1.0096041758</b></span><span class="lg-row"><span>price</span><b>$50.34</b></span><span class="lg-bar"><i data-w="23.4" style="width:23.4%"></i></span></li>
+<li title="XswsQk4duEQmCbGzfqUUWYmi7pV7xpJ9eEmLHXCaEQP"><span class="lg-top"><b>BACx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$51,290</b></span><span class="lg-row"><span>per unit</span><b>0.18</b></span><span class="lg-row"><span>multiplier</span><b>1.0179352667</b></span><span class="lg-row"><span>price</span><b>$58.36</b></span><span class="lg-bar"><i data-w="23.0" style="width:23.0%"></i></span></li>
+<li title="XsCAXu7xTaZMG9b9KJhNWYapuvNjxPuE4SysZq8uvMq"><span class="lg-top"><b>JPSTx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$49,236</b></span><span class="lg-row"><span>per unit</span><b>0.204249</b></span><span class="lg-row"><span>multiplier</span><b>1.0094580396</b></span><span class="lg-row"><span>price</span><b>$50.38</b></span><span class="lg-bar"><i data-w="22.0" style="width:22.0%"></i></span></li>
+<li title="XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1"><span class="lg-top"><b>GSx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$48,988</b></span><span class="lg-row"><span>per unit</span><b>2.85</b></span><span class="lg-row"><span>multiplier</span><b>1.0157573238</b></span><span class="lg-row"><span>price</span><b>$979.66</b></span><span class="lg-bar"><i data-w="21.9" style="width:21.9%"></i></span></li>
+<li title="Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh"><span class="lg-top"><b>NVDAx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$48,274</b></span><span class="lg-row"><span>per unit</span><b>0.15</b></span><span class="lg-row"><span>multiplier</span><b>1.0017011968</b></span><span class="lg-row"><span>price</span><b>$215.72</b></span><span class="lg-bar"><i data-w="21.6" style="width:21.6%"></i></span></li>
+<li title="XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C"><span class="lg-top"><b>JPMx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$44,693</b></span><span class="lg-row"><span>per unit</span><b>0.9</b></span><span class="lg-row"><span>multiplier</span><b>1.0139174713</b></span><span class="lg-row"><span>price</span><b>$351.39</b></span><span class="lg-bar"><i data-w="20.0" style="width:20.0%"></i></span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="program">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> the program</p>
+    <div class="head">
+      <h2>Entitlement, as an account you can read in one call.</h2>
+      <p>A dividend on Solana is a change to the meaning of a balance. This program reads the mint
+        directly, resolves the multiplier correctly, and writes every activation as a permanent,
+        ordered receipt that any protocol can read without an API.</p>
+    </div>
+
+    <pre><span class="c">// the whole trap, in nine lines</span>
+<span class="k">pub fn</span> effective(&amp;self, now: i64) -&gt; f64 {
+    <span class="k">if</span> self.new_multiplier != 0.0
+        &amp;&amp; self.new_multiplier_effective_timestamp &lt;= now
+    {
+        self.new_multiplier      <span class="c">// live</span>
+    } <span class="k">else</span> {
+        self.multiplier          <span class="c">// previous. not the multiplier.</span>
+    }
+}</pre>
+
+    <div class="ix">
+<div><b>init_registry</b><p>Once per deployment. Holds the authority and the two counters.</p></div>
+<div><b>register_mint</b><p>Reads an xStock mint and stores the live multiplier alongside the value in the field the mint calls multiplier, so the gap between them is auditable.</p></div>
+<div><b>record_activation</b><p>Permissionless. If the multiplier has moved, writes a Receipt: previous, new, the issuer&#x27;s own timestamp, the supply. Ordered by sequence and never edited.</p></div>
+<div><b>read_entitlement</b><p>Raw units in the units a wallet should display. Return data is a little-endian u128. Integer arithmetic throughout.</p></div>
+<div><b>activation_pending</b><p>One byte: has the multiplier moved since this program last looked? A cranker calls this first so it does not pay for a transaction that reverts.</p></div>
+<div><b>settlement_window</b><p>Seconds since the last activation. A protocol that wants to follow the issuer&#x27;s advice to pause refuses to settle while that is inside 900.</p></div>
+    </div>
+
+    <p class="small" style="margin-top:22px">The mint is read as raw bytes, not through the
+      spl-token-2022 crate, because the program does not link against the program that owns it.
+      The layout is not the one the docs describe: a mint account is a 165 byte base region, then
+      the account-type byte, then the extensions. The mint fills only the first 82 of those bytes.
+      So the header is computed rather than searched for, and a non-zero byte in the padding is
+      an error. Asserted on all 777 mints: the padding is zero in every one and the
+      <span class="num">ScaledUiAmountConfig</span> header is at byte 275 in every one.
+      <span class="num">cargo test</span> covers the parser, the read rule and the fixed-point
+      arithmetic.</p>
+  </div>
+</section>
+
+<section id="checks">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">07</span><span class="sep">/</span> the checks</p>
+    <div class="head">
+      <h2>What has to be true for this page to be right.</h2>
+      <p>Every figure above is generated by one script that asserts its own claims and refuses to
+        write the page if one fails. These are the assertions, with what they actually found.</p>
+    </div>
+    <div class="checks">
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>every mint read is Token-2022 with a scaled-ui-amount extension</b><p><em>777 of 777</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>every mint has a zero-padded base region and says it is a mint</b><p><em>777 of 777 padded with zeros, 777 of 777 type byte is 1, 0 rejected</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the scaled-ui-amount header sits at one offset, not a range</b><p><em>275 x777, across 777 mints; the largest extension body stepped over is 205 bytes</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the extension run is dense: it ends exactly at the end of every account</b><p><em>777 of 777 exact, 0 overran, 0 undershot, at most 8 entries</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the issuer&#x27;s gross/net/rate arithmetic closes</b><p><em>530 of 530 records match exactly</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>one withholding rate dominates</b><p><em>94.2% of 398 symbols at 30%</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the feed&#x27;s superseded versions are collapsed to the highest version</b><p><em>3 rows collapsed to 537 distinct events, 0 survivors are not the highest version; the superseded rows carried 0.71% of the per-unit gross</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the scheduled cash dividends are a proper subset of scheduled actions</b><p><em>537 scheduled cash dividends against 551 scheduled actions of all types</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the reconciliation covers the field, not a chosen handful</b><p><em>429 reconciliations across 338 names</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>a fresh activation reconciles tighter than an old one</b><p><em>median 2.0% on the 69 activations within 10 days against 5.3% on the 90 older than 60, so the residual is the stock moving, not the method</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>where the two price fields disagree, the reconciliation picks the one this run used</b><p><em>9 events where the two price fields differ by over 20%; the field this run used reconciles to a median error of 0.6%, the field it rejected to 33.1%</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the field named multiplier is not the multiplier</b><p><em>357 of 777 mints differ</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the read rule matches the issuer&#x27;s own current value on every mint</b><p><em>777 agreed, 0 disagreed, 0 published no value</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the read rule matches the multiplier the runtime applies, on a strided sample</b><p><em>111 agreed, 0 disagreed, 0 unavailable</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the activation split agrees with the event counts</b><p><em>411 never, 284 exactly one, 82 two or more</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the two aggregation loops cover the same symbols</b><p><em>unrounded $6,306,455.59 vs $6,306,455.59, difference $0.00</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the ledger and the headline are the same total</b><p><em>ledger $6,306,453 vs headline $6,306,456, drift $2.59 within $185 from 368 rounded rows</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the withheld total covers every withholding rate, not only the dominant one</b><p><em>all rates $6,306,456 vs 30%-only $6,276,242, the rest is $30,213</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the meter fills: net plus withheld is gross</b><p><em>$24,134,135 = $17,827,680 + $6,306,456</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>what was paid and what is still forward add up to the whole</b><p><em>paid $23,387,847 of $24,134,135, forward $746,288</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the implied gross yield is plausible for a US equity book</b><p><em>0.71% on $3,346,210,163 across the 358 mints that both pay and quote</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the price pass covered enough of the field to state a yield</b><p><em>660 of 777 mints quoted</em></p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">08</span><span class="sep">/</span> the limits</p>
+    <div class="head">
+      <h2>What this does not claim.</h2>
+      <p>The numbers are the numbers. These are the places where a careful reader should push
+        back, and what the evidence actually supports.</p>
+    </div>
+    <div class="limits">
+      <div>
+        <h3>The 30% may not be a permanent loss</h3>
+        <p>It is withheld at source. A holder may be able to credit it at home, depending on where
+          they live. What is not in doubt is the rate applied on 375 of
+          398 symbols, the exactness of its application, and that the holder is
+          never shown it.</p>
+      </div>
+      <div>
+        <h3>Why 30% rather than a treaty rate is not asserted here</h3>
+        <p>The feed shows the rates and the arithmetic. It does not show the reason.
+          20 symbols are at 0% and 3 at 5%, which is
+          evidence that a lower rate is achievable, and nothing more than that.</p>
+      </div>
+      <div>
+        <h3>The dividend is not lost, it is reinvested</h3>
+        <p>The holder's position grows by the net amount. The claim is that it grows by less than
+          the company paid, and that no surface reports the difference. It is not that the money
+          disappeared.</p>
+      </div>
+      <div>
+        <h3>No arbitrage is claimed</h3>
+        <p>Liquidity behind these tokens is thin. The deepest pool carries about $1.8m. A price
+          comparison against the underlying is therefore not a clean signal and was not
+          pursued.</p>
+      </div>
+      <div>
+        <h3>The window is the feed's, not a clean year</h3>
+        <p>2026-03-06 to 2026-09-23. The annual figure is that window scaled, not twelve
+          measured months. Re-run the script and you get a different window and a slightly
+          different number.</p>
+      </div>
+      <div>
+        <h3>This is one issuer</h3>
+        <p>777 mints from Backed's own asset API, which is exhaustive over what Backed
+          publishes and is not a census of every equity token on Solana. Backpack issues more and
+          they are not counted here.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sources">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">09</span><span class="sep">/</span> the sources</p>
+    <div class="head">
+      <h2>Everything, public, no key.</h2>
+      <p>No API token, no account, no paid feed. Run
+        <span class="num">python3 scripts/fetch.py</span> and it re-fetches all of it and
+        re-asserts the checks above.</p>
+    </div>
+    <div class="srcs">
+<div><b>mint list</b><code>https://api.xstocks.fi/api/v2/public/assets</code></div>
+<div><b>corporate actions</b><code>https://api.xstocks.fi/api/v2/public/corporate-actions/upcoming</code></div>
+<div><b>multiplier history</b><code>https://api.xstocks.fi/api/v2/public/assets/{SYMBOL}/multiplier/history</code></div>
+<div><b>mint accounts</b><code>https://api.mainnet-beta.solana.com</code></div>
+<div><b>prices</b><code>https://api.jup.ag/price/v3</code></div>
+<div><b>published mechanics</b><code>https://docs.xstocks.fi/developers/multipliers</code></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="mark">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12.6" r="8.2" stroke="#15171b" stroke-width="1.4"/>
+        <path d="M12 4.4V1.6" stroke="#9a7318" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M8.1 12.6h7.8" stroke="#15171b" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <div class="txt">
+      <p><b>Record Date.</b> An xStock's dividend is reinvested by raising a multiplier in the
+        Token-2022 mint account. This reads that multiplier, resolves it correctly, and records
+        every activation on chain so that the entitlement is checkable rather than assumed.</p>
+      <div class="links">
+        <a href="#claim">The claim</a>
+        <a href="#proof">The proof</a>
+        <a href="docs/architecture.svg">Architecture</a>
+        <a href="https://docs.xstocks.fi/developers/multipliers">Issuer mechanics</a>
+      </div>
+      <p class="small" style="margin-top:16px">Read 16 September 2026 from Solana mainnet, the issuer's
+        public corporate-action feed and the price API. Figures are the resting state in the
+        markup; the script animates them and is never their source.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  document.documentElement.className += " js";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Bars carry their final size in the markup. Zero, then restore, so the animation is the
+  // only thing the script does and a reader without it still sees every figure.
+  var bars = document.querySelectorAll(".meter i, .lg-bar i");
+  bars.forEach(function(el){ el.dataset.w = el.style.width || el.dataset.w || "0"; });
+
+  function paint(){
+    document.querySelectorAll(".reveal").forEach(function(el){ el.classList.add("in"); });
+    bars.forEach(function(el){
+      var w = el.dataset.w;
+      el.style.width = "0%";
+      requestAnimationFrame(function(){ el.style.width = w; });
+    });
+  }
+
+  if (reduce) { paint(); return; }
+
+  if (!("IntersectionObserver" in window)) { paint(); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("in");
+      entry.target.querySelectorAll(".meter i, .lg-bar i").forEach(function(el){
+        var w = el.dataset.w;
+        el.style.width = "0%";
+        requestAnimationFrame(function(){ el.style.width = w; });
+      });
+      io.unobserve(entry.target);
+    });
+  }, { rootMargin: "0px 0px -8% 0px" });
+
+  document.querySelectorAll("section, header.hero").forEach(function(el){
+    el.classList.add("reveal");
+    io.observe(el);
+  });
+})();
+</script>
+</body>
+</html>
