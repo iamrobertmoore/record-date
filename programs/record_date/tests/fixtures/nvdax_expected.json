@@ -1,0 +1,13 @@
+{
+  "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+  "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+  "length": 679,
+  "supply": 32127767286397,
+  "decimals": 8,
+  "header_offset": 275,
+  "extension_type": 25,
+  "extension_length": 56,
+  "multiplier": "1.0009180758490996",
+  "effective_timestamp": 1789000200,
+  "new_multiplier": "1.001701196801074"
+}
