@@ -1,0 +1,43 @@
+[package]
+name = "record_date"
+version = "0.1.0"
+description = "Created with Anchor"
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "record_date"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+
+[dependencies]
+anchor-lang = "1.2.0"
+
+[dev-dependencies]
+litesvm = "0.10.0"
+solana-message = "3.0.1"
+solana-transaction = "3.0.2"
+solana-signer = "3.0.0"
+solana-keypair = "3.0.1"
+# Only for the Account struct that LiteSVM's set_account takes. Everything else the tests need
+# comes through anchor_lang's solana_program re-export, which is the same crate versions.
+solana-account = "3.4.0"
+# LiteSVM returns the raw TransactionError, so a test that wants to assert on a custom error code
+# has to name the type. These two are the versions litesvm 0.10.0 resolves to; matching on the
+# error value is better than matching on its Debug string, which would pass on a rename.
+solana-transaction-error = "3.4.0"
+solana-instruction-error = "2.5.0"
+
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
