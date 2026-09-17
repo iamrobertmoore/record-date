@@ -25,9 +25,12 @@ TEMPLATE = os.path.join(HERE, "page_template.html")
 # can never settle, and a README compared against the build it ships with is either right or wrong.
 sys.path.insert(0, HERE)
 import published  # noqa: E402
+# The page and the check on the banner print the same figures, so they print them with the same
+# function. They had one each and they disagreed in the last digit; see `published.to_places`.
+from published import multiplier, to_places  # noqa: E402
 
 
-def check_published(data):
+def check_published(data, page):
     """Refuse to build a page whose hand-written neighbours no longer describe the same build.
 
     `index.html` is generated from data.json so it cannot disagree with it. The README and the two
@@ -38,9 +41,15 @@ def check_published(data):
 
     That is the exact failure this entry documents, and the committed tree was carrying it in two
     places when this gate was added. Refusing to build is the point.
+
+    The third check is the one that was missing rather than wrong. The first two ask whether each
+    hand-written surface describes *this build*; neither asks whether two surfaces that quote one
+    build agree with *each other*, and the banner and the page did not. See
+    `published.page_agrees_with_banner`.
     """
     problems = published.stale(data, ROOT)
     problems += published.stale_banner_example(data, ROOT)
+    problems += published.page_agrees_with_banner(page, ROOT)
     if problems:
         raise SystemExit(
             "the build has moved and these hand-written figures have not:\n  "
@@ -108,17 +117,6 @@ def esc(text):
     return html.escape(str(text), quote=True)
 
 
-def multiplier(value):
-    """A multiplier at ten places.
-
-    The mint stores an f64, so the exact value has seventeen significant digits. Printing all of
-    them is false precision: no reader can use the difference between 1.0268028384810615 and
-    1.0268028385, and the long string makes the number look arbitrary. Ten places is more than
-    the reconciliation needs to reproduce its own result.
-    """
-    return trim(repr(float(value)), 10)
-
-
 def timing_slots(timing):
     """The four modal activation times, each labelled with the New York clock.
 
@@ -166,7 +164,7 @@ def recon_rows(rows):
                 sym=esc(r["symbol"]),
                 when=esc(r["activated"]),
                 age=esc(str(r["age_days"])),
-                step=esc(trim(r["step"], 10)),
+                step=esc(to_places(r["step"], 10)),
                 net=esc(r["net_per_unit"]),
                 imp=esc(r["implied_price"]),
                 mkt=esc(r["market_price"]),
@@ -221,28 +219,15 @@ def token_cards(tokens, limit=30):
                 events=t["events"],
                 plural="" if int(t["events"]) == 1 else "s",
                 wh=money(withheld),
-                pu=esc(trim(t["withheld_per_unit"])),
+                # Six places, because this is a cash amount per unit and the tail past the sixth
+                # decimal is below any use a reader has for it.
+                pu=esc(to_places(t["withheld_per_unit"], 6)),
                 mult=esc(multiplier(t["live_multiplier"])),
                 price=("${:,.2f}".format(price) if price else "no quote"),
                 bar=bar,
             )
         )
     return "\n".join(out)
-
-
-def trim(value, places=6):
-    """A per-unit figure without the float tail the API carries.
-
-    The API hands back f64 values as 17 significant digits, which is not information: a reader
-    cannot use the difference between 1.0216625054701978 and 1.0216625055. Six places for a
-    per-unit cash amount, ten for a multiplier step, which is the precision the identity needs.
-    """
-    text = str(value)
-    if "." in text:
-        whole, frac = text.split(".", 1)
-        frac = frac[:places].rstrip("0")
-        return whole + ("." + frac if frac else "")
-    return text
 
 
 INSTRUCTIONS = [
@@ -468,7 +453,7 @@ def render(data):
         raise SystemExit("template placeholders left unfilled: %s" % ", ".join(sorted(set(left))))
 
     check_assets(page)
-    check_published(data)
+    check_published(data, page)
 
     out = os.path.join(ROOT, "index.html")
     with open(out, "w") as handle:

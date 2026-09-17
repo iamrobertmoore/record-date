@@ -18,7 +18,7 @@ That is the failure this entry is about, committed by the entry itself: a hand-m
 number that moves, drifting away from the thing it copies, with nothing able to notice. So the copies
 are checked here rather than trusted.
 
-Two callers, and the difference between them is the whole design:
+Two callers, and the difference between them is deliberate:
 
   * `scripts/fetch.py` calls this over the run it has just made, for the two diagrams only. The
     diagrams carry rounded figures on purpose, so a run-to-run wobble does not fail them; only a
@@ -32,6 +32,13 @@ Two callers, and the difference between them is the whole design:
 Only figures that *move* are listed. A count such as 927 cannot go stale without the code that
 produces it changing, and the sweep covers those already. A money total or an exchange rate can go
 stale overnight with nothing else changing, and that is the case worth a check.
+
+There is a third failure, and it is not the same as either of the two above. A surface can be
+*current* and still disagree with the surface beside it, if the two print the same figure by
+different rules. The banner carried the worked example's two multipliers rounded while the page cut
+them short, so the same pair from one build read two ways on two surfaces a judge reads in sequence,
+and every check passed. `page_agrees_with_banner` is that check, and `to_places` is the single
+definition of how a figure is printed, so the two cannot drift apart again.
 """
 
 import json
@@ -54,6 +61,53 @@ def _usd(value):
 def _bn(value):
     """A dollar total in billions, to two places, as the README prints it."""
     return "$%.2fbn" % (Decimal(value) / Decimal(1000000000))
+
+
+def to_places(value, places):
+    """`value` at `places` decimals, rounded rather than cut short.
+
+    One definition, used by the page and by the check on the banner, because the two had their own
+    and they disagreed. The banner printed the worked example's two multipliers rounded and the page
+    printed them truncated, so the same pair from the same build read 1.0344000942 / 1.0268028385 on
+    the banner and 1.0344000941 / 1.0268028384 in the page's receipt and its ledger. Two surfaces a
+    judge reads one after the other, quoting one build, differing in the last digit. That is the
+    failure this entry documents, committed by the entry, and nothing caught it: the banner check
+    asked whether its pair was *a* pair in the build, and every other check asked whether a figure
+    was present rather than whether two surfaces agreed about it.
+
+    Rounded, not truncated, because rounding is what both docstrings already promised and what
+    `"%.10f"` does by default, so it is the behaviour a later change will assume. Half up on the
+    decimal string rather than through a float, which is the rule `figures` already applies to the
+    pence share, and it is a decision rather than an inheritance. Measured on this build: 757 of the
+    758 multipliers round the same either way, and one does not. ROLx's live multiplier is stored as
+    1.00338500264999996858250597142614424228668212890625, whose shortest round-tripping decimal is
+    1.00338500265, so half up on that decimal gives 1.0033850027 while rounding the stored binary
+    gives 1.0033850026. The two differ by 3.1e-17, and the convention here is that the value the API
+    reported is the number, the same way the pence share is treated. Ten places is already far past
+    what the reconciliation identity needs, so the rule being stated and uniform is what matters,
+    not which side of a tie that far down the tail it lands on.
+
+    Trailing zeros are dropped, so a multiplier of exactly 1 prints as `1` rather than
+    `1.0000000000`. The page is a poster and the tail is not information.
+    """
+    text = str(value)
+    if "." not in text:
+        return text
+    quantised = Decimal(text).quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP)
+    if not quantised:
+        # A negative zero is not a figure anyone wants to read.
+        return "0"
+    return format(quantised.normalize(), "f")
+
+
+def multiplier(value):
+    """A multiplier at ten places, which is the precision the reconciliation identity needs.
+
+    The mint stores an f64, so the exact value has seventeen significant digits. Printing all of
+    them is false precision: no reader can use the difference between 1.0268028384810615 and
+    1.0268028385, and the long string makes the number look arbitrary.
+    """
+    return to_places(value, 10)
 
 
 def figures(data):
@@ -163,9 +217,33 @@ def stale_banner_example(data, root):
     for token in data["tokens"]:
         for key in ("base_multiplier", "live_multiplier"):
             if token.get(key) is not None:
-                in_build.add("%.10f" % token[key])
+                in_build.add(multiplier(token[key]))
     return ["%s shows %s, which is not a multiplier in this build"
             % (SURFACES["banner"], value) for value in sorted(shown - in_build)]
+
+
+def page_agrees_with_banner(page, root):
+    """Complaints when the page and the banner print the same figure differently.
+
+    The banner carries one mint's two multipliers to ten decimals and the page carries the same pair
+    twice, in the receipt and again in the ledger row for that mint. They come from one build, so a
+    reader moving from the banner to the page must see the same digits.
+
+    They did not, and this is the check that would have caught it. The banner was written by hand
+    from the rounded value while the page truncated its own, so the banner read 1.0344000942 /
+    1.0268028385 and the page read 1.0344000941 / 1.0268028384: the banner's two figures appeared
+    nowhere in `index.html` at all. Nothing noticed, because every check in the workspace asked
+    whether a figure was *present* somewhere rather than whether two surfaces that quote one build
+    agree with each other.
+
+    Only ten-decimal figures are compared. They are the ones the two surfaces have in common and the
+    only ones precise enough for a last-digit difference to be visible to a reader.
+    """
+    with open(os.path.join(root, SURFACES["banner"])) as handle:
+        banner = handle.read()
+    shown = sorted(set(re.findall(r"\b\d+\.\d{10}\b", banner)))
+    return ["%s prints %s and index.html does not, so the two surfaces disagree about the same "
+            "figure" % (SURFACES["banner"], value) for value in shown if value not in page]
 
 
 def stale(data, root, surfaces=("banner", "architecture", "readme")):

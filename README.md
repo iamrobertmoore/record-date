@@ -202,7 +202,7 @@ python3 scripts/fetch.py          # writes data.json, asserts 32 checks
 python3 scripts/build_page.py     # writes index.html, after checking the hand-written figures
 
 # the checks themselves
-python3 scripts/test_checks.py    # 42 negative controls, no network needed
+python3 scripts/test_checks.py    # 50 negative controls, no network needed
 ```
 
 If any check fails the script prints why and **refuses to build the page**. It is not possible to publish a stale number through this pipeline by accident.

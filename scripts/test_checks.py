@@ -169,9 +169,27 @@ def report(name, got, want):
     return ok
 
 
+# --------------------------------------------------------------- check D, the old form
+
+def to_places_old(value, places):
+    """The old form of `published.to_places`: cut the tail off rather than round it.
+
+    Kept here so the difference between the two is auditable rather than asserted, the same way
+    check A keeps the old selection beside the new one. It lived in `build_page.py` and was deleted
+    when the page and the check on the banner were made to share one definition; this file is now
+    the only place it exists, which is deliberate. An old form that has been deleted everywhere
+    cannot be compared against anything.
+    """
+    text = str(value)
+    if "." in text:
+        whole, frac = text.split(".", 1)
+        frac = frac[:places].rstrip("0")
+        return whole + ("." + frac if frac else "")
+    return text
+
+
 def main():
     passed = total = 0
-
     def case(name, got, want):
         nonlocal passed, total
         total += 1
@@ -434,6 +452,53 @@ def main():
              published.stale_banner_example(sample, tmp),
              ["docs/brand/readme-banner.svg shows no ten-decimal value, "
               "so the receipt has lost its worked example"])
+
+        # The page and the banner have to print the same figure. This is the check that was missing
+        # rather than wrong: the first two ask whether each hand-written surface describes *this
+        # build*, and neither asked whether two surfaces quoting one build agree with *each other*.
+        # They did not. Each had its own idea of ten decimal places, one rounding and one cutting
+        # short, so the worked example read 1.0344000942 / 1.0268028385 on the banner and
+        # 1.0344000941 / 1.0268028384 in the page's receipt and ledger. The banner's two figures
+        # appeared nowhere in index.html at all.
+        write(published.SURFACES["banner"], "1.0344000942 1.0268028385")
+        case("the page and the banner agree when they print the same digits",
+             published.page_agrees_with_banner("receipt 1.0344000942 and 1.0268028385", tmp), [])
+        case("negative control: a page printing the cut-short pair is reported",
+             published.page_agrees_with_banner("receipt 1.0344000941 and 1.0268028384", tmp),
+             ["docs/brand/readme-banner.svg prints 1.0268028385 and index.html does not, so the "
+              "two surfaces disagree about the same figure",
+              "docs/brand/readme-banner.svg prints 1.0344000942 and index.html does not, so the "
+              "two surfaces disagree about the same figure"])
+        case("negative control: a page carrying only one of the two is reported",
+             len(published.page_agrees_with_banner("receipt 1.0344000942 only", tmp)), 1)
+
+        # Rounding against cutting short, at values where the two actually differ rather than at
+        # ones where they happen to agree. These three are the values this entry's own docstrings
+        # named, so the rule is asserted against the examples that were already in the tree.
+        boundary = ("1.0216625054701978", "1.0344000941634355", "1.0268028384810615")
+        case("a multiplier is rounded, not cut short",
+             [published.multiplier(v) for v in boundary],
+             ["1.0216625055", "1.0344000942", "1.0268028385"])
+        case("negative control: the old form gives a different answer on the same three",
+             [to_places_old(v, 10) for v in boundary],
+             ["1.0216625054", "1.0344000941", "1.0268028384"])
+        case("  ... and the rounded form is the one the banner check accepts",
+             published.stale_banner_example(sample, tmp), [])
+        # The other direction, which is what makes the rounding decision load-bearing rather than
+        # cosmetic: a banner written from the cut-short values is refused. If this passed, the two
+        # forms would both be accepted and the page and the banner could drift apart again.
+        write(published.SURFACES["banner"], " ".join(to_places_old(v, 10) for v in boundary))
+        case("negative control: a banner carrying the cut-short pair is refused",
+             published.stale_banner_example(sample, tmp),
+             ["docs/brand/readme-banner.svg shows 1.0216625054, "
+              "which is not a multiplier in this build",
+              "docs/brand/readme-banner.svg shows 1.0268028384, "
+              "which is not a multiplier in this build",
+              "docs/brand/readme-banner.svg shows 1.0344000941, "
+              "which is not a multiplier in this build"])
+        case("trailing zeros are dropped, so a multiplier of one prints as one",
+             [published.multiplier(v) for v in (1.0, "1.0000000000", 1)],
+             ["1", "1", "1"])
 
     print()
     print("%d of %d as expected" % (passed, total))
