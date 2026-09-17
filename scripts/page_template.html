@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Record Date: the dividend is in the mint account, and nothing reads it</title>
-<meta name="description" content="94.2% of tokenized US stocks on Solana have 30% of their dividend withheld before it is reinvested. The reinvestment is a multiplier in the Token-2022 mint account that no wallet, DEX or protocol applies.">
+<title>Record Date: the dividend is in the mint account, and on {{MINT_LIVE_DIFFERS}} of {{MINT_TOTAL}} mints the obvious field is the previous one</title>
+<meta name="description" content="{{TOP_RATE_PCT}}% of tokenized US stocks on Solana have {{TOP_RATE}}% of their dividend withheld before it is reinvested, and {{TIMING_ON_A_NON_TRADING_DAY}} of the {{TIMING_N}} multiplier activations land on a day the US market does not trade at all.">
 <meta name="color-scheme" content="light">
 <link rel="icon" href="docs/brand/mark.svg" type="image/svg+xml">
 <style>
@@ -313,15 +313,20 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       <span class="chip hot">withheld <b>{{WITHHELD_SHARE}}%</b> of dividend income</span>
     </div>
 
-    <h1>The dividend is a number in the mint account, and nothing on Solana reads it.</h1>
+    <h1>The dividend is a number in the mint account, and on {{MINT_LIVE_DIFFERS}} of {{MINT_TOTAL}} mints the obvious field is the previous one.</h1>
 
     <p class="lede">A tokenized US stock pays its dividend by quietly raising a multiplier stored in
-      the token's Token-2022 mint account. The balance does not move. No wallet, exchange,
-      aggregator or DeFi protocol applies the multiplier, and the field named
+      the token's Token-2022 mint account. The balance does not move. Most wallets, exchanges,
+      aggregators and DeFi protocols do not apply the multiplier, and the field named
       <b>multiplier</b> is the wrong one. <b>{{TOP_RATE_SYMBOLS}} of the {{RATED_SYMBOLS}}
       tokenized stocks that publish a withholding rate lose {{TOP_RATE}}% of the dividend before
       it is reinvested</b>, and about <b>{{ANNUAL_WITHHELD_SHORT}} a year</b> is withheld before
       the reinvestment, on a surface no holder is shown.</p>
+    <p class="lede">Two other projects read this field before this one did, and they are named in
+      section 01. What neither of them ships is anything a venue can act on. The issuer's own docs
+      ask venues to pause around every activation and nothing enforces it, so
+      <b>{{TIMING_ON_A_NON_TRADING_DAY}} of the {{TIMING_N}} activations land on a day the market
+      does not trade at all</b>, and this is a program that can say so.</p>
 
     <div class="byline">
       <span><b>Read from</b><span>the mint accounts, the issuer's own feed, and the price API</span></span>
@@ -335,7 +340,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
 
 <section id="claim">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the claim</p>
+    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the claim, and what was already known</p>
     <div class="head">
       <h2>Four numbers, each from a source you can fetch yourself.</h2>
       <p>The issuer publishes a corporate-action feed. The chain publishes a multiplier. They are
@@ -357,6 +362,27 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       <div class="paid"><b>{{RECONCILED}}<span class="u">/{{CHECKED}}</span></b>
         <em>corporate-action records reconcile exactly to net = gross × (1 − rate). Zero
           exceptions, at the precision the issuer publishes.</em></div>
+    </div>
+
+    <div class="limits" style="margin-top:34px">
+      <div>
+        <h3>The read rule is not this project's finding</h3>
+        <p>Solana's own Token-2022 documentation describes the stale field.
+          <a href="https://github.com/AlperJ/exdate">ExDate</a> published it with worked examples
+          on 13 September 2026, along with the withholding rate and a market-wide dollar total,
+          and its own prior-art search names
+          <a href="https://solanarwa.app">SolanaRWA</a> as having turned these same multiplier
+          changes into per-holder income since May 2026. That is real prior art on the mechanic,
+          and it is named here rather than left for a reader to find.</p>
+      </div>
+      <div>
+        <h3>What is different here</h3>
+        <p>ExDate and SolanaRWA are both a <em>holder's statement</em>: what a wallet was paid,
+          read back from the chain. ExDate ships no program of any kind, and says so. This is a
+          <em>venue's control</em>. The two findings below are the ones I could not find written
+          down anywhere, and they are the two the program exists for: when the activations land
+          against the exchange's own calendar, and the currency the reference price is quoted in.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -521,7 +547,22 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         date; the market price is today's. So the gap between them has to be the stock's own
         movement, which means the gap must <em>grow</em> with the age of the activation. If the
         identity were an artefact of how the feed is written, the gap would be noise and the same
-        size in every bucket. It grows.</p>
+        size in every bucket.</p>
+      <p>It grows across the first four buckets, from 1.5% fresh to 6.9% at sixty days.
+        <b>The oldest bucket is the one where the gradient does not continue</b>, and it is shown
+        rather than smoothed: past sixty days the median comes back to 4.7%. I do not have an
+        explanation I can test for that, so the build asserts only the weaker version it can
+        stand behind, that a fresh activation reconciles tighter than an old one. A monotonic
+        claim would be a stronger sentence and it would not be true of this data.</p>
+      <p><b>Which figure the chain reinvests is asserted, not assumed.</b> The feed publishes a
+        gross cashflow and a net one, 30% apart, and the whole entry rests on the net being the
+        one that reaches the token. Divide either by the multiplier step and you get a share price.
+        Do it with the net figure and the answer lands on the market at
+        <b>{{NET_OVER_MARKET}}</b>; do it with the gross and it reads <b>{{GROSS_OVER_MARKET}}</b>.
+        The control is the {{ZERO_RATE_EVENTS}} events carrying a 0% rate, where the feed's net and
+        gross are the same number and a test that is measuring the unit rather than the arithmetic
+        must have no preference between them. It does not: both read
+        <b>{{ZERO_RATE_OVER_MARKET}}</b>.</p>
     </div>
 
     <div class="proof">
@@ -661,10 +702,30 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           pursued.</p>
       </div>
       <div>
+        <h3>The reference price is not always in dollars</h3>
+        <p>{{NON_USD_MINTS}} of the {{MINT_TOTAL}} mints track an equity that does not trade in
+          dollars, and the reference price published beside them is quoted in the underlying's own
+          currency. {{PRICED_NON_USD}} of the priced mints are non-dollar, and {{PENCE_PRICED}} of
+          those are London listings quoted in pence, so each is divided by 100 before it is
+          converted at the ECB rate for {{CURRENCY_FX_DATE}}. Read as dollars instead, the same
+          prices value the book at ${{MARKET_VALUE_AS_READ}} rather than
+          ${{MARKET_VALUE_CONVERTED}}, a factor of {{MARKET_VALUE_FACTOR}}, and the yield
+          denominator with it. The conversion is asserted on every non-dollar listing, because
+          this is a mistake a plausible-looking yield does not catch.</p>
+      </div>
+      <div>
         <h3>The window is the feed's, not a clean year</h3>
         <p>{{WINDOW_FROM}} to {{WINDOW_TO}}. The annual figure is that window scaled, not twelve
           measured months. Re-run the script and you get a different window and a slightly
           different number.</p>
+      </div>
+      <div>
+        <h3>The age gradient is not monotonic</h3>
+        <p>It holds from fresh to sixty days, 1.5% to 6.9%, and comes back down to 4.7% in the
+          oldest bucket. I do not have an explanation I can test for that, so the build asserts
+          only the weaker version it can stand behind: a fresh activation reconciles tighter than
+          an old one. The stronger sentence would be a monotonic claim, and it would not be true
+          of this data.</p>
       </div>
       <div>
         <h3>This is one issuer</h3>
@@ -684,6 +745,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       <p>No API token, no account, no paid feed. Run
         <span class="num">python3 scripts/fetch.py</span> and it re-fetches all of it and
         re-asserts the checks above.</p>
+      <p>One source is used for less than it offers, and it is worth saying which.
+        <b>Pyth's price values need a key and are not used here.</b> Its feed directory, which
+        carries the exchange calendar, is public, so the session definition in section 02 is
+        Pyth's and the numbers beside it are not. The comment in <span class="num">fetch.py</span>
+        says so rather than leaving it to be inferred.</p>
     </div>
     <div class="srcs">
 {{SOURCES}}

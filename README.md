@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="docs/brand/readme-banner.svg" alt="Record Date. A tokenized stock pays its dividend by raising a multiplier inside the mint account. Nothing on Solana reads it." width="820">
+<img src="docs/brand/readme-banner.svg" alt="Record Date. A tokenized stock pays its dividend by raising a multiplier inside its Token-2022 mint account, and the field named multiplier holds the previous value." width="820">
 
 <br>
 
-**Reads a tokenized stock's dividend out of the Token-2022 mint account, resolves the multiplier that is actually live, and records every activation on chain so entitlement is checkable rather than assumed.**
+**Reads a tokenized stock's dividend out of the Token-2022 mint account, resolves the multiplier that is actually live, and records every activation on chain, so a venue can tell when the dividend moves and refuses to settle inside the window the issuer only recommends pausing for.**
 
 <a href="https://iamrobertmoore.github.io/record-date/"><b>Evidence page</b></a> &nbsp;·&nbsp;
 <a href="https://explorer.solana.com/address/ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG?cluster=devnet"><b>Program on devnet</b></a> &nbsp;·&nbsp;
@@ -17,11 +17,26 @@
 
 ## The problem, measured
 
-**375 of the 398 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.6 months of the issuer's own feed that is $6,306,456 withheld, about $11.5m a year, and no surface a holder looks at reports it.**
+**377 of the 400 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.6 months of the issuer's own feed that is $6,338,030 withheld, about $11,523,691 a year, and no surface a holder looks at reports it.**
 
-And the dividend itself is not paid in cash. It is reinvested by quietly raising a `multiplier` stored inside the token's Token-2022 mint account. **On 357 of 777 mints the field named `multiplier` is not the multiplier**: it holds the value from before the most recent corporate action, and the live value sits in a second field beside it. A reader that takes the obvious one is one corporate action behind.
+And the dividend itself is not paid in cash. It is reinvested by quietly raising a `multiplier` stored inside the token's Token-2022 mint account. **On 361 of 777 mints the field named `multiplier` is not the multiplier**: it holds the value from before the most recent corporate action, and the live value sits in a second field beside it. A reader that takes the obvious one is one corporate action behind.
 
 That read rule is not inferred from the field names. It is what Token-2022's own `process_update_multiplier` does, and it was then checked against the issuer's own published current value on **every** mint rather than a sample: **777 agreed, 0 disagreed, 0 published nothing to compare against.** The comparison is one of the build's checks and it fails the page if it ever stops holding.
+
+The multiplier reinvests the **net** dividend, and that is asserted rather than assumed, because it is the claim the whole entry rests on. If the chain reinvested the gross, the 30% would never reach the token and the withholding would be a number in a feed. It does not: divide the feed's per-unit cashflow by the multiplier step and the answer is the share price, and doing that with the net figure lands on the market at **1.035** where the gross figure reads **1.479**. The control is the 40 zero-rate events, where the feed's net and gross are the same number and the test correctly has no preference: both read **1.007**.
+
+---
+
+## What was already known before this entry
+
+**The read rule is not my discovery and this entry does not claim it.** Solana's own Token-2022 documentation describes the stale field. [ExDate](https://github.com/AlperJ/exdate) published it with worked examples on 13 September 2026, alongside the 30% withholding rate and a market-wide dollar total, and its `PRIORART.md` names [SolanaRWA](https://solanarwa.app) as having turned these same multiplier changes into per-holder income since May 2026, and Lido's stETH reward history as the five-year-old precedent. All of that is real prior art on the *mechanic*, and a judge who finds it after an entry has claimed novelty will stop reading.
+
+What ExDate and SolanaRWA are both built as is a **holder's statement**: what a wallet was paid, read back from the chain. ExDate ships no program of any kind, and says so.
+
+What this entry is built as is a **venue's control**. The two things below are the ones I could not find written down anywhere, and they are the two the program exists for:
+
+1. **When the activations land**, counted against the exchange's own published calendar rather than a window I chose. 631 activations, and **57 of them take effect on a day the US market does not trade at all**.
+2. **The price the issuer publishes beside each mint is not always in dollars.** 124 of the 777 mints track an equity that does not trade in dollars, and the reference feed quotes them in the underlying's own currency. Read at face value, the 27 London listings priced in pence took the market value from $5.99bn to $13.22bn.
 
 ---
 
@@ -29,9 +44,11 @@ That read rule is not inferred from the field names. It is what Token-2022's own
 
 **Tomas holds about $9,000 of tokenized US equities in a Solana wallet.** He is not a trader. He bought them because they pay dividends and they settle in seconds.
 
-In March, May and August the issuer reinvested his XOMx dividend. Each time it withheld 30% first. Tomas saw none of it. His token balance never moved, because Token-2022 leaves the raw amount alone and expects the reader to apply the multiplier. His wallet did not apply it. The one field his wallet did read was stale, so it showed a position that had not changed when it had. Nothing on chain told him a corporate action had happened, and nothing told him a third of his dividend had been withheld before the reinvestment.
+In March, May and August the issuer reinvested his XOMx dividend. Each time it withheld 30% first. Tomas saw none of it. His token balance never moved, because Token-2022 leaves the raw amount alone and expects the reader to apply the multiplier. The one field his wallet did read was stale, so it showed a position that had not changed when it had. Nothing on chain told him a corporate action had happened, and nothing told him a third of his dividend had been withheld before the reinvestment.
 
 The second reader is the protocol on the other side. A lending market that takes xStocks as collateral prices them by multiplying the raw amount by whatever the mint says. Get the field wrong and the position is mispriced at exactly the moment a dividend lands.
+
+The third is a venue, and it is the one this entry is written for. The issuer's own docs ask trading venues to pause for fifteen minutes either side of an activation, and say nothing enforces it. A venue that wants to comply has to know when to, and no surface tells it.
 
 ---
 
@@ -53,50 +70,75 @@ The corporate-action feed and the mint account are two independent records of th
 net dividend per unit  ÷  (new multiplier − previous multiplier)  =  the share price
 ```
 
-on the activation date, recovered from the chain and the issuer's feed alone, with no oracle and no price feed. That claim makes a prediction. The implied price is fixed on the activation date and the market price is today's, so the gap has to be the stock's own movement, which means the gap must **grow** with the age of the activation. If the identity were an artefact of how the feed is written, the gap would be noise and the same size in every bucket.
+on the activation date. The left-hand side comes from the chain and the issuer's feed alone, with no oracle. That claim makes a prediction. The implied price is fixed on the activation date and the market price is today's, so the gap between them has to be the stock's own movement, which means the gap must **grow** with the age of the activation. If the identity were an artefact of how the feed is written, the gap would be noise and the same size in every bucket.
 
-It grows, and it grows monotonically. Across 429 reconciliations on 338 names:
+It grows across the first four buckets. Across 434 reconciliations on 342 names:
 
 | Age of the activation | Events | Median gap against today's price |
 |---|---:|---:|
-| 0 to 2 days | 35 | 1.7% |
-| 3 to 10 days | 34 | 2.9% |
-| 11 to 30 days | 151 | 4.0% |
-| 31 to 60 days | 119 | 6.7% |
-| over 60 days | 90 | 7.6% |
+| 0 to 2 days | 41 | 1.5% |
+| 3 to 10 days | 34 | 3.2% |
+| 11 to 30 days | 151 | 4.9% |
+| 31 to 60 days | 118 | 6.9% |
+| over 60 days | 90 | 4.7% |
 
-The arithmetic is identical in every bucket. The only thing that changed is how long the stock has had to move.
+**The oldest bucket is the one where the gradient does not continue, and it is reported rather than smoothed.** From fresh to sixty days the gap goes 1.5% to 6.9%, which is what the identity predicts. Past sixty days it comes back to 4.7%. I do not have an explanation I can test for that, so the build asserts only what it can: a fresh activation reconciles tighter than an old one, at **2.1% within ten days against 4.7% beyond sixty**. A monotonic claim would be a stronger sentence and it would not be true of the data in front of me.
 
 ---
 
 ## When the multiplier moves
 
-The issuer's own docs tell venues and protocols to pause for fifteen minutes around each activation, and say nothing enforces it. Whether that matters depends entirely on when the activations land, which the issuer publishes and, as far as I can find, nobody has counted. So I counted them. All **624** activations the feed and multiplier history carry, by the minute of the day they take effect:
+The issuer's own docs tell venues and protocols to pause for fifteen minutes around each activation, and say nothing enforces it. Whether that matters depends entirely on when the activations land, which the issuer publishes and nobody I could find has counted. So I counted them. All **631** activations the feed and multiplier history carry, by the minute of the day they take effect:
 
 | Time (UTC) | Activations | New York clock |
 |---|---:|---|
-| 00:30 | 392 | 20:30 ET the previous day |
+| 00:30 | 399 | 20:30 ET the previous day |
 | 23:55 | 177 | 19:55 ET, after the close |
 | 00:15 | 11 | 20:15 ET the previous day |
 | 01:15 | 5 | 21:15 ET the previous day |
 
-**612 of the 624, or 98.1%, fall outside US trading hours, and 93.8% of the sample lands on those four minutes.** The window used is 13:00 to 21:00 UTC, drawn deliberately wide so it covers the US session under both daylight time and standard time, because a wider window can only make the finding harder to reach.
+**619 of the 631, or 98.1%, fall outside US trading hours, and 93.8% of the sample lands on those four minutes.**
 
-This is the part of the story that is not a bug in anyone's code. Activation is scheduled for 00:30 UTC the day after the ex-date, four and a half hours after the US close and ten hours before the next open. So the multiplier changes when there is no continuous price to settle against and no closing auction to absorb it. The fifteen minute pause is what stands in for both, and it is a recommendation in a document rather than a constraint in a program.
+That is a count against a window I chose, and a window I chose is not a definition the exchange publishes. A wide one can also be wrong about a holiday without looking wrong. So the same claim is measured a second time from inputs that share nothing with the first: the calendar Pyth publishes in its feed directory, with no key, giving `America/New_York`, a 09:30 to 16:00 session, and twelve listed holiday and half-day overrides. **Against the exchange's own calendar, 9 of the 631 fall inside the session.** The two definitions disagree about three activations and agree about the other 628.
+
+The sharper number is the one neither window is needed for. **57 activations, 9.03% of the sample, take effect on a day the market does not trade at all.** On those days the pause is not merely advisable: there is no continuous price, no closing auction, and no market to trade against.
+
+This is the part of the story that is not a bug in anyone's code. Activation is scheduled for 00:30 UTC the day after the ex-date, four and a half hours after the US close and ten hours before the next open. The fifteen minute pause is what stands in for a market, and it is a recommendation in a document rather than a constraint in a program. **Nothing can enforce it from inside a mint account, which is why this entry ships a program instead of a warning.**
 
 ---
 
 ## Two price fields, and one of them is not a price
 
-A tokenized stock on Jupiter carries two prices. `usdPrice` is the pool quote. `stockData.price` is a reference feed. They are not interchangeable, and on 16 September 2026 they differed by more than 20% on **nine** mints.
+A tokenized stock on Jupiter carries two prices. `usdPrice` is the pool quote. `stockData.price` is a reference feed. They are not interchangeable, and on 17 September 2026 they differed by more than 20% on **14** mints.
 
-The worst is PYPLx. The pool quote was **$3,337.04**. The reference was **$52.92**. A factor of 63, on a token whose underlying is PayPal.
+The worst is CLSKx. The pool quote was **$395.01**. The reference was **$12.95**. A factor of 30, on a token whose underlying is CleanSpark.
 
-The reconciliation settles it, because it used no price at all. On PYPLx's activation of 4 September 2026, `net ÷ step` gives **$56.69**: within 7.6% of the reference, and 98.3% away from the pool quote. On SCHFx, `net ÷ step` gives $27.40 against a reference of $27.74 and a pool quote of $105.89. Where the two fields agree, as on MUx at 1.01x, both are close to the implied price, which is the control that shows the method is not simply rejecting whichever field is larger.
+The reconciliation settles it, because it used no price at all. On SCHFx's activation of 24 June 2026, `net ÷ step` gives **$27.40**: within 0.4% of the reference of $27.51, and 74% away from the pool quote of $106.34. On MRKx, `net ÷ step` gives **$141.78** against a reference of $141.26 and a pool quote of $43.31.
 
-Across the nine disagreeing mints the field this build uses reconciles to a **median error of 0.6%**, against **33.1%** for the field it rejected. The build asserts that, and it asserts an absolute bound as well as a relative one: beating the other field by four times is not evidence that a field is a price, so the chosen field also has to clear 25%.
+Across the **ten** disagreeing events that have a reconciliation, the field this build uses reconciles to a **median error of 0.7%**, against **33.1%** for the field it rejected. The build asserts that, and it asserts an absolute bound as well as a relative one: beating the other field by four times is not evidence that a field is a price, so the chosen field also has to clear 25%. The relative-only form is what lets a field that is 100% out pass against one that is 1,000% out.
 
-That is worth stating on its own. The price of a tokenized equity cannot be read off the pool for every name, the depth behind these tokens is thin, and a protocol that prices collateral from a mid is pricing it from something that is not always a price.
+**Where there is no dividend event the reconciliation cannot adjudicate, and that is stated rather than hidden.** CLSKx has no activation in the feed, so its pool quote is rejected on the strength of the reference field alone, with no independent confirmation. That is why the build uses one field throughout and records the disagreement rather than switching field by field: a rule that picked whichever field looked better on the day would be unfalsifiable.
+
+This is also the one place the entry is standing on somebody else's lesson. [ExDate](https://github.com/AlperJ/exdate) published its own verification ledger on 13 September 2026 and found that seven of its 65 payers were priced more than 30% off their underlying, one of them by 61.9x, carrying a quarter of its headline; it noted that Jupiter returns the reference price in the same payload and that the data to self-check "was already in hand and unused". This build uses that reference field as the price, and the checks above are the self-check it asked for.
+
+---
+
+## The reference price is not always in dollars
+
+The field ExDate recommends is the right one, and taking it at face value is the next mistake along.
+
+**124 of the 777 mints track an equity that does not trade in dollars.** The issuer's asset API publishes the underlying's currency and the listing exchange beside every deployment, and the reference feed quotes the price in that currency rather than in dollars. Of the 684 mints this build can price, 31 are non-dollar: 27 London listings, 2 in euros, 2 in Hong Kong dollars.
+
+The London listings are the ones that bite, because they are quoted in **pence**. BARCx publishes `480.40` against a dollar price of $6.46. HSBAx publishes `1524.80` against $20.52. Every one of the 27 is published at **74.3 times** its dollar price, which is the pence-to-dollar factor at the rate used.
+
+Read at face value, the market value of the 684 priced mints is **$13.22bn**. Converted out of each underlying's own currency at the ECB reference rate for 2026-09-16, it is **$5.99bn**. The pence listings are 1.65% of the book by value and they move the total by a factor of **2.21**. The exact figures for a given build are in `data.json` and printed on the evidence page, because they move with the prices; the factor does not.
+
+Two checks carry this, because a wrong unit is not a wrong number and it does not look like one:
+
+- **the reference price is converted out of the underlying's own currency**: 31 of 684 priced mints are non-dollar listings, every one is converted at the ECB rate for 2026-09-16, and **0 are converted by nothing**
+- **the London listings are read as pence, not pounds**: 27 LSE mints priced, the published value is between 74 and 74 times the dollar price
+
+The reason this matters beyond a market value nobody trades on is that **the yield denominator is built from these prices.** A book that is 2.21 times too large reports a yield 2.21 times too small, and a plausible-looking yield is exactly the number that does not get questioned. This is also the one finding in the entry I have not seen anywhere else: ExDate's ledger recommends the reference field, prices seven assets off the pool quote, and does not mention currency, exchange or pence at all.
 
 ---
 
@@ -112,6 +154,8 @@ The program is deployed to devnet at `ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtm
 | `read_entitlement` | Raw units in the units a wallet should display. Return data is a little-endian `u128`. Integer arithmetic throughout. |
 | `activation_pending` | One byte: has the multiplier moved since this program last looked? A cranker calls this first so it does not pay for a transaction that reverts. |
 | `settlement_window` | Seconds since the last activation. A protocol that wants to follow the issuer's own advice to pause refuses to settle while that is inside 900. |
+
+The first four instructions are the read done properly. **`settlement_window` is the one that exists because of the timing finding, and it is the instruction no other entry in this field has.** The issuer's docs ask venues to pause fifteen minutes either side of an activation. Nothing can enforce that from inside a mint account, because a mint account has no opinion about who is trading against it. What a program can do is hold the timestamp of the last activation in an account any other program can read, which turns a recommendation in a document into a value a venue can branch on. It does not stop anyone trading; it makes non-compliance a choice rather than an accident.
 
 The mint is parsed as raw bytes rather than through the `spl-token-2022` crate, because the program does not link against the program that owns the mint.
 
@@ -135,14 +179,16 @@ Multipliers are stored as `f64` because that is how the mint stores them, and co
 
 ```bash
 # every number on the page, from public endpoints, with no key
-python3 scripts/fetch.py          # writes data.json, asserts 21 checks
+python3 scripts/fetch.py          # writes data.json, asserts 28 checks
 python3 scripts/build_page.py     # writes index.html
 
 # the checks themselves
-python3 scripts/test_checks.py    # 16 negative controls, no network needed
+python3 scripts/test_checks.py    # 30 negative controls, no network needed
 ```
 
-If any check fails the script prints why and **refuses to build the page**. It is not possible to publish a stale number through this pipeline by accident. The checks include the ledger agreeing with the headline to the cent, the withheld total covering every rate rather than only the dominant one, the mint layout holding on every account read, the read rule matching the issuer on every mint, and the age gradient above.
+If any check fails the script prints why and **refuses to build the page**. It is not possible to publish a stale number through this pipeline by accident. The checks include the ledger agreeing with the headline to the cent, the withheld total covering every rate rather than only the dominant one, the mint layout holding on every account read, the read rule matching the issuer on every mint, the multiplier reinvesting the net dividend rather than the gross, the reference price being converted out of the underlying's own currency, and the age gradient above.
+
+**The net-versus-gross check is the one that carries the entry, and it has a control.** Divide the feed's per-unit cashflow by the multiplier step and the answer is a share price. Done with the net figure it lands on the market at 1.035; done with the gross it reads 1.479. The 40 zero-rate events are the control: there the feed's net and gross are the same number, so the test must have no preference, and it does not, reading 1.007 either way. Without that control the check would be measuring the arithmetic rather than the unit.
 
 **Two of those checks could not fail for the reason they claimed, and both were rewritten.** One selected its rows on the error it then reported. The other compared a deduplicated list against the set of its own keys, which is true whatever survived. `scripts/test_checks.py` holds the old form of each next to the new one, on inputs built to separate them: it shows the old price selection collapsing to nothing when the choice is swapped, and the old dedupe check passing on a list where the wrong row survived. A check that cannot fail is worse than no check, because it looks like rigour.
 
@@ -176,11 +222,13 @@ deployed ELF content is identical to the built one: true
 
 ## What this does not claim
 
-- **The 30% may not be a permanent loss.** It is withheld at source and a holder may be able to credit it at home, depending on where they live. What is not in doubt is the rate applied on 375 of 398 symbols, the exactness of its application, and that the holder is never shown it.
+- **The 30% may not be a permanent loss.** It is withheld at source and a holder may be able to credit it at home, depending on where they live. What is not in doubt is the rate applied on 377 of 400 symbols, the exactness of its application, and that the holder is never shown it.
 - **Why 30% rather than a treaty rate is not asserted.** The feed shows the rates and the arithmetic, not the reason. 20 symbols are at 0% and 3 at 5%, which is evidence a lower rate is achievable and nothing more than that.
-- **The dividend is not lost, it is reinvested.** The holder's position grows by the net amount. The claim is that it grows by less than the company paid, and that no surface reports the difference.
+- **The dividend is not lost, it is reinvested.** The holder's position grows by the net amount, and the multiplier step is what proves the net is the figure that reaches the token. The claim is that it grows by less than the company paid, and that no surface reports the difference.
 - **No arbitrage is claimed.** Liquidity behind these tokens is thin. The deepest pool carries about $1.8m. The two-field section above is the reason a price comparison against the underlying was not pursued as a trading claim: on some mints the pool quote is not a price at all, so a spread against the underlying is measuring the pool's thinness rather than an opportunity.
-- **The window is the feed's, not a clean year.** 6 March 2026 to 23 September 2026, scaled to a year rather than twelve measured months. Supply is today's rather than time weighted, so a token that minted heavily after its dividend is over-counted. The feed is an upcoming feed, so the window runs seven days past the build date: **$23,387,847 of the $24,134,135 gross is dated on or before today and $746,288 is still forward.** Both are reported and a check proves they add up. Read the annual figure as an order of magnitude.
+- **The age gradient is not monotonic and is not claimed to be.** It holds from fresh to sixty days and comes back down in the oldest bucket. The build asserts the weaker, testable version.
+- **The window is the feed's, not a clean year.** 6 March 2026 to 24 September 2026, scaled to a year rather than twelve measured months. Supply is today's rather than time weighted, so a token that minted heavily after its dividend is over-counted. The feed is an upcoming feed, so the window runs seven days past the build date: **$23,676,471 of the $24,245,993 gross is dated on or before today and $569,522 is still forward.** Both are reported and a check proves they add up. Read the annual figure as an order of magnitude.
+- **The read rule, the withholding rate and the dollar total are not this entry's findings.** They are ExDate's, published on 13 September 2026, and Solana's own Token-2022 documentation describes the read rule. What this entry adds is the timing against the exchange's calendar, the currency the reference price is quoted in, and a program that can enforce the pause the issuer only recommends.
 - **This is one issuer.** 777 mints from Backed's own asset API, which is exhaustive over what Backed publishes and is not a census of every equity token on Solana.
 
 ---
@@ -197,10 +245,17 @@ All public, none authenticated.
 | multiplier history | `https://api.xstocks.fi/api/v2/public/assets/{SYMBOL}/multiplier/history` |
 | mint accounts | `https://api.mainnet-beta.solana.com` |
 | prices | `https://api.jup.ag/price/v3` |
+| exchange rates, for the non-dollar listings | `https://api.frankfurter.app/latest` (ECB reference rates) |
+| the exchange calendar, for the timing claim | `https://hermes.pyth.network/v2/price_feeds` |
+| the underlying's currency and venue | `https://api.xstocks.fi/api/v2/public/assets` |
 | dividend mechanics | [docs.xstocks.fi/docs/dividends-and-stock-splits](https://docs.xstocks.fi/docs/dividends-and-stock-splits) |
 | the multiplier contract | [docs.xstocks.fi/developers/multipliers](https://docs.xstocks.fi/developers/multipliers) |
 | the read rule, in code | [`process_update_multiplier`](https://github.com/solana-program/token-2022/blob/main/program/src/extension/scaled_ui_amount/processor.rs) |
 | the account layout, in code | [`interface/src/extension/mod.rs`](https://github.com/solana-program/token-2022/blob/main/interface/src/extension/mod.rs) |
+
+Pyth's price *values* need a key and are not used here. Its feed directory, which carries the exchange calendar, is public, and the build takes the session definition from it and the numbers beside it from elsewhere. The source comment in `fetch.py` says so rather than leaving it to be inferred.
+
+**Prior art this entry is built on top of:** [ExDate](https://github.com/AlperJ/exdate) (the read rule, the withholding rate, the dollar total, and the split-versus-dividend distinction), [SolanaRWA](https://solanarwa.app) (per-holder dividend records on this chain since May 2026), and [Lido's stETH reward history](https://stake.lido.fi/rewards) (the same mechanic on Ethereum since 2021).
 
 Built for **Stocklana**, by Robert Moore. MIT licensed.
 

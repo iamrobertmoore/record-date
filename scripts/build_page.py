@@ -257,14 +257,16 @@ def check_cards(checks):
 
 def source_rows(sources):
     labels = {
-        "assets": "mint list",
+        "assets": "mint list, and the underlying's currency",
         "actions": "corporate actions",
         "multiplier": "multiplier history",
         "chain": "mint accounts",
-        "prices": "prices",
+        "prices": "prices, and the reference feed",
+        "fx": "exchange rates, for the non-dollar listings",
+        "calendar": "the exchange calendar, for the timing claim",
         "docs": "published mechanics",
     }
-    order = ["assets", "actions", "multiplier", "chain", "prices", "docs"]
+    order = ["assets", "actions", "multiplier", "chain", "prices", "fx", "calendar", "docs"]
     return "\n".join(
         "<div><b>{label}</b><code>{url}</code></div>".format(
             label=esc(labels.get(key, key)), url=esc(sources[key])
@@ -336,6 +338,30 @@ def render(data):
         "TIMING_OVERRIDES": str(timing["overrides"]),
         "TIMING_CALENDAR_FEEDS": str(timing["feeds_on_calendar"]),
         "TIMING_USD_FEEDS": str(timing["usd_equity_feeds"]),
+        # The reference price is quoted in the underlying's own currency, which is a limit on the
+        # price-derived figures rather than a footnote, so it is printed with the limits.
+        "CURRENCY_FX_DATE": esc(data["currency"]["fx_date"]),
+        "NON_USD_MINTS": str(
+            sum(v for k, v in data["currency"]["by_currency"].items() if k != "USD")
+        ),
+        "PRICED_NON_USD": str(data["currency"]["priced_non_usd"]),
+        "PENCE_PRICED": str(data["currency"]["pence_priced"]),
+        # Both totals, from one run, so the sentence cannot quote a ratio that was measured
+        # against a different set of prices than the one the page is built from.
+        "MARKET_VALUE_AS_READ": money(data["currency"]["market_value_as_read_usd"]),
+        "MARKET_VALUE_CONVERTED": money(data["currency"]["market_value_converted_usd"]),
+        "MARKET_VALUE_FACTOR": "%.2f"
+        % (
+            float(data["currency"]["market_value_as_read_usd"])
+            / float(data["currency"]["market_value_converted_usd"])
+        ),
+        "CURRENCY_VENUES": esc(
+            ", ".join(
+                "%s %d" % (k, v)
+                for k, v in data["currency"]["by_currency"].items()
+                if k != "USD"
+            )
+        ),
         # The share of the sample sitting on the four modal minutes, so the block cannot claim
         # "most activations land here" without saying how much of the field that actually is.
         "TIMING_TOP_SHARE": pct(
@@ -386,6 +412,12 @@ def render(data):
         "RECON_STALE": "{:.1f}".format(recon["stale_median"] * 100),
         "RECON_STALE_N": str(recon["stale_n"]),
         "RECON_MEDIAN": "{:.1f}".format(recon["median_error"] * 100),
+        # Which published figure the chain reinvests, with the zero-rate events as the control.
+        "NET_OVER_MARKET": "{:.3f}".format(recon["net_over_market"]),
+        "GROSS_OVER_MARKET": "{:.3f}".format(recon["gross_over_market"]),
+        "RATED_EVENTS": str(recon["rated_events"]),
+        "ZERO_RATE_OVER_MARKET": "{:.3f}".format(recon["zero_rate_net_over_market"]),
+        "ZERO_RATE_EVENTS": str(recon["zero_rate_events"]),
         "TOKEN_CARDS": token_cards(data["tokens"]),
         "INSTRUCTION_CARDS": instruction_cards(),
         "CHECKS": check_cards(data["checks"]),

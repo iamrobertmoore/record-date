@@ -50,6 +50,10 @@ US_SESSION_CLOSE_UTC = 21 * 60         # 21:00
 # That is worth being explicit about: the calendar is Pyth's, the numbers beside it are not.
 PYTH_FEEDS = "https://hermes.pyth.network/v2/price_feeds"
 
+# The ECB's daily reference rates, republished by Frankfurter, with no key. Needed because
+# `stockData.price` is quoted in the underlying's own currency, not in dollars. See `to_usd`.
+FX_RATES = "https://api.frankfurter.app/latest"
+
 
 def usd(value, places=0):
     """A dollar figure with thousands separators, for anything a reader will see.
@@ -139,6 +143,13 @@ def fetch_assets():
                     "name": asset.get("name"),
                     "isin": asset.get("isin"),
                     "underlying": asset.get("underlyingSymbol"),
+                    # The currency the underlying trades in, and the venue. Both are needed to
+                    # read a price: the token is dollar-denominated but the reference price beside
+                    # it is not, and 124 of the 777 mints are not US listings.
+                    "currency": (asset.get("underlying") or {}).get("currency") or "USD",
+                    "venue": (
+                        (asset.get("trading") or {}).get("exchange") or {}
+                    ).get("abbreviation"),
                 }
                 break
     return rows
@@ -491,6 +502,57 @@ def verify_supply_against_rpc(addresses, now, stride=7):
     return result
 
 
+def fetch_fx():
+    """Dollars per unit of each currency the field needs, from the ECB's daily reference set.
+
+    `stockData.price` is quoted in the underlying's own currency. Summing those as dollars is the
+    mistake this function exists to prevent, and it is not a small one: it read the 43 London
+    listings, which quote in pence, as if they were dollars, and made the market value of the
+    whole field $13.4bn when it is $6.2bn.
+
+    Frankfurter republishes the ECB reference rates and needs no key, which is the same standard
+    as every other source in this build. The rates are local-per-dollar, so they are inverted here
+    once and every caller then deals in dollars per local unit.
+    """
+    payload = get_json("%s?from=USD" % FX_RATES)
+    rates = payload.get("rates") or {}
+    if "USD" not in payload.get("base", "USD"):
+        raise RuntimeError("fx: unexpected base %r" % payload.get("base"))
+    return {
+        "date": payload.get("date"),
+        "usd_per": {code: 1.0 / rate for code, rate in rates.items() if rate},
+    }
+
+
+def to_usd(price, currency, fx):
+    """A price from `stockData.price`, in dollars.
+
+    Two corrections, and both are needed.
+
+    The first is the currency. The field is the equity's own reference price, so it is quoted in
+    the currency the equity trades in: dollars for the 653 US listings, and something else for the
+    other 124. Reading it as dollars overstated the London names by about 75 times, which is where
+    the market value went when this build stopped preferring the pool quote.
+
+    The second is the unit inside the currency. The London Stock Exchange quotes its equities in
+    pence, not pounds, so a FTSE price has to be divided by 100 before it is converted. That is
+    why GBP is treated separately rather than being left to the rate alone. The evidence that the
+    field is in pence and not pounds is in the issuer's own data: Barclays comes back as 474.05,
+    HSBC as 1,507.80 and Games Workshop as 17,720, which are those three shares in pence.
+    """
+    if price is None:
+        return None
+    amount = float(price)
+    if currency in (None, "USD"):
+        return amount
+    if currency == "GBP":
+        amount = amount / 100.0
+    rate = (fx.get("usd_per") or {}).get(currency)
+    if not rate:
+        raise KeyError("fx: no rate for %s" % currency)
+    return amount * rate
+
+
 def quote_of(payload):
     """The token price from a Jupiter entry, and which field it came out of.
 
@@ -509,6 +571,11 @@ def quote_of(payload):
     So the reference field is preferred and the AMM quote is the fallback, which is the reverse of
     what this function used to do. It also returns both, so the disagreement can be counted and
     asserted rather than assumed.
+
+    One caveat that this function does not handle and `to_usd` does: the reference field is quoted
+    in the underlying's own currency, and the pool quote is already in dollars. So preferring the
+    reference is only correct once the reference has been converted, and the conversion is applied
+    by the caller rather than here, because this function does not know the symbol.
     """
     if not isinstance(payload, dict):
         return None, None, None
@@ -524,7 +591,7 @@ def quote_of(payload):
     return None, None, None
 
 
-def fetch_prices(addresses):
+def fetch_prices(addresses, currency_of, fx):
     """Quotes for as many mints as the price API will give us, in one pass, with retries.
 
     This used to drop a chunk on the first failure and never come back to it. Because the API
@@ -534,11 +601,14 @@ def fetch_prices(addresses):
     or has genuinely failed four times, and the caller is told how many mints it ended up with.
 
     The payload is normalised here rather than at each call site, so that the one place that
-    knows Jupiter's field names is this one.
+    knows Jupiter's field names is this one. The conversion to dollars also happens here, for the
+    same reason: `usd` leaves this function in dollars whichever field it came from, and `local`
+    keeps the raw value so the page can show what the venue actually published.
     """
     out = {}
     failed = []
     sources = {"usdPrice": 0, "stockData.price": 0}
+    converted = {}
     diverged = []
     chunks = list(range(0, len(addresses), 40))
     for n, start in enumerate(chunks):
@@ -550,7 +620,19 @@ def fetch_prices(addresses):
                     usd, source, alt = quote_of(payload)
                     if usd is None:
                         continue
-                    out[mint] = {"usd": usd, "source": source, "alt": alt}
+                    currency = currency_of.get(mint) or "USD"
+                    # Only the reference field needs converting. The pool quote is already dollars.
+                    if source == "stockData.price":
+                        usd = to_usd(usd, currency, fx)
+                        if currency not in (None, "USD"):
+                            converted[currency] = converted.get(currency, 0) + 1
+                    out[mint] = {
+                        "usd": usd,
+                        "local": payload.get("stockData", {}).get("price") if source == "stockData.price" else None,
+                        "source": source,
+                        "alt": alt,
+                        "currency": currency,
+                    }
                     sources[source] += 1
                     # Both fields present and they disagree by more than 20%. On a healthy pool
                     # they agree to about a percent. Anything past 20% means one of them is not a
@@ -572,6 +654,9 @@ def fetch_prices(addresses):
     if failed:
         print("  %d chunks never landed: %s" % (len(failed), failed[:3]))
     print("  price field used: %s" % ", ".join("%s x%d" % (k, v) for k, v in sources.items() if v))
+    if converted:
+        print("  converted from the underlying's own currency: %s"
+              % ", ".join("%s x%d" % (k, v) for k, v in sorted(converted.items())))
     if diverged:
         worst = max(diverged, key=lambda d: max(d[1] / d[2], d[2] / d[1]))
         print("  %d mints where the pool quote and the reference feed disagree by over 20%%, "
@@ -653,7 +738,15 @@ def main():
             ", ".join(str(k) for k in sorted(layout["scaled_header_offsets"])),
         )
     )
-    prices, price_diverged = fetch_prices(list(mints))
+    fx = fetch_fx()
+    non_usd = sum(1 for a in assets.values() if a.get("currency") not in (None, "USD"))
+    print(
+        "  fx: ECB reference rates for %s, %d of %d mints have a non-dollar underlying"
+        % (fx["date"], non_usd, len(assets))
+    )
+    prices, price_diverged = fetch_prices(
+        list(mints), {a: v.get("currency") for a, v in assets.items()}, fx
+    )
     print("  %d prices" % len(prices))
 
     # ------------------------------------------------------------- withholding
@@ -808,13 +901,23 @@ def main():
     # That is the liquid subset, which is also where the dividend income sits.
     priced_value = Decimal(0)
     priced_mints = 0
+    # The same total computed with the published figure taken at face value as dollars. The
+    # reference feed quotes a non-dollar listing in the underlying's own currency, so this second
+    # total is what a reader gets who does not know that, and the gap between the two is the size
+    # of the mistake rather than a rhetorical claim about it. It is reported, not asserted on:
+    # the assertion is the conversion check further down.
+    priced_value_as_read = Decimal(0)
+    pence_priced = 0
     for mint, parsed in mints.items():
         price = prices.get(mint) or {}
         if not price.get("usd"):
             continue
-        priced_value += (Decimal(parsed["supply"]) / (Decimal(10) ** parsed["decimals"])) * Decimal(
-            repr(price["usd"])
-        )
+        supply = Decimal(parsed["supply"]) / (Decimal(10) ** parsed["decimals"])
+        priced_value += supply * Decimal(repr(price["usd"]))
+        local = price.get("local")
+        priced_value_as_read += supply * Decimal(repr(local if local is not None else price["usd"]))
+        if price.get("currency") == "GBP":
+            pence_priced += 1
         priced_mints += 1
     market_value = priced_value
 
@@ -871,6 +974,7 @@ def main():
     # since the activation date. If that prediction is right the error has to grow with age.
     today = as_of.date()
     recon = []
+    non_usd_recon = 0
     candidates = [
         s for s in {a["xstockSymbol"] for a in scheduled_cash}
         if symbol_to_mint.get(s) and (prices.get(symbol_to_mint[s]) or {}).get("usd")
@@ -910,6 +1014,15 @@ def main():
             if age < 0:
                 continue
             mint = symbol_to_mint[symbol]
+            # The identity below compares the feed's per-unit cashflow against a market price. For
+            # the 124 mints whose underlying is not a dollar listing, the feed quotes that cashflow
+            # in the underlying's own currency, and the two sides are then in different units, so
+            # the comparison would be meaningless rather than merely noisy. Those are excluded and
+            # counted rather than converted, because converting them would need an independent
+            # source for the dividend itself and this build does not have one.
+            if (prices.get(mint) or {}).get("currency") not in (None, "USD"):
+                non_usd_recon += 1
+                continue
             parsed = mints[mint]
             quote = prices[mint]["usd"]
             # What the market says one share costs, from a third source: the token price
@@ -935,6 +1048,9 @@ def main():
                         - Decimal(repr(row["previous_multiplier"]))
                     ),
                     "net_per_unit": row["net_per_unit"],
+                    # Carried so the check below can ask whether it is the net or the gross
+                    # that the multiplier reinvests, rather than assuming the answer.
+                    "gross_per_unit": row.get("gross_per_unit"),
                     "implied_price": str(implied),
                     "market_price": str(market.quantize(Decimal("0.01"))),
                     "error": float((implied - market) / market),
@@ -1130,6 +1246,8 @@ def main():
                 "decimals": parsed["decimals"],
                 "supply_raw": str(parsed["supply"]),
                 "price": price.get("usd"),
+                "price_local": price.get("local"),
+                "currency": price.get("currency") or "USD",
                 "liquidity": price.get("liquidity"),
                 "market_value": str(
                     (raw * Decimal(repr(price.get("usd") or 0))).quantize(Decimal("1"))
@@ -1255,6 +1373,59 @@ def main():
           "median %.1f%% on the %d activations within 10 days against %.1f%% on the %d older "
           "than 60, so the residual is the stock moving, not the method"
           % (median(fresh) * 100, len(fresh), median(stale) * 100, len(stale)))
+    # The claim underneath every figure on the page is that the multiplier reinvests the NET
+    # dividend. If it reinvested the gross instead, the 30% would never reach the token, the
+    # withholding would be a number in a feed and nothing more, and this build would be measuring
+    # a loss that does not happen. That is the load-bearing economic claim of the entry, so it is
+    # asserted rather than described, and it is asserted in a way that can fail.
+    #
+    # No oracle is needed. Divide the feed's per-unit cashflow by the multiplier step and the
+    # answer is the share price on the activation date. Do that twice, once with the net figure
+    # and once with the gross, and see which one lands on the market. On a 30% event the two
+    # differ by 42.9%, which is far more than the stock's own drift since the ex-date, so the test
+    # can tell them apart rather than merely preferring one.
+    #
+    # The control is the zero-rate events. There the feed's net and gross are the same number, so
+    # the test has nothing to choose between and must not prefer the net anyway. A test that
+    # picked the net just as strongly on those rows would be measuring the arithmetic rather than
+    # the unit, and could not fail for the reason it claims.
+    def ratio_pair(rows):
+        """(net, gross) implied-price-over-market ratios, from the reconciliation's own error."""
+        net_side, gross_side = [], []
+        for r in rows:
+            net, gross = r.get("net_per_unit"), r.get("gross_per_unit")
+            if not net or not gross:
+                continue
+            try:
+                net_d, gross_d = Decimal(net), Decimal(gross)
+            except Exception:  # noqa: BLE001
+                continue
+            if net_d == 0:
+                continue
+            net_ratio = 1 + r["error"]
+            # implied_gross / market == (gross / net) * (implied_net / market)
+            gross_side.append(float(gross_d / net_d) * net_ratio)
+            net_side.append(net_ratio)
+        return net_side, gross_side
+
+    rated_net, rated_gross = ratio_pair(
+        [r for r in recon if float(r.get("withholding_rate") or 0) > 0.29]
+    )
+    zero_net, zero_gross = ratio_pair(
+        [r for r in recon if abs(float(r.get("withholding_rate") or 0)) < 1e-9]
+    )
+    check("the multiplier reinvests the net dividend, not the gross",
+          len(rated_net) >= 50
+          and 0.9 < (median(rated_net) or 0) < 1.1
+          and (median(rated_gross) or 0) > 1.3
+          and len(zero_net) >= 5
+          and abs(median(zero_net) - median(zero_gross)) < 1e-9,
+          "the implied price over the market reads %.3f on the net figure against %.3f on the "
+          "gross across %d events at a rate above 29%%, so the net is the one landing on a share "
+          "price; on the %d zero-rate events, where the two figures are the same number, both "
+          "read %.3f, which is the control"
+          % (median(rated_net), median(rated_gross), len(rated_net),
+             len(zero_net), median(zero_net)))
     # The price source, decided by evidence rather than by preference. Where the pool quote and
     # the reference feed disagree, the reconciliation is a third opinion that used no price at
     # all, so whichever field it agrees with is the one that is a price. This is the check that
@@ -1344,7 +1515,39 @@ def main():
           and paid_gross < gross,
           "paid %s of %s, forward %s"
           % (usd(paid_gross), usd(gross), usd(gross - paid_gross)))
-    check("the implied gross yield is plausible for a US equity book",
+    # The reference price is quoted in the underlying's own currency, and summing it as dollars is
+    # a factor of 75 on the London listings. That error is invisible to the reconciliation below,
+    # because the feed quotes the dividend in the same currency as the price, so the identity holds
+    # in the wrong unit as happily as in the right one. It needs its own checks.
+    #
+    # The first is the census: every priced mint whose underlying is not a dollar listing must have
+    # had a currency read from the issuer's own metadata and a rate applied. A mint that slipped
+    # through is summed as if it were dollars, which is exactly what happened.
+    priced_non_usd = [m for m, p in prices.items() if p.get("currency") not in (None, "USD")]
+    unconverted = [
+        m for m in priced_non_usd
+        if prices[m].get("local") is None or prices[m].get("usd") == prices[m].get("local")
+    ]
+    check("the reference price is converted out of the underlying's own currency",
+          len(priced_non_usd) >= 20 and not unconverted,
+          "%d of %d priced mints are non-dollar listings and every one is converted at the ECB "
+          "rate for %s; %d converted by nothing"
+          % (len(priced_non_usd), len(prices), fx["date"], len(unconverted)))
+    # The second is the unit inside the currency, which is the part that actually moved the number.
+    # The London Stock Exchange quotes in pence, so a FTSE price has to be divided by 100 before it
+    # is converted. This asserts the ratio on the real prices rather than asserting that a line of
+    # code ran: drop the division and the ratio falls from about 75 to about 0.75.
+    pence_factor = [
+        p["local"] / p["usd"]
+        for p in prices.values()
+        if p.get("currency") == "GBP" and p.get("local") and p.get("usd")
+    ]
+    check("the London listings are read as pence, not pounds",
+          len(pence_factor) >= 10 and all(50 < f < 150 for f in pence_factor),
+          "%d LSE mints priced, the published value is between %.0f and %.0f times the dollar "
+          "price"
+          % (len(pence_factor), min(pence_factor or [0]), max(pence_factor or [0])))
+    check("the implied gross yield is plausible for an equity book",
           Decimal("0.004") < implied_yield < Decimal("0.05"),
           "%.2f%% on %s across the %d mints that both pay and quote"
           % (float(implied_yield) * 100, usd(yield_value), yield_symbols))
@@ -1370,7 +1573,28 @@ def main():
             "multiplier": "%s/assets/{SYMBOL}/multiplier/history" % XSTOCKS_API,
             "chain": RPC,
             "prices": JUPITER,
+            "fx": "%s?from=USD" % FX_RATES,
+            "calendar": PYTH_FEEDS,
             "docs": "https://docs.xstocks.fi/developers/multipliers",
+        },
+        # The price field is quoted in the underlying's own currency, so the currencies in the
+        # field are part of the result rather than an implementation detail. The London listings
+        # are quoted in pence and that is asserted separately.
+        "currency": {
+            "fx_date": fx["date"],
+            "usd_per": {k: round(v, 6) for k, v in sorted(fx["usd_per"].items())},
+            "by_currency": dict(
+                Counter(a.get("currency") or "USD" for a in assets.values()).most_common()
+            ),
+            "priced_non_usd": len(priced_non_usd),
+            # Priced London listings, which are the ones quoted in pence. Counted here rather than
+            # derived on the page, so the sentence and the check cannot drift apart.
+            "pence_priced": pence_priced,
+            "market_value_as_read_usd": str(priced_value_as_read.quantize(Decimal("1"))),
+            "market_value_converted_usd": str(priced_value.quantize(Decimal("1"))),
+            "pence_quoted": sorted(
+                a["symbol"] for a in assets.values() if a.get("currency") == "GBP"
+            ),
         },
         "mints": {
             "total": len(mints),
@@ -1432,6 +1656,17 @@ def main():
             "stale_n": len(stale),
             "buckets": buckets,
             "illustrated": illustrated,
+            # Which of the two published figures the chain actually reinvests. Asserted above
+            # rather than described here, because it is the economic claim the entry rests on.
+            "net_over_market": median(rated_net),
+            "gross_over_market": median(rated_gross),
+            "rated_events": len(rated_net),
+            "zero_rate_net_over_market": median(zero_net),
+            "zero_rate_events": len(zero_net),
+            # Activations on non-dollar listings, dropped rather than converted, because the
+            # feed quotes the cashflow in the underlying's currency and this build has no
+            # independent source for the dividend to convert it against.
+            "excluded_non_usd": non_usd_recon,
         },
         "read_rule": read_rule,
         "supply_witness": supply_witness,
