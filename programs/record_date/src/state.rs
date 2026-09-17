@@ -83,3 +83,24 @@ impl Receipt {
         self.new_fp == self.previous_fp
     }
 }
+
+/// One per mint that has been bound to a Pyth feed.
+///
+/// The binding is what makes `verify_against_pyth` more than a price lookup. Without it the
+/// instruction would accept any feed the caller passed, including the feed for a different
+/// equity, so the check would be "is there a fresh Pyth price anywhere" rather than "is there a
+/// fresh Pyth price for *this* stock". The feed id is stored, not the account address, because a
+/// feed is republished into a new account on every update and only the id is stable.
+#[account]
+#[derive(InitSpace)]
+pub struct PythBinding {
+    pub mint: Pubkey,
+    pub feed_id: [u8; 32],
+    /// Pyth's own ticker for the feed, for a human reading the account.
+    #[max_len(SYMBOL_MAX)]
+    pub feed_symbol: [u8; SYMBOL_MAX],
+    pub feed_symbol_len: u8,
+    /// When the binding was written.
+    pub bound_at: i64,
+    pub bump: u8,
+}

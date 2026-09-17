@@ -19,6 +19,7 @@
 pub mod constants;
 pub mod error;
 pub mod instructions;
+pub mod pyth;
 pub mod state;
 pub mod token2022;
 
@@ -66,5 +67,36 @@ pub mod record_date {
     /// Seconds since the last activation. Return data: little-endian i64.
     pub fn settlement_window(ctx: Context<ReadMint>) -> Result<()> {
         crate::instructions::read::handle_settlement_window(ctx)
+    }
+
+    /// Bind a registered mint to a Pyth price feed. Additive: it writes a new account and does
+    /// not change the layout of any existing one, so receipts already on chain keep reading.
+    pub fn bind_pyth_feed(
+        ctx: Context<BindPythFeed>,
+        feed_id: [u8; 32],
+        feed_symbol: String,
+    ) -> Result<()> {
+        crate::instructions::bind_pyth_feed::handle_bind_pyth_feed(ctx, feed_id, feed_symbol)
+    }
+
+    /// Check a price against Pyth's own, refusing a stale price or the wrong feed.
+    ///
+    /// `max_age_secs` is the caller's own freshness policy, which is why it is an argument and not
+    /// a constant here. It is bounded by `pyth::MAX_PRICE_AGE_CEILING_SECS`.
+    ///
+    /// Return data: the Pyth price as 1e18 fixed point (16 bytes LE), then the deviation in basis
+    /// points (16 bytes LE).
+    pub fn verify_against_pyth(
+        ctx: Context<VerifyAgainstPyth>,
+        expected_price_fp: u128,
+        tolerance_bps: u16,
+        max_age_secs: i64,
+    ) -> Result<()> {
+        crate::instructions::verify_against_pyth::handle_verify_against_pyth(
+            ctx,
+            expected_price_fp,
+            tolerance_bps,
+            max_age_secs,
+        )
     }
 }

@@ -26,4 +26,24 @@ pub enum RecordDateError {
     NotRegistered,
     #[msg("the multiplier has not moved since this program last recorded it")]
     NothingToRecord,
+    #[msg("the price update account is not owned by the Pyth receiver program")]
+    NotPythReceiver,
+    #[msg("the account is not a Pyth PriceUpdateV2")]
+    NotAPriceUpdate,
+    #[msg("the account is shorter than a PriceUpdateV2, so it cannot be parsed")]
+    PriceUpdateTooShort,
+    #[msg("the Pyth price is for a different feed than the one bound to this mint")]
+    FeedIdMismatch,
+    #[msg("the Pyth price is older than this program will settle against")]
+    StalePythPrice,
+    #[msg("the price differs from Pyth's by more than the tolerance")]
+    PriceDeviation,
+    #[msg("the price is not a number this program can represent")]
+    PriceOutOfRange,
+    #[msg("the Pyth price is negative")]
+    NegativePythPrice,
+    #[msg("the feed symbol is longer than 12 bytes")]
+    FeedSymbolTooLong,
+    #[msg("the caller asked for a price age longer than this program will accept")]
+    PriceAgeCeilingExceeded,
 }

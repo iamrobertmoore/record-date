@@ -23,3 +23,7 @@ pub const RECOMMENDED_PAUSE_SECS: i64 = 15 * 60;
 pub const REGISTRY_SEED: &[u8] = b"registry";
 pub const TOKEN_RECORD_SEED: &[u8] = b"token";
 pub const RECEIPT_SEED: &[u8] = b"receipt";
+/// Binds a mint to a Pyth feed. A separate account on purpose: adding a field to `TokenRecord`
+/// would change its layout, and every receipt already written stays readable only if the records
+/// they were written against keep deserialising.
+pub const PYTH_BINDING_SEED: &[u8] = b"pyth";

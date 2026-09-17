@@ -21,7 +21,9 @@ custom-panic = []
 
 
 [dependencies]
-anchor-lang = "1.2.0"
+# `init-if-needed` is for the Pyth binding, which has to survive a demo being re-run: the binding
+# is one account per mint and the second run finds it already there.
+anchor-lang = { version = "1.2.0", features = ["init-if-needed"] }
 
 [dev-dependencies]
 litesvm = "0.10.0"
@@ -37,6 +39,10 @@ solana-account = "3.4.0"
 # error value is better than matching on its Debug string, which would pass on a rename.
 solana-transaction-error = "3.4.0"
 solana-instruction-error = "2.5.0"
+# Only to recompute the Pyth discriminator in a test. The program writes those eight bytes out
+# because a `const` cannot call sha256, so the test is the thing that checks they were written
+# down correctly. `solana_program::hash` is feature-gated and anchor does not enable it.
+sha2 = "0.10"
 
 
 [lints.rust]
