@@ -31,6 +31,13 @@ from decimal import Decimal
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
+# The figures the hand-written surfaces carry live in their own module so `scripts/build_page.py`
+# and `scripts/test_checks.py` use the same code this script uses rather than a copy of it.
+# `sys.path` is prepended because the scripts are run as `python3 scripts/fetch.py`, which does not
+# put their own directory on the path.
+sys.path.insert(0, HERE)
+import published  # noqa: E402
+
 XSTOCKS_API = "https://api.xstocks.fi/api/v2/public"
 RPC = "https://api.mainnet-beta.solana.com"
 JUPITER = "https://api.jup.ag/price/v3"
@@ -84,6 +91,17 @@ def usd(value, places=0):
     page builder so data.json is legible too.
     """
     return "${:,.{p}f}".format(Decimal(value), p=places)
+
+
+def stale_svg_figures(data, mint_count, live_differs, root):
+    """Kept as a thin alias so older callers and the control harness keep working.
+
+    The comparison itself now lives in `scripts/published.py`, which `scripts/build_page.py` also
+    uses to check the README against the build as written. Two copies of a list of figures is the
+    same defect as one copy of a figure.
+    """
+    del mint_count, live_differs  # the counts are read out of `data`, which carries both
+    return published.stale(data, root, surfaces=("banner", "architecture"))
 
 # Token-2022 `ScaledUiAmountConfig`: authority (32), multiplier (8), timestamp (8), new (8)
 SCALED_UI_AMOUNT_LEN = 56
@@ -1883,6 +1901,32 @@ def main():
         "checks": checks,
         "tokens": tokens,
     }
+
+    # The two hand-authored SVGs on the README's first screen carry figures, and nothing tied
+    # them to this file. The claim-consistency sweep asserts those strings are *present*, which is
+    # not the same as asserting they are *current*: when a figure moves here, the page follows
+    # automatically because it is built from data.json, and the banner does not, because it is
+    # drawn by hand. The sweep passes either way, so a stale number on the surface a judge reads
+    # first is invisible to every check in this workspace.
+    #
+    # That is the same silent-drift shape as a hand-maintained mirror of an enum, and it gets the
+    # same treatment. This runs after the block above so that a run which already failed does not
+    # spend a reader's attention on a diagram.
+    #
+    # The README is checked too, but not here: it is checked against data.json as written, by
+    # `scripts/build_page.py`. Checking it against this run would be circular, because this run is
+    # the thing that moves it.
+    stale_svg = stale_svg_figures(data, len(mints), live_differs, ROOT)
+    stale_example = published.stale_banner_example(data, ROOT)
+    check("the hand-drawn diagrams carry this run's figures, not an earlier run's",
+          not stale_svg and not stale_example,
+          "every figure matches" if not (stale_svg or stale_example)
+          else "; ".join(stale_svg + stale_example))
+
+    failed = [c for c in checks if not c["ok"]]
+    if failed:
+        print("\n%d check(s) failed. The page must not be built from this." % len(failed))
+        return 1
 
     with open(os.path.join(ROOT, "data.json"), "w") as handle:
         json.dump(data, handle, indent=1)

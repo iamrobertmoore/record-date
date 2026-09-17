@@ -18,13 +18,13 @@
 
 ## The problem, measured
 
-**377 of the 400 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.6 months of the issuer's own feed that is $6,373,808 withheld, about $11,588,741 a year, and no surface a holder looks at reports it.**
+**377 of the 400 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.6 months of the issuer's own feed that is $6,373,807 withheld, about $11,588,741 a year, and no surface a holder looks at reports it.**
 
 And the dividend itself is not paid in cash. It is reinvested by quietly raising a `multiplier` stored inside the token's Token-2022 mint account. **On 370 of 927 mints the field named `multiplier` is not the multiplier**: it holds the value from before the most recent corporate action, and the live value sits in a second field beside it. A reader that takes the obvious one is one corporate action behind.
 
 That read rule is not inferred from the field names. It is what Token-2022's own `process_update_multiplier` does, and it was then checked against the issuer's own published current value on **every** mint rather than a sample: **927 agreed, 0 disagreed, 0 published nothing to compare against.** The comparison is one of the build's checks and it fails the page if it ever stops holding.
 
-The multiplier reinvests the **net** dividend, and that is asserted rather than assumed, because it is the claim the whole entry rests on. If the chain reinvested the gross, the 30% would never reach the token and the withholding would be a number in a feed. It does not: divide the feed's per-unit cashflow by the multiplier step and the answer is the share price, and doing that with the net figure lands on the market at **1.035** where the gross figure reads **1.479**. The control is the 40 zero-rate events, where the feed's net and gross are the same number and the test correctly has no preference: both read **1.006**.
+The multiplier reinvests the **net** dividend, and that is asserted rather than assumed, because it is the claim the whole entry rests on. If the chain reinvested the gross, the 30% would never reach the token and the withholding would be a number in a feed. It does not: divide the feed's per-unit cashflow by the multiplier step and the answer is the share price, and doing that with the net figure lands on the market at **1.033** where the gross figure reads **1.476**. The control is the 40 zero-rate events, where the feed's net and gross are the same number and the test correctly has no preference: both read **1.006**.
 
 ---
 
@@ -41,7 +41,7 @@ What this entry is built as is a **venue's control**, and the timing ground is n
 What survives is not the mechanism. It is **the history the mint discards, and a count nobody has made.** The mint holds only the most recent change and overwrites it: 370 of the 379 tokens priced here carry a past activation timestamp, median age 26.6 days, and every earlier one is gone. EquityGuard's guard answers whether it is safe to trade *now*. It cannot answer when this last moved or how often it moves. And the second thing below is a unit error in the field the prior art recommends:
 
 1. **When the activations land**, counted against the exchange's own published calendar rather than a window I chose. 640 activations, and **57 of them take effect on a day the US market does not trade at all**. The premise is the organiser's own number rather than mine: the Solana Foundation's 13 September newsletter reports that **63% of tokenized-equity volume settles outside US market hours**.
-2. **The price the issuer publishes beside each mint is not always in dollars.** 174 of the 927 mints track an equity that does not trade in dollars, and the reference feed quotes them in the underlying's own currency. Read at face value, the 27 London listings priced in pence took the market value from $6.42bn to $13.64bn.
+2. **The price the issuer publishes beside each mint is not always in dollars.** 174 of the 927 mints track an equity that does not trade in dollars, and the reference feed quotes them in the underlying's own currency. Read at face value, the 27 London listings priced in pence took the market value from $6.46bn to $13.81bn.
 
 ---
 
@@ -82,13 +82,13 @@ It grows across the first four buckets. Across 443 reconciliations on 351 names:
 
 | Age of the activation | Events | Median gap against today's price |
 |---|---:|---:|
-| 0 to 2 days | 41 | 2.0% |
-| 3 to 10 days | 34 | 3.0% |
-| 11 to 30 days | 160 | 5.0% |
-| 31 to 60 days | 118 | 7.0% |
-| over 60 days | 90 | 5.2% |
+| 0 to 2 days | 41 | 1.7% |
+| 3 to 10 days | 34 | 2.5% |
+| 11 to 30 days | 160 | 4.9% |
+| 31 to 60 days | 118 | 6.9% |
+| over 60 days | 90 | 4.8% |
 
-**The oldest bucket is the one where the gradient does not continue, and it is reported rather than smoothed.** From fresh to sixty days the gap goes 2.0% to 7.0%, which is what the identity predicts. Past sixty days it comes back to 5.2%. I do not have an explanation I can test for that, so the build asserts only what it can: a fresh activation reconciles tighter than an old one, at **2.1% within ten days against 5.2% beyond sixty**. A monotonic claim would be a stronger sentence and it would not be true of the data in front of me.
+**The oldest bucket is the one where the gradient does not continue, and it is reported rather than smoothed.** From fresh to sixty days the gap goes 1.7% to 6.9%, which is what the identity predicts. Past sixty days it comes back to 4.8%. I do not have an explanation I can test for that, so the build asserts only what it can: a fresh activation reconciles tighter than an old one, at **2.1% within ten days against 4.8% beyond sixty**. A monotonic claim would be a stronger sentence and it would not be true of the data in front of me.
 
 ---
 
@@ -135,17 +135,17 @@ The field ExDate recommends is the right one, and taking it at face value is the
 
 **174 of the 927 mints track an equity that does not trade in dollars.** The issuer's asset API publishes the underlying's currency and the listing exchange beside every deployment, and the reference feed quotes the price in that currency rather than in dollars. Of the 784 mints this build can price, 31 are non-dollar: 27 London listings, 2 in euros, 2 in Hong Kong dollars.
 
-The London listings are the ones that bite, because they are quoted in **pence**. BARCx publishes `480.40` against a dollar price of $6.46. HSBAx publishes `1524.80` against $20.52. Every one of the 27 is published at **74.3 times** its dollar price, which is the pence-to-dollar factor at the rate used.
+The London listings are the ones that bite, because they are quoted in **pence**. A FTSE share is published at roughly **75 times** the dollar price of the same share, because the exchange quotes in pence and the feed carries that figure through as though it were pounds. On this build every one of the 27 is published at **74.8 times** its dollar price, a ratio pinned to 100 divided by the GBP rate rather than varying with the share, which is why it is one number and not a range.
 
-Read at face value, the market value of the 784 priced mints is **$13.64bn**. Converted out of each underlying's own currency at the ECB reference rate for 2026-09-16, it is **$6.42bn**. The London listings are **1.53% of the book by value and 100% of that difference**: reading a pence figure as dollars multiplies that slice by 74, so a slice that rounds to nothing is the whole of the error. The exact figures for a given build are in `data.json` and printed on the evidence page, because they move with the prices and with the currency mix. What does not move is the currency the reference price is quoted in.
+Read at face value, the market value of the 784 priced mints is **$13.81bn**. Converted out of each underlying's own currency at the ECB reference rate for 2026-09-17, it is **$6.46bn**. The London listings are **1.54% of the book by value and 100% of that difference**: reading a pence figure as dollars multiplies that slice by 75, so a slice that rounds to nothing is the whole of the error. The exact figures for a given build are in `data.json` and printed on the evidence page, because they move with the prices and with the currency mix. What does not move is the currency the reference price is quoted in.
 
 Three checks carry this, because a wrong unit is not a wrong number and it does not look like one:
 
-- **the reference price is converted out of the underlying's own currency**: 31 of 784 priced mints are non-dollar listings, every one is converted at the ECB rate for 2026-09-16, and **0 are converted by nothing**
-- **the London listings are read as pence, not pounds**: 27 LSE mints priced, each published at **74.3 times** its dollar price, a ratio pinned to 100 divided by the GBP rate rather than varying with the share; drop the division and it reads 0.74
-- **the currency mistake is small in the book and large in the total**: the London listings are 1.53% of the converted book and 100% of the gap between the converted and face-value totals
+- **the reference price is converted out of the underlying's own currency**: 31 of 784 priced mints are non-dollar listings, every one is converted at the ECB rate for 2026-09-17, and **0 are converted by nothing**
+- **the London listings are read as pence, not pounds**: 27 LSE mints priced, each published at **74.8 times** its dollar price, a ratio pinned to 100 divided by the GBP rate rather than varying with the share; drop the division and it reads 0.75
+- **the currency mistake is small in the book and large in the total**: the London listings are 1.54% of the converted book and 100% of the gap between the converted and face-value totals
 
-The reason this matters beyond a market value nobody trades on is that **the yield denominator is built from these prices.** A book that is 2.13 times too large reports a yield 2.13 times too small, and a plausible-looking yield is exactly the number that does not get questioned. This is also the one finding in the entry I have not seen anywhere else: ExDate's ledger recommends the reference field, prices seven assets off the pool quote, and does not mention currency, exchange or pence at all.
+The reason this matters beyond a market value nobody trades on is that **the yield denominator is built from these prices.** A book that is 2.14 times too large reports a yield 2.14 times too small, and a plausible-looking yield is exactly the number that does not get questioned. This is also the one finding in the entry I have not seen anywhere else: ExDate's ledger recommends the reference field, prices seven assets off the pool quote, and does not mention currency, exchange or pence at all.
 
 ---
 
@@ -198,16 +198,18 @@ Multipliers are stored as `f64` because that is how the mint stores them, and co
 
 ```bash
 # every number on the page, from public endpoints, with no key
-python3 scripts/fetch.py          # writes data.json, asserts 31 checks
-python3 scripts/build_page.py     # writes index.html
+python3 scripts/fetch.py          # writes data.json, asserts 32 checks
+python3 scripts/build_page.py     # writes index.html, after checking the hand-written figures
 
 # the checks themselves
-python3 scripts/test_checks.py    # 30 negative controls, no network needed
+python3 scripts/test_checks.py    # 42 negative controls, no network needed
 ```
 
-If any check fails the script prints why and **refuses to build the page**. It is not possible to publish a stale number through this pipeline by accident. The checks include the ledger agreeing with the headline to the cent, the withheld total covering every rate rather than only the dominant one, the mint layout holding on every account read, the read rule matching the issuer on every mint, the multiplier reinvesting the net dividend rather than the gross, the reference price being converted out of the underlying's own currency, and the age gradient above.
+If any check fails the script prints why and **refuses to build the page**. It is not possible to publish a stale number through this pipeline by accident.
 
-**The net-versus-gross check is the one that carries the entry, and it has a control.** Divide the feed's per-unit cashflow by the multiplier step and the answer is a share price. Done with the net figure it lands on the market at 1.035; done with the gross it reads 1.479. The 40 zero-rate events are the control: there the feed's net and gross are the same number, so the test must have no preference, and it does not, reading 1.006 either way. Without that control the check would be measuring the arithmetic rather than the unit.
+**This file is one of the things that is checked.** The page is generated from `data.json` and cannot disagree with it, but the README, the banner at the top of it and the architecture diagram below are written by hand, and a hand-copied figure that moves is the exact defect this entry is about. All three are derived from `data.json` and compared with it before the page is written. That check has a control of its own, and it earned its place immediately: it found two figures on this screen that the previous commit had left contradicting the build they shipped with. The checks include the ledger agreeing with the headline to the cent, the withheld total covering every rate rather than only the dominant one, the mint layout holding on every account read, the read rule matching the issuer on every mint, the multiplier reinvesting the net dividend rather than the gross, the reference price being converted out of the underlying's own currency, and the age gradient above.
+
+**The net-versus-gross check is the one that carries the entry, and it has a control.** Divide the feed's per-unit cashflow by the multiplier step and the answer is a share price. Done with the net figure it lands on the market at 1.033; done with the gross it reads 1.476. The 40 zero-rate events are the control: there the feed's net and gross are the same number, so the test must have no preference, and it does not, reading 1.006 either way. Without that control the check would be measuring the arithmetic rather than the unit.
 
 **Two of those checks could not fail for the reason they claimed, and both were rewritten.** One selected its rows on the error it then reported. The other compared a deduplicated list against the set of its own keys, which is true whatever survived. `scripts/test_checks.py` holds the old form of each next to the new one, on inputs built to separate them: it shows the old price selection collapsing to nothing when the choice is swapped, and the old dedupe check passing on a list where the wrong row survived. A check that cannot fail is worse than no check, because it looks like rigour.
 
@@ -252,7 +254,7 @@ deployed ELF content is identical to the built one: true
 - **The dividend is not lost, it is reinvested.** The holder's position grows by the net amount, and the multiplier step is what proves the net is the figure that reaches the token. The claim is that it grows by less than the company paid, and that no surface reports the difference.
 - **No arbitrage is claimed.** Liquidity behind these tokens is thin. The deepest pool carries about $1.8m. The two-field section above is the reason a price comparison against the underlying was not pursued as a trading claim: on some mints the pool quote is not a price at all, so a spread against the underlying is measuring the pool's thinness rather than an opportunity.
 - **The age gradient is not monotonic and is not claimed to be.** It holds from fresh to sixty days and comes back down in the oldest bucket. The build asserts the weaker, testable version.
-- **The window is the feed's, not a clean year.** 6 March 2026 to 24 September 2026, scaled to a year rather than twelve measured months. Supply is today's rather than time weighted, so a token that minted heavily after its dividend is over-counted. The feed is an upcoming feed, so the window runs seven days past the build date: **$23,795,729 of the $24,365,252 gross is dated on or before today and $569,522 is still forward.** Both are reported and a check proves they add up. Read the annual figure as an order of magnitude.
+- **The window is the feed's, not a clean year.** 6 March 2026 to 24 September 2026, scaled to a year rather than twelve measured months. Supply is today's rather than time weighted, so a token that minted heavily after its dividend is over-counted. The feed is an upcoming feed, so the window runs seven days past the build date: **$23,795,729 of the $24,365,251 gross is dated on or before today and $569,522 is still forward.** Both are reported and a check proves they add up. Read the annual figure as an order of magnitude.
 - **The read rule, the withholding rate and the dollar total are not this entry's findings.** They are ExDate's, published on 13 September 2026, and Solana's own Token-2022 documentation describes the read rule. **Nor is the timing area unoccupied, and the on-chain half of it least of all.** Kamino holds corporate-action timestamps and runs a price band outside trading hours; EquityGuard reads the mint's own activation timestamp and refuses execution inside a transition window; and 19 of the 75 repositories this event has produced ship an on-chain program. An earlier version of this file claimed the timestamp as its own and called an on-chain program near-unique differentiation. **Both claims were false.** What this entry adds is the count and the history: 640 activations timed against the exchange's own calendar, and an ordered record of every activation rather than only the latest.
 - **The field is not empty and this entry is not alone in it.** 92 projects were submitted at the time of writing and none are published, so this is what competitors claim rather than what I could verify they do. The four closest are `EquityGuard` (an on-chain guard reading the mint's activation timestamp, devnet, 13 September), `dividendx-stocklana` (an Anchor program splitting a position into principal and dividend-right tokens, with a real devnet Raydium round trip), `KEEL` (on-chain risk mandates priced against live Pyth accounts), and `stockcurve` (which reads the same keyless `PriceUpdateV2` account this entry does). Also on the ground: `multiplier` is a corporate-actions oracle, `openbell-solana` gates execution on off-hours premiums and raw-versus-scaled amount mistakes, `basis-terminal` productises the price gap, and `corporate-action-guard` (3 September 2026, before this event opened) issues fail-closed preflight receipts against stale corporate-action state on a different chain. I read their READMEs and, for the four closest, their program source; not their code in full.
 - **The Pyth check is a comparison, not a correction, and nothing enforces it.** It refuses a price that is stale, for the wrong feed, or too far from Pyth's own. It does not make Pyth right, nothing forces a venue to call it, and a venue that ignores it is unaffected. That is the same shape as `settlement_window` and the same reason both exist: they are values another program can branch on rather than gates anything must pass. **The weekend and holiday behaviour of the equity feed is not measured directly here, and the evidence that it matters is sharp.** No equity prints when the market is shut, so the price cannot move, and whether the pusher still writes a fresh `publish_time` then is untested. Two things point the same way: the devnet AAPL account's last write was Friday 14 August at 16:00:19 ET, the exact minute of the close, and another entry in this event states that with the real Pyth receiver nothing is published for US equities between Friday 20:00 ET and Sunday 20:00 ET. Since every activation observed here lands at 20:30 ET, a five-minute rule would refuse every Friday-night corporate action. The cadence measured above is a weekday pre-market one, and that is why the age limit is an argument with a ceiling rather than a constant in the program.

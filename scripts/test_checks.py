@@ -36,12 +36,19 @@ Run it with `python3 scripts/test_checks.py`. It needs no network and no depende
 
 import datetime
 import importlib.util
+import json
 import os
 import sys
+import tempfile
 import zoneinfo
 from statistics import median
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# The figures the hand-written surfaces carry, imported rather than copied. A control that drove a
+# copy would prove the copy agrees with itself, which is the failure this file exists to catch.
+sys.path.insert(0, HERE)
+import published  # noqa: E402
 
 
 def load_calendar():
@@ -60,6 +67,26 @@ def load_calendar():
         sys.modules["fetch_under_test"] = module
         spec.loader.exec_module(module)
         return module.parse_schedule, module.session_open
+    except Exception as exc:  # noqa: BLE001 - a skip must be visible, not fatal
+        print("  could not load fetch.py: %s: %s" % (type(exc).__name__, exc))
+        return None
+
+
+def load_fetch():
+    """fetch.py as a module, for a control that has to call a real function rather than a copy.
+
+    Unused at the moment: check D moved to `published.py` when the README joined the surfaces it
+    checks, and nothing else needs the module. Kept because the loader is the fiddly part, and the
+    next control that wants a real function should not have to rediscover that fetch.py runs its
+    whole pipeline at import and has to be loaded with `__name__` set to something else.
+    """
+    path = os.path.join(HERE, "fetch.py")
+    try:
+        spec = importlib.util.spec_from_file_location("fetch_under_test", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["fetch_under_test"] = module
+        spec.loader.exec_module(module)
+        return module
     except Exception as exc:  # noqa: BLE001 - a skip must be visible, not fatal
         print("  could not load fetch.py: %s: %s" % (type(exc).__name__, exc))
         return None
@@ -288,6 +315,125 @@ def main():
          weekly[local.weekday()] is not None, True)
     case("  ... and the calendar correctly says it is shut",
          session_open(labour_day, cal), False)
+
+    # ------------------------------------------------------------------ check D
+    # The hand-written surfaces. This one differs in kind from A and B: there is no old form to set
+    # beside a new one, because the old form was nothing at all. The README, the banner and the
+    # architecture diagram are written by hand, so they are the figures on the surface a judge reads
+    # first that do not follow data.json, and the claim-consistency sweep asserts only that those
+    # strings are *present*. A figure that moved would therefore ship and pass every other check in
+    # this workspace.
+    #
+    # That is not hypothetical. The committed tree carried it in two places when this control was
+    # written: the README said `1.479` where its own data.json said `1.478`, and `1.53%` where the
+    # same file said `1.54%`.
+    #
+    # The control drives the real `published.stale` over files written to a temporary directory,
+    # from a fixture this file builds. That is what makes it a control rather than a restatement:
+    # the fixture is this file's numbers, so this file can move one and see it reported.
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, "docs", "brand"))
+        # Deliberately round numbers, so the fixture is visibly a fixture and a failure cannot be
+        # confused with the real build. They still exercise every formatting path, including the
+        # half-up rounding on the pence share, which sits on a boundary at 1.535.
+        sample = {
+            "money": {
+                "gross_usd": "20000000", "net_usd": "15000000", "withheld_usd": "5000000",
+                "annualised_withheld_usd": "9000000",
+                "paid_gross_usd": "19000000", "forward_gross_usd": "1000000",
+            },
+            "actions": {"months": 6.6},
+            "read_rule": {"agreed": 927, "disagreed": 0, "no_value": 0},
+            "mints": {"total": 927, "live_differs_from_base": 370},
+            "activation_timing": {"n": 640, "on_a_non_trading_day": 57},
+            "reconciliation": {
+                "net_over_market": 1.0349, "gross_over_market": 1.4785,
+                "fresh_median": 0.0213, "stale_median": 0.0520,
+                "buckets": [{"label": "0-2 days", "n": 41, "median": 0.0198}],
+            },
+            "currency": {
+                "usd_per": {"GBP": 1.345587},
+                "pence_share_of_book": 0.01535,
+                "market_value_as_read_usd": "13638378887",
+                "market_value_converted_usd": "6416996434",
+                "read_over_converted": 2.1254,
+                "fx_date": "2020-01-01",
+            },
+            "tokens": [{"base_multiplier": 1.0268028384810615,
+                        "live_multiplier": 1.0344000941634355}],
+        }
+        want = published.figures(sample)
+
+        def write(path, text):
+            with open(os.path.join(tmp, path), "w") as handle:
+                handle.write(text)
+
+        # Every surface written to carry exactly the fixture's figures. The join is what a file with
+        # no line breaks looks like; a figure has to appear verbatim and the separator is irrelevant.
+        for name, path in published.SURFACES.items():
+            write(path, "\n".join(want[name]))
+
+        print()
+        print("  the hand-written surfaces, against a build whose figures they carry")
+        case("every figure matches, so nothing is reported", published.stale(sample, tmp), [])
+
+        # One figure moved by a tenth of a point, which is the size of move a second build on the
+        # same day actually produces. If this passes, the check cannot catch its own drift.
+        write(published.SURFACES["banner"],
+              "\n".join(want["banner"]).replace("25.0% withheld", "24.9% withheld"))
+        off = published.stale(sample, tmp)
+        case("one figure moved by a tenth of a point is reported", len(off), 1)
+        case("  ... and it names the diagram and the figure it wanted",
+             off[0] if off else None,
+             "docs/brand/readme-banner.svg should say '25.0% withheld'")
+
+        # The other direction: the money is right and a count is wrong. Both diagrams carry the
+        # mint count, so a count that is wrong has to be reported in both of them.
+        write(published.SURFACES["banner"], "\n".join(want["banner"]))
+        stale_counts = dict(sample)
+        stale_counts["mints"] = {"total": 927, "live_differs_from_base": 999}
+        off = published.stale(stale_counts, tmp, surfaces=("banner", "architecture"))
+        case("a stale mint count is reported in both diagrams", len(off), 2)
+        case("  ... and the architecture diagram is checked, not skipped",
+             "docs/architecture.svg should say '999 of 927 mints differ here'" in off, True)
+
+        # The README is a separate surface and has to be checked as one. Drop a single figure from
+        # it and leave both diagrams correct: only the README may be reported.
+        write(published.SURFACES["readme"],
+              "\n".join(want["readme"]).replace("1.54% of the book", "1.53% of the book"))
+        off = published.stale(sample, tmp, surfaces=("readme",))
+        case("a README figure that drifted is reported on its own", off,
+             ["README.md should say '1.54% of the book'"])
+
+        # The rounding rule on the pence share, asserted at a boundary where the paths actually
+        # differ rather than at one where they happen to agree. Measured: 0.02675 * 100 prints as
+        # 2.67 through a float and as 2.68 half up, so a fixture at that value separates the rule
+        # from the accident. This is the shape the committed README carried: it said 1.53% where
+        # 0.01535 is 1.535.
+        contested = json.loads(json.dumps(sample))
+        contested["currency"]["pence_share_of_book"] = 0.02675
+        case("the pence share is rounded half up, not through a float",
+             [f for f in published.figures(contested)["readme"] if f.endswith("of the book")],
+             ["2.68% of the book"])
+        case("  ... and a float would have asked the README for a different figure",
+             "%.2f%% of the book" % (0.02675 * 100), "2.67% of the book")
+        case("  ... so the figure the README is asked for is the half-up one, not the float one",
+             "2.68% of the book" in published.figures(contested)["readme"], True)
+
+        # The banner's worked example: a pair that is in the build passes, a pair that is not is
+        # reported. Ten decimals, so a truncated or rounded pair is caught too.
+        write(published.SURFACES["banner"], "1.0344000942 1.0268028385")
+        case("a worked example drawn from this build is accepted",
+             published.stale_banner_example(sample, tmp), [])
+        write(published.SURFACES["banner"], "1.0344000942 1.0268028300")
+        case("a worked example that is not in this build is reported",
+             published.stale_banner_example(sample, tmp),
+             ["docs/brand/readme-banner.svg shows 1.0268028300, which is not a multiplier in this build"])
+        write(published.SURFACES["banner"], "no figures here at all")
+        case("a banner with no worked example is reported rather than passed",
+             published.stale_banner_example(sample, tmp),
+             ["docs/brand/readme-banner.svg shows no ten-decimal value, "
+              "so the receipt has lost its worked example"])
 
     print()
     print("%d of %d as expected" % (passed, total))

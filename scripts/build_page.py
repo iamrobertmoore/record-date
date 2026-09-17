@@ -20,6 +20,34 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 TEMPLATE = os.path.join(HERE, "page_template.html")
 
+# The figures the hand-written surfaces carry. Checked here, against data.json as written, rather
+# than in the fetch, which is the thing that moves them: a README compared against a fresh fetch
+# can never settle, and a README compared against the build it ships with is either right or wrong.
+sys.path.insert(0, HERE)
+import published  # noqa: E402
+
+
+def check_published(data):
+    """Refuse to build a page whose hand-written neighbours no longer describe the same build.
+
+    `index.html` is generated from data.json so it cannot disagree with it. The README and the two
+    diagrams are written by hand and can. When they do, the page ships with a headline number that
+    contradicts the file it was built from, on the surface a judge reads first, and nothing else in
+    the pipeline notices: the claim-consistency sweep asks whether a figure is *present*, not
+    whether it is *current*.
+
+    That is the exact failure this entry documents, and the committed tree was carrying it in two
+    places when this gate was added. Refusing to build is the point.
+    """
+    problems = published.stale(data, ROOT)
+    problems += published.stale_banner_example(data, ROOT)
+    if problems:
+        raise SystemExit(
+            "the build has moved and these hand-written figures have not:\n  "
+            + "\n  ".join(problems)
+            + "\n\nUpdate them to match data.json, then build again.")
+    return len(problems)
+
 
 def check_assets(page):
     """Refuse to ship a page that links something broken.
@@ -440,6 +468,7 @@ def render(data):
         raise SystemExit("template placeholders left unfilled: %s" % ", ".join(sorted(set(left))))
 
     check_assets(page)
+    check_published(data)
 
     out = os.path.join(ROOT, "index.html")
     with open(out, "w") as handle:
