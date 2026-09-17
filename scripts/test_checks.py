@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Negative controls for the two checks in fetch.py that were rewritten.
+"""Negative controls for the checks in fetch.py that were rewritten, and for the session calendar.
 
 A check that cannot fail for the reason it claims is worse than no check, because it looks like
-rigour. Both of these were in that state. This file holds the old form of each next to the new
-form, on inputs built to separate them, so the difference is auditable rather than asserted.
+rigour. Both of the rewritten ones were in that state. This file holds the old form of each next to
+the new form, on inputs built to separate them, so the difference is auditable rather than asserted.
+
+Check C is different in kind: it exercises the real `parse_schedule` and `session_open` from
+fetch.py, imported rather than copied, against dates whose answer is known from the exchange
+calendar itself. A copy of the parser would only prove the copy agrees with itself.
 
 Run it with `python3 scripts/test_checks.py`. It needs no network and no dependencies.
 
@@ -30,7 +34,35 @@ Run it with `python3 scripts/test_checks.py`. It needs no network and no depende
     published for that eventId.
 """
 
+import datetime
+import importlib.util
+import os
+import sys
+import zoneinfo
 from statistics import median
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_calendar():
+    """`parse_schedule` and `session_open` as defined in fetch.py, not as redefined here.
+
+    fetch.py runs its whole pipeline at import, so it cannot simply be imported. It is loaded with
+    `__name__` set to something other than `__main__` and the module body is allowed to run only as
+    far as its function definitions, which is what `spec.loader.exec_module` does. If that ever
+    stops working the check reports itself skipped rather than passing silently, because a skipped
+    control that reads as a pass is the exact failure this file exists to catch.
+    """
+    path = os.path.join(HERE, "fetch.py")
+    try:
+        spec = importlib.util.spec_from_file_location("fetch_under_test", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["fetch_under_test"] = module
+        spec.loader.exec_module(module)
+        return module.parse_schedule, module.session_open
+    except Exception as exc:  # noqa: BLE001 - a skip must be visible, not fatal
+        print("  could not load fetch.py: %s: %s" % (type(exc).__name__, exc))
+        return None
 
 
 # --------------------------------------------------------------------------- check A
@@ -199,6 +231,63 @@ def main():
          (dedupe_check_old(kept_right), dedupe_check_old(kept_wrong)), (True, True))
     case("negative control: nothing was superseded, so there is nothing to collapse",
          dedupe_check([{"eventId": "a", "version": 1}], [{"eventId": "a", "version": 1}]), False)
+
+    print()
+    print("check C: the exchange calendar")
+    print()
+
+    # The real functions, imported from fetch.py rather than copied. A copy would only prove the
+    # copy agrees with itself, and the whole point of this check is that the parser in the build is
+    # the one being tested.
+    calendar = load_calendar()
+    if calendar is None:
+        print("  fetch.py could not be imported; check C skipped")
+        print()
+        print("%d of %d as expected" % (passed, total))
+        return 0 if passed == total else 1
+
+    parse_schedule, session_open = calendar
+    # The schedule Pyth publishes for US equities, as read on 16 September 2026. Kept here as a
+    # literal so this file needs no network, and asserted against the live feed by fetch.py itself.
+    SCHEDULE = (
+        "America/New_York;0930-1600,0930-1600,0930-1600,0930-1600,0930-1600,C,C;"
+        "0907/C,1126/C,1127/0930-1300,1224/0930-1300,1225/C"
+    )
+    tz, weekly, overrides = parse_schedule(SCHEDULE)
+    cal = {"timezone": tz, "weekly": weekly, "overrides": overrides}
+
+    case("the timezone is the exchange's", tz, "America/New_York")
+    case("the week is Monday first", [s is not None for s in weekly],
+         [True, True, True, True, True, False, False])
+    case("Monday opens at 09:30 and closes at 16:00",
+         weekly[0], (9 * 60 + 30, 16 * 60))
+    case("overrides are parsed, including the half days", len(overrides), 5)
+
+    print()
+    print("  the session test, on dates whose answer is known")
+    # Each case is (instant, open?, what it is). The two that matter most are the holiday and the
+    # half day, because those are the cases the weekly pattern alone gets wrong.
+    for iso, want, label in (
+        ("2026-09-16T18:00:00+00:00", True, "Wednesday 14:00 ET, mid session"),
+        ("2026-09-16T00:30:00+00:00", False, "the real activation time, 20:30 ET the day before"),
+        ("2026-09-15T23:55:00+00:00", False, "the other real activation time, 19:55 ET"),
+        ("2026-09-07T15:00:00+00:00", False, "Labour Day 11:00 ET: the override must beat the weekday"),
+        ("2026-11-27T18:00:00+00:00", True, "half day, 13:00 ET: still open"),
+        ("2026-11-27T19:00:00+00:00", False, "half day, 14:00 ET: closed"),
+        ("2026-12-25T18:00:00+00:00", False, "Christmas Day"),
+        ("2026-09-19T18:00:00+00:00", False, "Saturday"),
+    ):
+        case(label, session_open(datetime.datetime.fromisoformat(iso), cal), want)
+
+    # The negative control for the whole idea. If the calendar added nothing over the weekday
+    # pattern, it would not be worth fetching. Labour Day is the case that separates them: the
+    # weekly pattern says Monday trades, and the override says it does not.
+    labour_day = datetime.datetime.fromisoformat("2026-09-07T15:00:00+00:00")
+    local = labour_day.astimezone(zoneinfo.ZoneInfo("America/New_York"))
+    case("negative control: the weekly pattern alone would say Labour Day is open",
+         weekly[local.weekday()] is not None, True)
+    case("  ... and the calendar correctly says it is shut",
+         session_open(labour_day, cal), False)
 
     print()
     print("%d of %d as expected" % (passed, total))

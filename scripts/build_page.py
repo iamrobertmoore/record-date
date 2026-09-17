@@ -318,12 +318,24 @@ def render(data):
         "READ_RULE_DISAGREED": str(read_rule["disagreed"]),
         "READ_RULE_NO_VALUE": str(read_rule["no_value"]),
         "TIMING_N": str(timing["n"]),
-        "TIMING_INSIDE": str(timing["inside"]),
+        # The UTC window, which is the loose bound.
         "TIMING_OUTSIDE": str(timing["outside"]),
         # `pct` takes a fraction and does the scaling, so passing a percentage here double-counts
         # it. It did, and the page read "9808.0% outside US trading hours".
-        "TIMING_INSIDE_PCT": pct(timing["inside_share"]),
         "TIMING_OUTSIDE_PCT": pct(1 - timing["inside_share"]),
+        # The exchange's own calendar, which is the authoritative definition. Both are printed:
+        # two independent measurements that agree are worth more than one stated alone, and if
+        # they ever diverge the reader sees it rather than reading only the flattering one.
+        "TIMING_INSIDE_CALENDAR": str(timing["inside_calendar"]),
+        "TIMING_OUTSIDE_CALENDAR": str(timing["outside_calendar"]),
+        "TIMING_OUTSIDE_CALENDAR_PCT": pct(1 - timing["inside_calendar_share"]),
+        "TIMING_OUTSIDE_HOURS_TRADING_DAY": str(timing["outside_hours_on_a_trading_day"]),
+        "TIMING_ON_A_NON_TRADING_DAY": str(timing["on_a_non_trading_day"]),
+        "TIMING_TZ": esc(timing["timezone"]),
+        "TIMING_SESSION": esc(timing["session"]),
+        "TIMING_OVERRIDES": str(timing["overrides"]),
+        "TIMING_CALENDAR_FEEDS": str(timing["feeds_on_calendar"]),
+        "TIMING_USD_FEEDS": str(timing["usd_equity_feeds"]),
         # The share of the sample sitting on the four modal minutes, so the block cannot claim
         # "most activations land here" without saying how much of the field that actually is.
         "TIMING_TOP_SHARE": pct(

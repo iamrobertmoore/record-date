@@ -23,6 +23,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import zoneinfo
 from collections import Counter, defaultdict
 from decimal import Decimal
 
@@ -34,11 +35,20 @@ RPC = "https://api.mainnet-beta.solana.com"
 JUPITER = "https://api.jup.ag/price/v3"
 TOKEN_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 
-# The US regular trading session in UTC, stated generously. It runs 13:30 to 20:00 UTC under EDT
-# and 14:30 to 21:00 under EST, so this window covers both with an hour to spare at each end. A
-# wider window can only make the finding below harder to reach, which is the direction to err in.
+# The US regular session as a fixed UTC window, stated generously. It runs 13:30 to 20:00 UTC
+# under EDT and 14:30 to 21:00 under EST, so this covers both with an hour to spare at each end.
+# A wider window can only make the finding below harder to reach, which is the direction to err in.
+#
+# This is the loose bound, not the answer. The exchange's own calendar is fetched below and is the
+# authoritative definition; the two are computed independently and the check requires both to clear
+# the bar, because a window I chose and a calendar the exchange publishes are not the same claim.
 US_SESSION_OPEN_UTC = 13 * 60          # 13:00
 US_SESSION_CLOSE_UTC = 21 * 60         # 21:00
+
+# Pyth publishes the exchange calendar alongside its feed directory, with no key. Its price values
+# do need a key, so this build takes the session definition from Pyth and prices from elsewhere.
+# That is worth being explicit about: the calendar is Pyth's, the numbers beside it are not.
+PYTH_FEEDS = "https://hermes.pyth.network/v2/price_feeds"
 
 
 def usd(value, places=0):
@@ -154,6 +164,97 @@ def fetch_multiplier_history(symbol):
         % (XSTOCKS_API, symbol)
     )
     return payload.get("nodes") or []
+
+
+def parse_schedule(text):
+    """An exchange calendar, as (timezone, weekly[7], overrides{MMDD: session}).
+
+    The grammar is `<TZ>;<Mon>..<Sun>;<MMDD>/<session>,...`, where a session is `HHMM-HHMM` in
+    exchange-local time, `C` means closed, and the day list runs Monday first. An override replaces
+    the weekly pattern for that date, which is how a holiday and a half day are both expressed.
+
+    The overrides are forward-listed from whenever Pyth published the feed. So this is
+    authoritative for the regular weekly session and for any date it names, and silent about a
+    holiday that predates the listing. That limit is exactly why the UTC window is kept as well:
+    the two are computed independently and the check requires both to agree that the market is
+    shut, so a gap in one cannot carry the claim on its own.
+    """
+    parts = text.split(";")
+    if len(parts) < 2:
+        raise ValueError("not a schedule: %r" % text[:60])
+    days = parts[1].split(",")
+    if len(days) != 7:
+        raise ValueError("expected 7 day sessions, got %d" % len(days))
+
+    def session(token):
+        token = token.strip()
+        if token in ("C", "", "-"):
+            return None
+        opens, closes = token.split("-")
+        return (int(opens[:2]) * 60 + int(opens[2:]), int(closes[:2]) * 60 + int(closes[2:]))
+
+    weekly = [session(d) for d in days]
+    overrides = {}
+    for item in (parts[2].split(",") if len(parts) > 2 else []):
+        item = item.strip()
+        if not item:
+            continue
+        mmdd, _, body = item.partition("/")
+        overrides[mmdd] = session(body)
+    return parts[0], weekly, overrides
+
+
+def _session_text(session):
+    """A session as `HH:MM-HH:MM`, or `closed`. Only for the console and the page."""
+    if session is None:
+        return "closed"
+    return "%02d:%02d-%02d:%02d" % (
+        session[0] // 60, session[0] % 60, session[1] // 60, session[1] % 60
+    )
+
+
+def fetch_exchange_calendar():
+    """The calendar Pyth publishes for US equities, and how many feeds carry it.
+
+    The dominant schedule is taken rather than any one symbol's, because the whole US equity set
+    shares one and taking the most common avoids picking a symbol that happens to trade elsewhere.
+    """
+    feeds = get_json(PYTH_FEEDS)
+    usd = [
+        f for f in feeds
+        if (f.get("attributes") or {}).get("asset_type") == "Equity"
+        and f["attributes"].get("quote_currency") == "USD"
+    ]
+    counts = Counter(
+        f["attributes"]["schedule"] for f in usd if f["attributes"].get("schedule")
+    )
+    if not counts:
+        raise RuntimeError("Pyth returned no scheduled USD equity feeds")
+    schedule, n = counts.most_common(1)[0]
+    tz, weekly, overrides = parse_schedule(schedule)
+    return {
+        "timezone": tz,
+        "weekly": weekly,
+        "overrides": overrides,
+        "feeds": len(usd),
+        "feeds_on_this_schedule": n,
+        "distinct_symbols": len({
+            (f["attributes"].get("display_symbol") or "").upper()
+            for f in usd if f["attributes"].get("display_symbol")
+        }),
+        "schedule": schedule,
+    }
+
+
+def session_open(when, calendar):
+    """Is the US regular session open at this instant, by the exchange's own calendar?"""
+    local = when.astimezone(zoneinfo.ZoneInfo(calendar["timezone"]))
+    key = "%02d%02d" % (local.month, local.day)
+    session = calendar["overrides"].get(key, calendar["weekly"][local.weekday()])
+    if session is None:
+        return False
+    minutes = local.hour * 60 + local.minute
+    return session[0] <= minutes <= session[1]
 
 
 def fetch_current_multiplier(symbol):
@@ -778,7 +879,11 @@ def main():
     # already being fetched. This is the raw material for the timing measurement below, and it is
     # gathered before `reconcile` filters, so the sample is every activation on every candidate
     # name rather than only the ones that happened to match a dividend row.
-    activation_minutes = []
+    #
+    # The full instant is kept, not just the minute of the day. The minute is enough for the
+    # histogram, but deciding whether the US market was open needs the date as well, because a
+    # holiday and a half day are both real and neither is visible in a time of day.
+    activation_times = []
     for symbol in sorted(candidates):
         try:
             history = fetch_multiplier_history(symbol)
@@ -790,10 +895,12 @@ def main():
             if len(stamp) < 16:
                 continue
             try:
-                hh, mm = int(stamp[11:13]), int(stamp[14:16])
+                when = datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00"))
             except ValueError:
                 continue
-            activation_minutes.append(hh * 60 + mm)
+            if when.tzinfo is None:
+                when = when.replace(tzinfo=datetime.timezone.utc)
+            activation_times.append(when)
         for row in reconcile(symbol, actions, history):
             activated = (row["effective_at"] or "")[:10]
             try:
@@ -846,27 +953,74 @@ def main():
     # ------------------------------------------------------------- when the multiplier moves
     # The issuer's docs tell venues to pause for fifteen minutes around each activation and say
     # nothing enforces it. Whether that matters depends entirely on when the activations happen,
-    # which the issuer publishes and nobody has counted. So count them.
-    timing = {"n": len(activation_minutes), "inside": 0, "by_minute": {}}
-    for m in activation_minutes:
-        timing["by_minute"]["%02d:%02d" % (m // 60, m % 60)] = (
-            timing["by_minute"].get("%02d:%02d" % (m // 60, m % 60), 0) + 1
+    # which the issuer publishes and nobody has counted. So count them, two ways.
+    #
+    # The first way is a fixed UTC window, which is a definition I chose. The second is the
+    # exchange's own calendar, fetched from Pyth, which knows about holidays and half days and is
+    # therefore a definition the exchange publishes. A claim that survives both is not an artefact
+    # of where I drew the window.
+    calendar = None
+    try:
+        calendar = fetch_exchange_calendar()
+        print(
+            "  exchange calendar: %s, %s Mon-Fri, %d overrides, %d of %d USD equity feeds share it"
+            % (calendar["timezone"], _session_text(calendar["weekly"][0]),
+               len(calendar["overrides"]), calendar["feeds_on_this_schedule"], calendar["feeds"])
         )
-        if US_SESSION_OPEN_UTC <= m <= US_SESSION_CLOSE_UTC:
+    except Exception as exc:  # noqa: BLE001 - the window below is still a usable measurement
+        print("  exchange calendar unavailable (%s); falling back to the UTC window alone" % exc)
+
+    # Three buckets, because they are three different claims and the weakest one is the one that
+    # is easiest to overstate. An activation outside the session on a day the market trades is
+    # "after the close", which is ordinary. An activation on a day the market does not trade at
+    # all is a different thing, and it is the one that makes the pause unavoidable rather than
+    # merely advisable. Counting them separately stops the second being read into the first.
+    timing = {"n": len(activation_times), "inside": 0, "inside_calendar": 0,
+              "outside_hours_on_a_trading_day": 0, "on_a_non_trading_day": 0,
+              "by_minute": {}, "calendar_available": calendar is not None}
+    for when in activation_times:
+        minutes = when.hour * 60 + when.minute
+        clock = "%02d:%02d" % (when.hour, when.minute)
+        timing["by_minute"][clock] = timing["by_minute"].get(clock, 0) + 1
+        if US_SESSION_OPEN_UTC <= minutes <= US_SESSION_CLOSE_UTC:
             timing["inside"] += 1
-    timing["inside_share"] = (
-        round(timing["inside"] / timing["n"], 4) if timing["n"] else None
-    )
+        if calendar is not None:
+            if session_open(when, calendar):
+                timing["inside_calendar"] += 1
+            else:
+                local = when.astimezone(zoneinfo.ZoneInfo(calendar["timezone"]))
+                day = calendar["overrides"].get(
+                    "%02d%02d" % (local.month, local.day),
+                    calendar["weekly"][local.weekday()],
+                )
+                if day is None:
+                    timing["on_a_non_trading_day"] += 1
+                else:
+                    timing["outside_hours_on_a_trading_day"] += 1
+
+    timing["inside_share"] = round(timing["inside"] / timing["n"], 4) if timing["n"] else None
     timing["outside"] = timing["n"] - timing["inside"]
+    if calendar is not None:
+        timing["inside_calendar_share"] = round(timing["inside_calendar"] / timing["n"], 4)
+        timing["outside_calendar"] = timing["n"] - timing["inside_calendar"]
+        timing["non_trading_day_share"] = round(
+            timing["on_a_non_trading_day"] / timing["n"], 4
+        )
+        timing["session"] = _session_text(calendar["weekly"][0])
+        timing["timezone"] = calendar["timezone"]
+        timing["overrides"] = len(calendar["overrides"])
+        timing["feeds_on_calendar"] = calendar["feeds_on_this_schedule"]
+        timing["usd_equity_feeds"] = calendar["feeds"]
+        timing["calendar_symbols"] = calendar["distinct_symbols"]
     # The modal times, because "23:55 and 00:30" is the shape of the finding and a bare
     # percentage hides it.
-    timing["top_times"] = sorted(
-        timing["by_minute"].items(), key=lambda kv: (-kv[1], kv[0])
-    )[:4]
+    timing["top_times"] = sorted(timing["by_minute"].items(), key=lambda kv: (-kv[1], kv[0]))[:4]
     print(
-        "  activations: %d, of which %d (%.1f%%) inside the US session, %d outside"
-        % (timing["n"], timing["inside"],
-           (timing["inside_share"] or 0) * 100, timing["outside"])
+        "  activations: %d | %d (%.1f%%) inside the UTC window | %d (%.1f%%) inside the "
+        "exchange session | %d after the close on a trading day | %d on a non-trading day"
+        % (timing["n"], timing["inside"], (timing["inside_share"] or 0) * 100,
+           timing["inside_calendar"], (timing.get("inside_calendar_share") or 0) * 100,
+           timing["outside_hours_on_a_trading_day"], timing["on_a_non_trading_day"])
     )
 
     # Buckets of age, so the prediction is visible as a shape rather than an anecdote.
@@ -1061,16 +1215,40 @@ def main():
     # The decisive test. If the two records describe the same events, then dividing net by the
     # step recovers the price on the activation date, so the gap against today's price is the
     # stock's own movement and must grow with age. It does, and this check fails if it stops.
-    # The timing measurement, asserted. The claim is that the multiplier moves while the US market
-    # is shut, which is why the issuer's fifteen minute pause is not a formality: there is no
-    # closing auction to absorb it and no continuous price to settle against. A share below 25%
-    # would mean activations are not concentrated outside the session and the claim is wrong.
+    # The timing measurement, asserted twice over. The claim is that the multiplier moves while
+    # the US market is shut, which is why the issuer's fifteen minute pause is not a formality:
+    # there is no closing auction to absorb it and no continuous price to settle against.
+    #
+    # The first definition is a UTC window I chose. The second is the exchange's own calendar, in
+    # its own timezone, with its holidays and half days. Requiring both is what stops this being an
+    # artefact of where I drew the window: a window wide enough to look generous could still be
+    # wrong about a holiday, and the calendar cannot be.
     check("the multiplier moves while the US market is shut",
           timing["n"] >= 100 and timing["inside_share"] is not None
           and timing["inside_share"] < 0.25,
           "%d activations, %d (%.1f%%) inside 13:00-21:00 UTC; most common times %s"
           % (timing["n"], timing["inside"], (timing["inside_share"] or 0) * 100,
              ", ".join("%s x%d" % (k, v) for k, v in timing["top_times"])))
+    check("the exchange's own calendar agrees the market was shut",
+          timing["calendar_available"] and timing.get("inside_calendar_share") is not None
+          and timing["inside_calendar_share"] < 0.25,
+          "%d of %d (%.1f%%) inside %s %s, which is the session %d of %d USD equity feeds on "
+          "Pyth carry, over %d listed overrides"
+          % (timing.get("inside_calendar", 0), timing["n"],
+             (timing.get("inside_calendar_share") or 0) * 100,
+             timing.get("session", "?"), timing.get("timezone", "?"),
+             timing.get("feeds_on_calendar", 0), timing.get("usd_equity_feeds", 0),
+             timing.get("overrides", 0)))
+    # The two definitions are computed from different inputs and must not merely both clear the
+    # bar; they must agree about which activations are inside. A count that differs by more than a
+    # few means one of the two is measuring something else.
+    check("the two definitions of the session agree on almost every activation",
+          timing["calendar_available"]
+          and abs(timing["inside"] - timing["inside_calendar"]) <= max(5, timing["n"] // 50),
+          "%d inside the UTC window against %d inside the exchange calendar, a difference of %d "
+          "across %d activations"
+          % (timing["inside"], timing.get("inside_calendar", 0),
+             abs(timing["inside"] - timing.get("inside_calendar", 0)), timing["n"]))
     check("a fresh activation reconciles tighter than an old one",
           len(fresh) >= 5 and len(stale) >= 5
           and median(fresh) < 0.05 and median(stale) > 2 * median(fresh),

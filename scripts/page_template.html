@@ -432,11 +432,24 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       <div class="hd">
         <p><b>When the multiplier actually moves.</b> {{TIMING_N}} activations the issuer has
           published, counted by the minute of the day they take effect.
-          <b>{{TIMING_OUTSIDE}} of them, {{TIMING_OUTSIDE_PCT}}%, fall outside US trading
-          hours</b>, and {{TIMING_TOP_SHARE}}% of the whole sample lands on the four minutes
-          below. The US regular session runs 13:30 to 20:00 UTC in summer and 14:30 to 21:00 in
-          winter; the window used here is drawn wide, 13:00 to 21:00, to cover both, so the
-          split is stated against the most generous definition of the session available.</p>
+          <b>{{TIMING_OUTSIDE_CALENDAR}} of them, {{TIMING_OUTSIDE_CALENDAR_PCT}}%, fall outside
+          the US regular session</b>, and {{TIMING_TOP_SHARE}}% of the whole sample lands on the
+          four minutes below.</p>
+        <p style="margin-top:10px">That is measured two ways, because one definition of "the
+          market is open" is mine and the other is the exchange's. The first is a fixed UTC window
+          drawn wide at 13:00 to 21:00, which covers the session under both daylight time and
+          standard time and can only make the finding harder to reach: by that definition
+          {{TIMING_OUTSIDE}} of {{TIMING_N}}, or {{TIMING_OUTSIDE_PCT}}%, are outside. The second
+          is the exchange calendar Pyth publishes with its feed directory: {{TIMING_TZ}}, a regular
+          session of {{TIMING_SESSION}}, {{TIMING_OVERRIDES}} date overrides for holidays and half
+          days, and it covers {{TIMING_CALENDAR_FEEDS}} of the {{TIMING_USD_FEEDS}} US equity feeds
+          Pyth carries. Against that, {{TIMING_INSIDE_CALENDAR}} of {{TIMING_N}} fall inside the
+          session, so {{TIMING_OUTSIDE_CALENDAR}} are outside, or
+          {{TIMING_OUTSIDE_CALENDAR_PCT}}%. The two are computed independently and the build
+          requires both to agree the market is shut, so the result is not an artefact of where the
+          window was drawn. Of the ones the calendar puts outside,
+          {{TIMING_OUTSIDE_HOURS_TRADING_DAY}} land on a weekday that trades but outside its hours
+          and {{TIMING_ON_A_NON_TRADING_DAY}} on a day the market does not trade at all.</p>
       </div>
       <div class="row">
 {{TIMING_SLOTS}}
