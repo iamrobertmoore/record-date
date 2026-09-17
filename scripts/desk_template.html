@@ -234,7 +234,8 @@ footer code{font-size:12.5px;color:var(--ink)}
     <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the mint</p>
     <div class="head">
       <h2>Pick a registered mint. Everything below follows it.</h2>
-      <p>These are the mints this program has registered on devnet. A dot marks one where the
+      <p>These are the mints this program has registered on devnet, and there are
+        <span class="num" id="mint-count">{{MINT_COUNT}}</span> of them. A dot marks one where the
         field named <span class="num">multiplier</span> and the live
         <span class="num">new_multiplier</span> disagree, which is the state the entry is about.</p>
     </div>
@@ -816,6 +817,13 @@ POST {{RPC_HOST}}
   function el(id) { return document.getElementById(id); }
   function setText(id, v) { var e = el(id); if (e) e.textContent = v; }
 
+  /* A picker label is a symbol the program stores and an address that comes off the wire, and
+     neither is escaped on the way in. A symbol that closed a tag would take the picker apart. */
+  function esc(v) {
+    return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
   /* ------------------------------------------------------------------ state */
 
   var live = null;      // filled by a successful read
@@ -844,6 +852,42 @@ POST {{RPC_HOST}}
   }
 
   /* ------------------------------------------------------------------ render */
+
+  /* The picker is baked from the capture, so the page still reads with JavaScript stripped. A
+     successful live read rebuilds it, because the program gains records: the demo registers a
+     mint, and a picker frozen at build time hides it. The first version of this page only
+     re-rendered the selected mint, so a record registered after the build never appeared while
+     the status chip still said the read had succeeded. Order is preserved and new records
+     append, so the list does not reshuffle under the reader. */
+  function renderPicker(records, keep) {
+    var host = el("picker");
+    var previous = [];
+    var old = host.querySelectorAll("button[data-mint]");
+    for (var i = 0; i < old.length; i++) previous.push(old[i].getAttribute("data-mint"));
+
+    var byMint = {};
+    for (var j = 0; j < records.length; j++) byMint[records[j].mint] = records[j];
+
+    var order = previous.filter(function (m) { return byMint[m]; });
+    for (var k = 0; k < records.length; k++) {
+      if (order.indexOf(records[k].mint) === -1) order.push(records[k].mint);
+    }
+
+    var html = "";
+    for (var n = 0; n < order.length; n++) {
+      var mint = order[n];
+      var rec = byMint[mint];
+      var state = live && live.mints[mint] ? live.mints[mint].mint : null;
+      var flag = state && state.fieldDisagrees ? '<span class="flag"></span>' : "";
+      var label = rec.symbol ? esc(rec.symbol) : esc(mint.slice(0, 6));
+      html += '<button type="button" data-mint="' + esc(mint) + '" aria-pressed="'
+        + (mint === keep ? "true" : "false") + '" title="' + esc(mint) + '">'
+        + flag + label + " \u00b7 " + esc(mint.slice(0, 4)) + "\u2026</button>";
+    }
+    host.innerHTML = html;
+    setText("mint-count", String(order.length));
+    return order;
+  }
 
   function renderMint(mint) {
     selected = mint;
@@ -1074,6 +1118,11 @@ POST {{RPC_HOST}}
     mark("reading", "asking " + RPC.replace(/^https?:\/\//, ""));
     readLive().then(function (out) {
       live = out;
+      var order = renderPicker(out.records, selected);
+      /* The selected mint can vanish from under the reader if its record is closed, and it is
+         absent from the live read if that read partly failed. Falling back to the first record
+         keeps the page showing something rather than an empty section. */
+      if (!out.mints[selected] && order.length) selected = order[0];
       renderMint(selected);
       mark("live", "re-read just now, against the program at " + PROGRAM.slice(0, 8) + "\u2026");
     }).catch(function (e) {
