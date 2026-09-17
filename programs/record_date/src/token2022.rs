@@ -59,8 +59,8 @@ impl ScaledUiAmount {
     ///
     /// This is the whole point of the program. The field named `multiplier` is the
     /// **previous** value; the live one is `new_multiplier`, once its timestamp has passed.
-    /// A reader that takes `multiplier` is one corporate action behind. On 16 September 2026
-    /// that was 357 of the 777 xStock mints on Solana.
+    /// A reader that takes `multiplier` is one corporate action behind. On 17 September 2026
+    /// that was 370 of the 927 xStock mints on Solana.
     pub fn effective(&self, now: i64) -> f64 {
         if self.new_multiplier != 0.0 && self.new_multiplier_effective_timestamp <= now {
             self.new_multiplier
@@ -133,7 +133,7 @@ pub struct MintView {
 /// above `BASE_ACCOUNT_AND_TYPE_LENGTH`, and does the same check on the padding that this does.
 ///
 /// The walk is exact. It steps from one header to the next and never skips a byte looking for
-/// something that resembles a header. That is a decision, not an omission: on all 777 xStock
+/// something that resembles a header. That is a decision, not an omission: on all 927 xStock
 /// mints the run is dense and ends exactly at the end of the account, so there is nothing to
 /// skip over. A tolerant walk that advanced a byte whenever a header looked implausible would be
 /// a way to return a *different* plausible-looking body without failing, which is worse than

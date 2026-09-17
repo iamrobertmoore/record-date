@@ -340,7 +340,7 @@ async function main() {
   const payer = loadPayer();
   const state = loadState();
 
-  console.log("Record Date: the dividend is in the mint account, and nothing reads it");
+  console.log("Record Date: the dividend is in the mint account, and no surface reports it");
   console.log(`  rpc ${RPC}`);
   console.log(`  program ${PROGRAM_ID.toBase58()}`);
   console.log(`  payer ${payer.publicKey.toBase58()}`);

@@ -7,7 +7,7 @@
 //!
 //! 1. The field named `multiplier` is the **previous** value. The live one is
 //!    `new_multiplier`, and it takes over at `new_multiplier_effective_timestamp`.
-//!    On 16 September 2026, 357 of the 737 xStock mints on Solana differed between the two.
+//!    On 17 September 2026, 370 of the 927 xStock mints on Solana differed between the two.
 //! 2. There is no account that records the sequence of activations, so the history lives in
 //!    an HTTP API and in transaction logs.
 //!

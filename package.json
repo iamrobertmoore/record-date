@@ -2,7 +2,7 @@
   "name": "record-date",
   "version": "1.0.0",
   "private": true,
-  "description": "The dividend is in the mint account and nothing reads it. Read it, and keep a receipt.",
+  "description": "The dividend is in the mint account and no surface reports it. Read it, and keep a receipt.",
   "type": "module",
   "license": "MIT",
   "engines": {

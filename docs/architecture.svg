@@ -25,7 +25,7 @@
   <rect width="1200" height="720" fill="#fbfaf7"/>
 
   <text x="48" y="56" class="eyebrow">Record Date / architecture</text>
-  <text x="48" y="92" class="h">The multiplier lives in the mint. Nothing reads it.</text>
+  <text x="48" y="92" class="h">The multiplier lives in the mint. No surface reports it.</text>
   <text x="48" y="118" class="sub">One program reads the mint account directly and turns each corporate action into a receipt any reader can consume in a single call.</text>
 
   <!-- ============ panel 1: the mint ============ -->
@@ -85,7 +85,7 @@
   </g>
 
   <text x="72" y="644" class="sm">The base region is a fixed 165 bytes.</text>
-  <text x="72" y="660" class="sm">So the header is at 275 on all 777 mints.</text>
+  <text x="72" y="660" class="sm">So the header is at 275 on all 927 mints.</text>
 
   <!-- arrow 1 -->
   <line x1="400" y1="410" x2="428" y2="410" stroke="#989ea6" stroke-width="1.5" marker-end="url(#ar)"/>
@@ -108,7 +108,7 @@
     <text x="474" y="330" class="mov">2. resolve the multiplier</text>
     <text x="474" y="350" class="sm">live = new_multiplier if its timestamp</text>
     <text x="474" y="366" class="sm">has passed, else multiplier.</text>
-    <text x="474" y="386" class="mo" fill="#b0321c">357 of 777 mints differ here</text>
+    <text x="474" y="386" class="mo" fill="#b0321c">370 of 927 mints differ here</text>
 
     <rect x="460" y="406" width="296" height="72" rx="3" fill="#f5f2ec" stroke="#e7e4dd"/>
     <text x="474" y="428" class="mov">3. convert once</text>

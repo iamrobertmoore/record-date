@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320"
-     role="img" aria-label="Record Date: the dividend is a number in the Token-2022 mint account, and nothing on Solana reads it">
+     role="img" aria-label="Record Date: the dividend is a number in the Token-2022 mint account, and no surface reports it">
   <title>Record Date</title>
   <defs>
     <style>
@@ -33,18 +33,18 @@
     A tokenized stock pays its dividend by raising a multiplier
   </text>
   <text class="sans" x="72" y="210" font-size="19" font-weight="500" fill="#3a3d44">
-    inside the mint account. Nothing on Solana reads it.
+    inside the mint account. No surface reports it.
   </text>
 
   <!-- three figures, in pills -->
   <rect class="chip" x="72" y="240" width="188" height="30" rx="15"/>
-  <text class="pill" x="88" y="259">777 mints read on chain</text>
+  <text class="pill" x="88" y="259">927 mints read on chain</text>
 
   <rect class="chip" x="272" y="240" width="216" height="30" rx="15"/>
-  <text class="pill" x="288" y="259">$6,495,809 withheld in 6.6 months</text>
+  <text class="pill" x="288" y="259">$6,373,808 withheld in 6.6 months</text>
 
   <rect class="chip" x="500" y="240" width="168" height="30" rx="15"/>
-  <text class="pill" x="516" y="259">357 of 777 mints stale</text>
+  <text class="pill" x="516" y="259">370 of 927 mints stale</text>
 
   <!-- the receipt: the two candidate values -->
   <rect x="716" y="44" width="412" height="232" rx="14" fill="#fff" stroke="#e6e1d6"/>
@@ -63,11 +63,12 @@
     A reader that takes this one is one corporate action behind.
   </text>
 
-  <!-- the split: 74.3% reinvested, 25.7% withheld -->
+  <!-- the split: 73.8% reinvested, 26.2% withheld. Bar widths are the labels:
+       348 * 0.738 = 256.8 and 348 * 0.262 = 91.2, so the boundary sits at x=1004.8. -->
   <g>
-    <rect x="748" y="234" width="264.5" height="10" rx="5" fill="#1c7a58"/>
-    <rect x="1012.5" y="234" width="83.5" height="10" rx="5" fill="#b0321c"/>
-    <text class="eyebrow" x="748" y="264" style="fill:#1c7a58">74.3% reinvested</text>
-    <text class="eyebrow" x="1012" y="264" style="fill:#b0321c">25.7% withheld</text>
+    <rect x="748" y="234" width="256.8" height="10" rx="5" fill="#1c7a58"/>
+    <rect x="1004.8" y="234" width="91.2" height="10" rx="5" fill="#b0321c"/>
+    <text class="eyebrow" x="748" y="264" style="fill:#1c7a58">73.8% reinvested</text>
+    <text class="eyebrow" x="1004" y="264" style="fill:#b0321c">26.2% withheld</text>
   </g>
 </svg>
