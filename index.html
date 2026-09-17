@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Record Date: the dividend is in the mint account, and on 361 of 777 mints the obvious field is the previous one</title>
-<meta name="description" content="94.2% of tokenized US stocks on Solana have 30% of their dividend withheld before it is reinvested, and 57 of the 631 multiplier activations land on a day the US market does not trade at all.">
+<title>Record Date: the dividend is in the mint account, and on 370 of 927 mints the obvious field is the previous one</title>
+<meta name="description" content="94.2% of tokenized US stocks on Solana have 30% of their dividend withheld before it is reinvested, and 57 of the 640 multiplier activations land on a day the US market does not trade at all.">
 <meta name="color-scheme" content="light">
 <link rel="icon" href="docs/brand/mark.svg" type="image/svg+xml">
 <style>
@@ -309,23 +309,23 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
   <div class="wrap">
     <div class="stamp">
       <span class="chip">Solana mainnet · read <b>17 September 2026</b></span>
-      <span class="chip">Token-2022 mints <b>777</b></span>
-      <span class="chip hot">withheld <b>26.1%</b> of dividend income</span>
+      <span class="chip">Token-2022 mints <b>927</b></span>
+      <span class="chip hot">withheld <b>26.2%</b> of dividend income</span>
     </div>
 
-    <h1>The dividend is a number in the mint account, and on 361 of 777 mints the obvious field is the previous one.</h1>
+    <h1>The dividend is a number in the mint account, and on 370 of 927 mints the obvious field is the previous one.</h1>
 
     <p class="lede">A tokenized US stock pays its dividend by quietly raising a multiplier stored in
       the token's Token-2022 mint account. The balance does not move. Most wallets, exchanges,
       aggregators and DeFi protocols do not apply the multiplier, and the field named
       <b>multiplier</b> is the wrong one. <b>377 of the 400
       tokenized stocks that publish a withholding rate lose 30% of the dividend before
-      it is reinvested</b>, and about <b>$11.5m a year</b> is withheld before
+      it is reinvested</b>, and about <b>$11.6m a year</b> is withheld before
       the reinvestment, on a surface no holder is shown.</p>
     <p class="lede">Two other projects read this field before this one did, and they are named in
       section 01. What neither of them ships is anything a venue can act on. The issuer's own docs
       ask venues to pause around every activation and nothing enforces it, so
-      <b>57 of the 631 activations land on a day the market
+      <b>57 of the 640 activations land on a day the market
       does not trade at all</b>, and this is a program that can say so.</p>
 
     <div class="byline">
@@ -353,11 +353,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         <em>of the 400 tokenized stocks with a published rate are taxed at
           30%. 20 are at 0% and 3 at 5%, which is
           all this feed says about why.</em></div>
-      <div class="taken"><b>$11,523,691</b>
+      <div class="taken"><b>$11,588,741</b>
         <em>a year, withheld from holders of tokenized stocks on Solana. Measured, not
           estimated: per-unit dividends times supply.</em></div>
-      <div><b>361</b>
-        <em>of 777 mints store a value in the field named <span class="num">multiplier</span>
+      <div><b>370</b>
+        <em>of 927 mints store a value in the field named <span class="num">multiplier</span>
           that is not the multiplier. A reader that takes it is one corporate action behind.</em></div>
       <div class="paid"><b>533<span class="u">/533</span></b>
         <em>corporate-action records reconcile exactly to net = gross × (1 − rate). Zero
@@ -405,8 +405,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         <p class="k">multiplier</p>
         <p class="v wrong">1.0268028384</p>
         <p class="note">The field a reader reaches for first. It is the value in force
-          <em>before</em> the most recent corporate action. For 361 of
-          777 mints it is not the multiplier.</p>
+          <em>before</em> the most recent corporate action. For 370 of
+          927 mints it is not the multiplier.</p>
       </div>
       <div class="mid">effective</div>
       <div>
@@ -423,7 +423,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       <span class="num">multiplier</span> otherwise. That is what Token-2022's own
       <span class="num">process_update_multiplier</span> does, and it is not taken on trust. The
       issuer publishes its own view of the live value, and the rule was compared against it on
-      every mint rather than a sample: <b>777 agreed, 0
+      every mint rather than a sample: <b>927 agreed, 0
       disagreed</b>, 0 publishing nothing to compare against. The comparison
       is one of the build's own checks and it stops the page if it ever fails.</p>
 
@@ -458,29 +458,29 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
 
     <div class="timing">
       <div class="hd">
-        <p><b>When the multiplier actually moves.</b> 631 activations the issuer has
+        <p><b>When the multiplier actually moves.</b> 640 activations the issuer has
           published, counted by the minute of the day they take effect.
-          <b>622 of them, 98.6%, fall outside
+          <b>631 of them, 98.6%, fall outside
           the US regular session</b>, and 93.8% of the whole sample lands on the
           four minutes below.</p>
         <p style="margin-top:10px">That is measured two ways, because one definition of "the
           market is open" is mine and the other is the exchange's. The first is a fixed UTC window
           drawn wide at 13:00 to 21:00, which covers the session under both daylight time and
           standard time and can only make the finding harder to reach: by that definition
-          619 of 631, or 98.1%, are outside. The second
+          628 of 640, or 98.1%, are outside. The second
           is the exchange calendar Pyth publishes with its feed directory: America/New_York, a regular
           session of 09:30-16:00, 12 date overrides for holidays and half
           days, and it covers 1043 of the 1071 US equity feeds
-          Pyth carries. Against that, 9 of 631 fall inside the
-          session, so 622 are outside, or
+          Pyth carries. Against that, 9 of 640 fall inside the
+          session, so 631 are outside, or
           98.6%. The two are computed independently and the build
           requires both to agree the market is shut, so the result is not an artefact of where the
           window was drawn. Of the ones the calendar puts outside,
-          565 land on a weekday that trades but outside its hours
+          574 land on a weekday that trades but outside its hours
           and 57 on a day the market does not trade at all.</p>
       </div>
       <div class="row">
-<div class="slot off"><b>00:30</b><i>399 activations</i><u>20:30 ET the previous day</u></div>
+<div class="slot off"><b>00:30</b><i>407 activations</i><u>20:30 ET the previous day</u></div>
 <div class="slot off"><b>23:55</b><i>177 activations</i><u>19:55 ET, after the close</u></div>
 <div class="slot off"><b>00:15</b><i>11 activations</i><u>20:15 ET the previous day</u></div>
 <div class="slot off"><b>01:15</b><i>5 activations</i><u>21:15 ET the previous day</u></div>
@@ -510,7 +510,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
   <div class="wrap">
     <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> what was taken</p>
     <div class="head">
-      <h2>The dividend is reinvested net of tax, and the net is 73.9% of the gross.</h2>
+      <h2>The dividend is reinvested net of tax, and the net is 73.8% of the gross.</h2>
       <p>Across the 540 scheduled cash dividends the issuer has published, the
         arithmetic closes exactly: <span class="num">net = gross × (1 − rate)</span> on all
         533 records that carry both figures. The withheld part never reaches the token,
@@ -518,22 +518,22 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
     </div>
 
     <div class="meter" role="img"
-         aria-label="Of 24,245,993 dollars of gross dividend, 17,907,963 arrived and 6,338,030 was withheld">
-      <i class="keep" data-w="73.859" style="width:73.859%"></i>
-      <i class="take" data-w="26.141" style="width:26.141%"></i>
+         aria-label="Of 24,365,252 dollars of gross dividend, 17,991,444 arrived and 6,373,808 was withheld">
+      <i class="keep" data-w="73.841" style="width:73.841%"></i>
+      <i class="take" data-w="26.159" style="width:26.159%"></i>
     </div>
     <div class="key">
-      <span><i style="background:#1c7a58"></i> reinvested into the token · $17,907,963</span>
-      <span><i style="background:#b0321c"></i> withheld at source · $6,338,030</span>
+      <span><i style="background:#1c7a58"></i> reinvested into the token · $17,991,444</span>
+      <span><i style="background:#b0321c"></i> withheld at source · $6,373,808</span>
     </div>
 
     <div class="stats" style="margin-top:38px">
-      <div><b>$24,245,993</b><em>gross dividends published across the window
+      <div><b>$24,365,252</b><em>gross dividends published across the window
         2026-03-06 to 2026-09-24, 6.6 months</em></div>
-      <div class="paid"><b>$17,907,963</b><em>the part that became more token</em></div>
-      <div class="taken"><b>$6,338,030</b><em>the part that did not</em></div>
+      <div class="paid"><b>$17,991,444</b><em>the part that became more token</em></div>
+      <div class="taken"><b>$6,373,808</b><em>the part that did not</em></div>
       <div class="taken"><b>0.71<span class="u">%</span></b><em>implied gross yield on
-        the 361 symbols that both pay and quote, the check that the total is not an
+        the 370 symbols that both pay and quote, the check that the total is not an
         order of magnitude out</em></div>
     </div>
 
@@ -541,7 +541,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       scaled supply, at today's price, over the window the issuer's feed covers. Supply is today's
       rather than time-weighted, so a token that minted heavily after its dividend is
       over-counted. The feed is an upcoming feed, so the window runs a few days past today:
-      <span class="num">$23,676,471</span> of the $24,245,993 gross is dated on or before today
+      <span class="num">$23,795,729</span> of the $24,365,252 gross is dated on or before today
       and <span class="num">$569,522</span> is still forward. Read the annual figure as
       an order of magnitude, not a ledger. The full arithmetic is in
       <span class="num">scripts/fetch.py</span>.</p>
@@ -572,11 +572,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         gross cashflow and a net one, 30% apart, and the whole entry rests on the net being the
         one that reaches the token. Divide either by the multiplier step and you get a share price.
         Do it with the net figure and the answer lands on the market at
-        <b>1.035</b>; do it with the gross and it reads <b>1.479</b>.
+        <b>1.035</b>; do it with the gross and it reads <b>1.478</b>.
         The control is the 40 events carrying a 0% rate, where the feed's net and
         gross are the same number and a test that is measuring the unit rather than the arithmetic
         must have no preference between them. It does not: both read
-        <b>1.007</b>.</p>
+        <b>1.006</b>.</p>
     </div>
 
     <div class="proof">
@@ -588,12 +588,12 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           </tr>
         </thead>
         <tbody>
-<tr><td class="sym">BBYx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0072687939</td><td class="m">0.672</td><td class="imp">$92.45</td><td class="m">$92.53</td><td class="m good">-0.1%</td></tr>
-<tr><td class="sym">CRMx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0012360711</td><td class="m">0.308</td><td class="imp">$249.18</td><td class="m">$249.47</td><td class="m good">-0.1%</td></tr>
+<tr><td class="sym">BBYx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0072687939</td><td class="m">0.672</td><td class="imp">$92.45</td><td class="m">$90.91</td><td class="m good">+1.7%</td></tr>
+<tr><td class="sym">CRMx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0012360711</td><td class="m">0.308</td><td class="imp">$249.18</td><td class="m">$250.32</td><td class="m good">-0.5%</td></tr>
 <tr><td class="sym">HBANx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.006858407</td><td class="m">0.1085</td><td class="imp">$15.82</td><td class="m">$15.84</td><td class="m good">-0.1%</td></tr>
-<tr><td class="sym">HPEx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.00175988</td><td class="m">0.09975</td><td class="imp">$56.68</td><td class="m">$57.36</td><td class="m good">-1.2%</td></tr>
-<tr><td class="sym">SATAx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0005396219</td><td class="m">0.0516</td><td class="imp">$95.62</td><td class="m">$95.53</td><td class="m good">+0.1%</td></tr>
-<tr><td class="sym">VICIx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0131267835</td><td class="m">0.322</td><td class="imp">$24.53</td><td class="m">$24.36</td><td class="m good">+0.7%</td></tr>
+<tr><td class="sym">HPEx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.00175988</td><td class="m">0.09975</td><td class="imp">$56.68</td><td class="m">$58.02</td><td class="m good">-2.3%</td></tr>
+<tr><td class="sym">SATAx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0005396219</td><td class="m">0.0516</td><td class="imp">$95.62</td><td class="m">$95.56</td><td class="m good">+0.1%</td></tr>
+<tr><td class="sym">VICIx</td><td class="m">2026-09-17<span class="age">0d</span></td><td class="m">0.0131267835</td><td class="m">0.322</td><td class="imp">$24.53</td><td class="m">$23.87</td><td class="m good">+2.8%</td></tr>
 <tr><td class="sym">AIGx</td><td class="m">2026-09-16<span class="age">1d</span></td><td class="m">0.0046064753</td><td class="m">0.35</td><td class="imp">$75.98</td><td class="m">$75.72</td><td class="m good">+0.3%</td></tr>
 <tr><td class="sym">ARESx</td><td class="m">2026-09-16<span class="age">1d</span></td><td class="m">0.007319907</td><td class="m">0.945</td><td class="imp">$129.10</td><td class="m">$123.31</td><td class="m good">+4.7%</td></tr>
         </tbody>
@@ -609,21 +609,21 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           <tr><th>Age of the activation</th><th>Events</th><th>Median gap against today's price</th></tr>
         </thead>
         <tbody>
-<tr><td class="m">0-2 days</td><td class="m">41</td><td class="m"><span class="dwrap"><i class="dbar" style="width:22.0%"></i></span><span class="dpct">1.5%</span></td></tr>
-<tr><td class="m">3-10 days</td><td class="m">34</td><td class="m"><span class="dwrap"><i class="dbar" style="width:47.0%"></i></span><span class="dpct">3.2%</span></td></tr>
-<tr><td class="m">11-30 days</td><td class="m">151</td><td class="m"><span class="dwrap"><i class="dbar" style="width:71.3%"></i></span><span class="dpct">4.9%</span></td></tr>
-<tr><td class="m">31-60 days</td><td class="m">118</td><td class="m"><span class="dwrap"><i class="dbar" style="width:100.0%"></i></span><span class="dpct">6.9%</span></td></tr>
-<tr><td class="m">over 60 days</td><td class="m">90</td><td class="m"><span class="dwrap"><i class="dbar" style="width:67.9%"></i></span><span class="dpct">4.7%</span></td></tr>
+<tr><td class="m">0-2 days</td><td class="m">41</td><td class="m"><span class="dwrap"><i class="dbar" style="width:28.4%"></i></span><span class="dpct">2.0%</span></td></tr>
+<tr><td class="m">3-10 days</td><td class="m">34</td><td class="m"><span class="dwrap"><i class="dbar" style="width:43.3%"></i></span><span class="dpct">3.0%</span></td></tr>
+<tr><td class="m">11-30 days</td><td class="m">160</td><td class="m"><span class="dwrap"><i class="dbar" style="width:71.4%"></i></span><span class="dpct">5.0%</span></td></tr>
+<tr><td class="m">31-60 days</td><td class="m">118</td><td class="m"><span class="dwrap"><i class="dbar" style="width:100.0%"></i></span><span class="dpct">7.0%</span></td></tr>
+<tr><td class="m">over 60 days</td><td class="m">90</td><td class="m"><span class="dwrap"><i class="dbar" style="width:74.4%"></i></span><span class="dpct">5.2%</span></td></tr>
         </tbody>
       </table>
     </div>
 
-    <p class="small" style="margin-top:16px">Across 434 reconciliations on
-      342 names the median gap is <b>2.1%</b> where the activation is within
-      ten days (75 events) and <b>4.7%</b> where it is more than sixty
+    <p class="small" style="margin-top:16px">Across 443 reconciliations on
+      351 names the median gap is <b>2.1%</b> where the activation is within
+      ten days (75 events) and <b>5.2%</b> where it is more than sixty
       (90). The arithmetic is identical in both buckets. The only thing that changed
       is how long the stock has had to move, which is what makes this evidence rather than a
-      coincidence. The overall median is 4.6%.</p>
+      coincidence. The overall median is 4.7%.</p>
   </div>
 </section>
 
@@ -636,36 +636,36 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         times the scaled supply the chain reports. The bar is scaled to the largest here.</p>
     </div>
     <ul class="ledger">
-<li title="Xs78JED6PFZxWc2wCEPspZW9kL3Se5J7L5TChKgsidH"><span class="lg-top"><b>STRCx</b><em>7 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$223,344</b></span><span class="lg-row"><span>per unit</span><b>0.437499</b></span><span class="lg-row"><span>multiplier</span><b>1.0863570205</b></span><span class="lg-row"><span>price</span><b>$97.25</b></span><span class="lg-bar"><i data-w="100.0" style="width:100.0%"></i></span></li>
-<li title="XsAtbqkAP1HJxy7hFDeq7ok6yM43DQ9mQ1Rh861X8rw"><span class="lg-top"><b>PFEx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$165,753</b></span><span class="lg-row"><span>per unit</span><b>0.258</b></span><span class="lg-row"><span>multiplier</span><b>1.0537129709</b></span><span class="lg-row"><span>price</span><b>$27.49</b></span><span class="lg-bar"><i data-w="74.2" style="width:74.2%"></i></span></li>
-<li title="XsfAzPzYrYjd4Dpa9BU3cusBsvWfVB9gBcyGC87S57n"><span class="lg-top"><b>NVOx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$130,148</b></span><span class="lg-row"><span>per unit</span><b>0.396955</b></span><span class="lg-row"><span>multiplier</span><b>1.0370549907</b></span><span class="lg-row"><span>price</span><b>$41.88</b></span><span class="lg-bar"><i data-w="58.3" style="width:58.3%"></i></span></li>
-<li title="XsvKCaNsxg2GN8jjUmq71qukMJr7Q1c5R2Mk9P8kcS8"><span class="lg-top"><b>CMCSAx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$113,925</b></span><span class="lg-row"><span>per unit</span><b>0.198</b></span><span class="lg-row"><span>multiplier</span><b>1.0876797409</b></span><span class="lg-row"><span>price</span><b>$23.74</b></span><span class="lg-bar"><i data-w="51.0" style="width:51.0%"></i></span></li>
+<li title="Xs78JED6PFZxWc2wCEPspZW9kL3Se5J7L5TChKgsidH"><span class="lg-top"><b>STRCx</b><em>7 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$223,344</b></span><span class="lg-row"><span>per unit</span><b>0.437499</b></span><span class="lg-row"><span>multiplier</span><b>1.0863570205</b></span><span class="lg-row"><span>price</span><b>$97.48</b></span><span class="lg-bar"><i data-w="100.0" style="width:100.0%"></i></span></li>
+<li title="XsAtbqkAP1HJxy7hFDeq7ok6yM43DQ9mQ1Rh861X8rw"><span class="lg-top"><b>PFEx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$165,753</b></span><span class="lg-row"><span>per unit</span><b>0.258</b></span><span class="lg-row"><span>multiplier</span><b>1.0537129709</b></span><span class="lg-row"><span>price</span><b>$27.53</b></span><span class="lg-bar"><i data-w="74.2" style="width:74.2%"></i></span></li>
+<li title="XsfAzPzYrYjd4Dpa9BU3cusBsvWfVB9gBcyGC87S57n"><span class="lg-top"><b>NVOx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$130,148</b></span><span class="lg-row"><span>per unit</span><b>0.396955</b></span><span class="lg-row"><span>multiplier</span><b>1.0370549907</b></span><span class="lg-row"><span>price</span><b>$42.09</b></span><span class="lg-bar"><i data-w="58.3" style="width:58.3%"></i></span></li>
+<li title="XsvKCaNsxg2GN8jjUmq71qukMJr7Q1c5R2Mk9P8kcS8"><span class="lg-top"><b>CMCSAx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$113,925</b></span><span class="lg-row"><span>per unit</span><b>0.198</b></span><span class="lg-row"><span>multiplier</span><b>1.0876797409</b></span><span class="lg-row"><span>price</span><b>$23.75</b></span><span class="lg-bar"><i data-w="51.0" style="width:51.0%"></i></span></li>
 <li title="XsqBC5tcVQLYt8wqGCHRnAUUecbRYXoJCReD6w7QEKp"><span class="lg-top"><b>TBLLx</b><em>5 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$113,672</b></span><span class="lg-row"><span>per unit</span><b>0.451278</b></span><span class="lg-row"><span>multiplier</span><b>1.0187608513</b></span><span class="lg-row"><span>price</span><b>$105.73</b></span><span class="lg-bar"><i data-w="50.9" style="width:50.9%"></i></span></li>
-<li title="XsaHND8sHyfMfsWPj6kSdd5VwvCayZvjYgKmmcNL5qh"><span class="lg-top"><b>XOMx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$112,966</b></span><span class="lg-row"><span>per unit</span><b>0.927</b></span><span class="lg-row"><span>multiplier</span><b>1.0176489705</b></span><span class="lg-row"><span>price</span><b>$163.96</b></span><span class="lg-bar"><i data-w="50.6" style="width:50.6%"></i></span></li>
-<li title="XsnQnU7AdbRZYe2akqqpibDdXjkieGFfSkbkjX1Sd1X"><span class="lg-top"><b>MRKx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$108,611</b></span><span class="lg-row"><span>per unit</span><b>0.765</b></span><span class="lg-row"><span>multiplier</span><b>1.0258591861</b></span><span class="lg-row"><span>price</span><b>$144.91</b></span><span class="lg-bar"><i data-w="48.6" style="width:48.6%"></i></span></li>
+<li title="XsaHND8sHyfMfsWPj6kSdd5VwvCayZvjYgKmmcNL5qh"><span class="lg-top"><b>XOMx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$112,966</b></span><span class="lg-row"><span>per unit</span><b>0.927</b></span><span class="lg-row"><span>multiplier</span><b>1.0176489705</b></span><span class="lg-row"><span>price</span><b>$163.40</b></span><span class="lg-bar"><i data-w="50.6" style="width:50.6%"></i></span></li>
+<li title="XsnQnU7AdbRZYe2akqqpibDdXjkieGFfSkbkjX1Sd1X"><span class="lg-top"><b>MRKx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$108,611</b></span><span class="lg-row"><span>per unit</span><b>0.765</b></span><span class="lg-row"><span>multiplier</span><b>1.0258591861</b></span><span class="lg-row"><span>price</span><b>$145.67</b></span><span class="lg-bar"><i data-w="48.6" style="width:48.6%"></i></span></li>
 <li title="Xs4uZnG2mzZQKgnmuYboj1PRBtascAvWh5NdVMfz2aW"><span class="lg-top"><b>YLDEx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$105,875</b></span><span class="lg-row"><span>per unit</span><b>0.477105</b></span><span class="lg-row"><span>multiplier</span><b>1.0194749276</b></span><span class="lg-row"><span>price</span><b>$55.63</b></span><span class="lg-bar"><i data-w="47.4" style="width:47.4%"></i></span></li>
-<li title="XsNNMt7WTNA2sV3jrb1NNfNgapxRF5i4i6GcnTRRHts"><span class="lg-top"><b>CVXx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$104,221</b></span><span class="lg-row"><span>per unit</span><b>1.068</b></span><span class="lg-row"><span>multiplier</span><b>1.0295541831</b></span><span class="lg-row"><span>price</span><b>$211.75</b></span><span class="lg-bar"><i data-w="46.7" style="width:46.7%"></i></span></li>
-<li title="XsaBXg8dU5cPM6ehmVctMkVqoiRG2ZjMo1cyBJ3AykQ"><span class="lg-top"><b>KOx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$103,027</b></span><span class="lg-row"><span>per unit</span><b>0.477</b></span><span class="lg-row"><span>multiplier</span><b>1.0225601246</b></span><span class="lg-row"><span>price</span><b>$87.93</b></span><span class="lg-bar"><i data-w="46.1" style="width:46.1%"></i></span></li>
-<li title="XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3"><span class="lg-top"><b>HDx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$97,202</b></span><span class="lg-row"><span>per unit</span><b>2.097</b></span><span class="lg-row"><span>multiplier</span><b>1.0232993457</b></span><span class="lg-row"><span>price</span><b>$303.69</b></span><span class="lg-bar"><i data-w="43.5" style="width:43.5%"></i></span></li>
-<li title="Xsv99frTRUeornyvCfvhnDesQDWuvns1M852Pez91vF"><span class="lg-top"><b>PEPx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$95,765</b></span><span class="lg-row"><span>per unit</span><b>0.888</b></span><span class="lg-row"><span>multiplier</span><b>1.0344000941</b></span><span class="lg-row"><span>price</span><b>$134.40</b></span><span class="lg-bar"><i data-w="42.9" style="width:42.9%"></i></span></li>
+<li title="XsNNMt7WTNA2sV3jrb1NNfNgapxRF5i4i6GcnTRRHts"><span class="lg-top"><b>CVXx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$104,221</b></span><span class="lg-row"><span>per unit</span><b>1.068</b></span><span class="lg-row"><span>multiplier</span><b>1.0295541831</b></span><span class="lg-row"><span>price</span><b>$211.54</b></span><span class="lg-bar"><i data-w="46.7" style="width:46.7%"></i></span></li>
+<li title="XsaBXg8dU5cPM6ehmVctMkVqoiRG2ZjMo1cyBJ3AykQ"><span class="lg-top"><b>KOx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$103,027</b></span><span class="lg-row"><span>per unit</span><b>0.477</b></span><span class="lg-row"><span>multiplier</span><b>1.0225601246</b></span><span class="lg-row"><span>price</span><b>$87.94</b></span><span class="lg-bar"><i data-w="46.1" style="width:46.1%"></i></span></li>
+<li title="XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3"><span class="lg-top"><b>HDx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$97,202</b></span><span class="lg-row"><span>per unit</span><b>2.097</b></span><span class="lg-row"><span>multiplier</span><b>1.0232993457</b></span><span class="lg-row"><span>price</span><b>$304.87</b></span><span class="lg-bar"><i data-w="43.5" style="width:43.5%"></i></span></li>
+<li title="Xsv99frTRUeornyvCfvhnDesQDWuvns1M852Pez91vF"><span class="lg-top"><b>PEPx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$95,765</b></span><span class="lg-row"><span>per unit</span><b>0.888</b></span><span class="lg-row"><span>multiplier</span><b>1.0344000941</b></span><span class="lg-row"><span>price</span><b>$134.75</b></span><span class="lg-bar"><i data-w="42.9" style="width:42.9%"></i></span></li>
 <li title="XsCZJYnCmjs5cYZDMLVxVzvMy5AK2oqsWpobS6SYno8"><span class="lg-top"><b>FLBLx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$91,403</b></span><span class="lg-row"><span>per unit</span><b>0.172777</b></span><span class="lg-row"><span>multiplier</span><b>1.0171047698</b></span><span class="lg-row"><span>price</span><b>$23.00</b></span><span class="lg-bar"><i data-w="40.9" style="width:40.9%"></i></span></li>
 <li title="Xs1neEMHNaDDSHqE9nvDGkmuX73ZASKcLtQqwmVAQde"><span class="lg-top"><b>EWQx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$88,751</b></span><span class="lg-row"><span>per unit</span><b>0.3262</b></span><span class="lg-row"><span>multiplier</span><b>1.0163263663</b></span><span class="lg-row"><span>price</span><b>$44.15</b></span><span class="lg-bar"><i data-w="39.7" style="width:39.7%"></i></span></li>
-<li title="XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX"><span class="lg-top"><b>MSFTx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$86,479</b></span><span class="lg-row"><span>per unit</span><b>0.819</b></span><span class="lg-row"><span>multiplier</span><b>1.0059033904</b></span><span class="lg-row"><span>price</span><b>$492.44</b></span><span class="lg-bar"><i data-w="38.7" style="width:38.7%"></i></span></li>
-<li title="XsEYQJtVa51Ww3y28jV1FwheMgmDj8BpxYiCPThcLWW"><span class="lg-top"><b>JAAAx</b><em>5 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$72,815</b></span><span class="lg-row"><span>per unit</span><b>0.301845</b></span><span class="lg-row"><span>multiplier</span><b>1.0111858841</b></span><span class="lg-row"><span>price</span><b>$50.64</b></span><span class="lg-bar"><i data-w="32.6" style="width:32.6%"></i></span></li>
+<li title="XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX"><span class="lg-top"><b>MSFTx</b><em>3 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$86,479</b></span><span class="lg-row"><span>per unit</span><b>0.819</b></span><span class="lg-row"><span>multiplier</span><b>1.0059033904</b></span><span class="lg-row"><span>price</span><b>$494.46</b></span><span class="lg-bar"><i data-w="38.7" style="width:38.7%"></i></span></li>
+<li title="XsEYQJtVa51Ww3y28jV1FwheMgmDj8BpxYiCPThcLWW"><span class="lg-top"><b>JAAAx</b><em>5 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$72,815</b></span><span class="lg-row"><span>per unit</span><b>0.301845</b></span><span class="lg-row"><span>multiplier</span><b>1.0111858841</b></span><span class="lg-row"><span>price</span><b>$50.66</b></span><span class="lg-bar"><i data-w="32.6" style="width:32.6%"></i></span></li>
 <li title="XsM51PKxDNQBZR65VRxRjNqcMWUBoYwHeVn2FR6WXi9"><span class="lg-top"><b>EWGx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$72,334</b></span><span class="lg-row"><span>per unit</span><b>0.249474</b></span><span class="lg-row"><span>multiplier</span><b>1.0137581351</b></span><span class="lg-row"><span>price</span><b>$42.43</b></span><span class="lg-bar"><i data-w="32.4" style="width:32.4%"></i></span></li>
-<li title="XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe"><span class="lg-top"><b>UNHx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$68,958</b></span><span class="lg-row"><span>per unit</span><b>1.359</b></span><span class="lg-row"><span>multiplier</span><b>1.0273478685</b></span><span class="lg-row"><span>price</span><b>$376.06</b></span><span class="lg-bar"><i data-w="30.9" style="width:30.9%"></i></span></li>
-<li title="XsqE9cRRpzxcGKDXj1BJ7Xmg4GRhZoyY1KpmGSxAWT2"><span class="lg-top"><b>MCDx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$62,269</b></span><span class="lg-row"><span>per unit</span><b>1.116</b></span><span class="lg-row"><span>multiplier</span><b>1.0211807004</b></span><span class="lg-row"><span>price</span><b>$249.49</b></span><span class="lg-bar"><i data-w="27.9" style="width:27.9%"></i></span></li>
+<li title="XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe"><span class="lg-top"><b>UNHx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$68,958</b></span><span class="lg-row"><span>per unit</span><b>1.359</b></span><span class="lg-row"><span>multiplier</span><b>1.0273478685</b></span><span class="lg-row"><span>price</span><b>$376.30</b></span><span class="lg-bar"><i data-w="30.9" style="width:30.9%"></i></span></li>
+<li title="XsqE9cRRpzxcGKDXj1BJ7Xmg4GRhZoyY1KpmGSxAWT2"><span class="lg-top"><b>MCDx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$62,269</b></span><span class="lg-row"><span>per unit</span><b>1.116</b></span><span class="lg-row"><span>multiplier</span><b>1.0211807004</b></span><span class="lg-row"><span>price</span><b>$249.40</b></span><span class="lg-bar"><i data-w="27.9" style="width:27.9%"></i></span></li>
 <li title="XsbZDdYJKxEBQASz4KBj23NRgymXw2NK6mbNQ6PYhC7"><span class="lg-top"><b>FEZx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$62,099</b></span><span class="lg-row"><span>per unit</span><b>0.333487</b></span><span class="lg-row"><span>multiplier</span><b>1.0111067299</b></span><span class="lg-row"><span>price</span><b>$68.28</b></span><span class="lg-bar"><i data-w="27.8" style="width:27.8%"></i></span></li>
-<li title="XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn"><span class="lg-top"><b>JNJx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$58,697</b></span><span class="lg-row"><span>per unit</span><b>0.804</b></span><span class="lg-row"><span>multiplier</span><b>1.0195885202</b></span><span class="lg-row"><span>price</span><b>$267.28</b></span><span class="lg-bar"><i data-w="26.3" style="width:26.3%"></i></span></li>
-<li title="XspwhyYPdWVM8XBHZnpS9hgyag9MKjLRyE3tVfmCbSr"><span class="lg-top"><b>IBMx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$56,149</b></span><span class="lg-row"><span>per unit</span><b>1.011</b></span><span class="lg-row"><span>multiplier</span><b>1.0204029187</b></span><span class="lg-row"><span>price</span><b>$238.46</b></span><span class="lg-bar"><i data-w="25.1" style="width:25.1%"></i></span></li>
-<li title="XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W"><span class="lg-top"><b>SPYx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$54,693</b></span><span class="lg-row"><span>per unit</span><b>0.571054</b></span><span class="lg-row"><span>multiplier</span><b>1.0057145602</b></span><span class="lg-row"><span>price</span><b>$754.05</b></span><span class="lg-bar"><i data-w="24.5" style="width:24.5%"></i></span></li>
+<li title="XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn"><span class="lg-top"><b>JNJx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$58,697</b></span><span class="lg-row"><span>per unit</span><b>0.804</b></span><span class="lg-row"><span>multiplier</span><b>1.0195885202</b></span><span class="lg-row"><span>price</span><b>$267.58</b></span><span class="lg-bar"><i data-w="26.3" style="width:26.3%"></i></span></li>
+<li title="XspwhyYPdWVM8XBHZnpS9hgyag9MKjLRyE3tVfmCbSr"><span class="lg-top"><b>IBMx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$56,149</b></span><span class="lg-row"><span>per unit</span><b>1.011</b></span><span class="lg-row"><span>multiplier</span><b>1.0204029187</b></span><span class="lg-row"><span>price</span><b>$240.01</b></span><span class="lg-bar"><i data-w="25.1" style="width:25.1%"></i></span></li>
+<li title="XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W"><span class="lg-top"><b>SPYx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$54,693</b></span><span class="lg-row"><span>per unit</span><b>0.571054</b></span><span class="lg-row"><span>multiplier</span><b>1.0057145602</b></span><span class="lg-row"><span>price</span><b>$760.48</b></span><span class="lg-bar"><i data-w="24.5" style="width:24.5%"></i></span></li>
 <li title="XsbWCMXPzLdZMLpPtiiWE7M99fySmsnK5eFCWGWfDQ8"><span class="lg-top"><b>EWUx</b><em>1 event</em></span><span class="lg-row"><span>withheld</span><b class="taken">$52,233</b></span><span class="lg-row"><span>per unit</span><b>0.199875</b></span><span class="lg-row"><span>multiplier</span><b>1.0098892366</b></span><span class="lg-row"><span>price</span><b>$47.46</b></span><span class="lg-bar"><i data-w="23.4" style="width:23.4%"></i></span></li>
 <li title="Xs8rb8QG9mEuQ41g2cUzuJLZt3xEPQFhvgb9s4obXSn"><span class="lg-top"><b>FAAAx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$52,153</b></span><span class="lg-row"><span>per unit</span><b>0.2157</b></span><span class="lg-row"><span>multiplier</span><b>1.0096041758</b></span><span class="lg-row"><span>price</span><b>$50.38</b></span><span class="lg-bar"><i data-w="23.4" style="width:23.4%"></i></span></li>
-<li title="XswsQk4duEQmCbGzfqUUWYmi7pV7xpJ9eEmLHXCaEQP"><span class="lg-top"><b>BACx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$51,290</b></span><span class="lg-row"><span>per unit</span><b>0.18</b></span><span class="lg-row"><span>multiplier</span><b>1.0179352667</b></span><span class="lg-row"><span>price</span><b>$58.01</b></span><span class="lg-bar"><i data-w="23.0" style="width:23.0%"></i></span></li>
-<li title="XsCAXu7xTaZMG9b9KJhNWYapuvNjxPuE4SysZq8uvMq"><span class="lg-top"><b>JPSTx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$49,236</b></span><span class="lg-row"><span>per unit</span><b>0.204249</b></span><span class="lg-row"><span>multiplier</span><b>1.0094580396</b></span><span class="lg-row"><span>price</span><b>$50.35</b></span><span class="lg-bar"><i data-w="22.0" style="width:22.0%"></i></span></li>
-<li title="XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1"><span class="lg-top"><b>GSx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$48,988</b></span><span class="lg-row"><span>per unit</span><b>2.85</b></span><span class="lg-row"><span>multiplier</span><b>1.0157573238</b></span><span class="lg-row"><span>price</span><b>$941.01</b></span><span class="lg-bar"><i data-w="21.9" style="width:21.9%"></i></span></li>
-<li title="Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh"><span class="lg-top"><b>NVDAx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$48,274</b></span><span class="lg-row"><span>per unit</span><b>0.15</b></span><span class="lg-row"><span>multiplier</span><b>1.0017011968</b></span><span class="lg-row"><span>price</span><b>$215.68</b></span><span class="lg-bar"><i data-w="21.6" style="width:21.6%"></i></span></li>
-<li title="XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C"><span class="lg-top"><b>JPMx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$44,693</b></span><span class="lg-row"><span>per unit</span><b>0.9</b></span><span class="lg-row"><span>multiplier</span><b>1.0139174713</b></span><span class="lg-row"><span>price</span><b>$349.82</b></span><span class="lg-bar"><i data-w="20.0" style="width:20.0%"></i></span></li>
+<li title="XswsQk4duEQmCbGzfqUUWYmi7pV7xpJ9eEmLHXCaEQP"><span class="lg-top"><b>BACx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$51,290</b></span><span class="lg-row"><span>per unit</span><b>0.18</b></span><span class="lg-row"><span>multiplier</span><b>1.0179352667</b></span><span class="lg-row"><span>price</span><b>$58.19</b></span><span class="lg-bar"><i data-w="23.0" style="width:23.0%"></i></span></li>
+<li title="XsCAXu7xTaZMG9b9KJhNWYapuvNjxPuE4SysZq8uvMq"><span class="lg-top"><b>JPSTx</b><em>4 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$49,236</b></span><span class="lg-row"><span>per unit</span><b>0.204249</b></span><span class="lg-row"><span>multiplier</span><b>1.0094580396</b></span><span class="lg-row"><span>price</span><b>$50.30</b></span><span class="lg-bar"><i data-w="22.0" style="width:22.0%"></i></span></li>
+<li title="XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1"><span class="lg-top"><b>GSx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$48,988</b></span><span class="lg-row"><span>per unit</span><b>2.85</b></span><span class="lg-row"><span>multiplier</span><b>1.0157573238</b></span><span class="lg-row"><span>price</span><b>$948.50</b></span><span class="lg-bar"><i data-w="21.9" style="width:21.9%"></i></span></li>
+<li title="Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh"><span class="lg-top"><b>NVDAx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$48,274</b></span><span class="lg-row"><span>per unit</span><b>0.15</b></span><span class="lg-row"><span>multiplier</span><b>1.0017011968</b></span><span class="lg-row"><span>price</span><b>$217.26</b></span><span class="lg-bar"><i data-w="21.6" style="width:21.6%"></i></span></li>
+<li title="XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C"><span class="lg-top"><b>JPMx</b><em>2 events</em></span><span class="lg-row"><span>withheld</span><b class="taken">$44,693</b></span><span class="lg-row"><span>per unit</span><b>0.9</b></span><span class="lg-row"><span>multiplier</span><b>1.0139174713</b></span><span class="lg-row"><span>price</span><b>$351.20</b></span><span class="lg-bar"><i data-w="20.0" style="width:20.0%"></i></span></li>
     </ul>
   </div>
 </section>
@@ -705,7 +705,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       The layout is not the one the docs describe: a mint account is a 165 byte base region, then
       the account-type byte, then the extensions. The mint fills only the first 82 of those bytes.
       So the header is computed rather than searched for, and a non-zero byte in the padding is
-      an error. Asserted on all 777 mints: the padding is zero in every one and the
+      an error. Asserted on all 927 mints: the padding is zero in every one and the
       <span class="num">ScaledUiAmountConfig</span> header is at byte 275 in every one.
       <span class="num">cargo test</span> covers the parser, the read rule and the fixed-point
       arithmetic.</p>
@@ -721,34 +721,37 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         write the page if one fails. These are the assertions, with what they actually found.</p>
     </div>
     <div class="checks">
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>every mint read is Token-2022 with a scaled-ui-amount extension</b><p><em>777 of 777</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>every mint has a zero-padded base region and says it is a mint</b><p><em>777 of 777 padded with zeros, 777 of 777 type byte is 1, 0 rejected</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the scaled-ui-amount header sits at one offset, not a range</b><p><em>275 x777, across 777 mints; the largest extension body stepped over is 205 bytes</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the extension run is dense: it ends exactly at the end of every account</b><p><em>777 of 777 exact, 0 overran, 0 undershot, at most 8 entries</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the asset walk starts at page 0, so it is not one page short</b><p><em>100 symbols on page 0 of the issuer&#x27;s asset API, 100 of them present in the 927 mints read</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>every mint read is Token-2022 with a scaled-ui-amount extension</b><p><em>927 of 927</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>every mint has a zero-padded base region and says it is a mint</b><p><em>927 of 927 padded with zeros, 927 of 927 type byte is 1, 0 rejected</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the scaled-ui-amount header sits at one offset, not a range</b><p><em>275 x927, across 927 mints; the largest extension body stepped over is 205 bytes</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the extension run is dense: it ends exactly at the end of every account</b><p><em>927 of 927 exact, 0 overran, 0 undershot, at most 8 entries</em></p></div></div>
 <div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the issuer&#x27;s gross/net/rate arithmetic closes</b><p><em>533 of 533 records match exactly</em></p></div></div>
 <div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>one withholding rate dominates</b><p><em>94.2% of 400 symbols at 30%</em></p></div></div>
 <div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the feed&#x27;s superseded versions are collapsed to the highest version</b><p><em>3 rows collapsed to 540 distinct events, 0 survivors are not the highest version; the superseded rows carried 0.71% of the per-unit gross</em></p></div></div>
 <div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the scheduled cash dividends are a proper subset of scheduled actions</b><p><em>540 scheduled cash dividends against 554 scheduled actions of all types</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the reconciliation covers the field, not a chosen handful</b><p><em>434 reconciliations across 342 names</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the multiplier moves while the US market is shut</b><p><em>631 activations, 12 (1.9%) inside 13:00-21:00 UTC; most common times 00:30 x399, 23:55 x177, 00:15 x11, 01:15 x5</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the exchange&#x27;s own calendar agrees the market was shut</b><p><em>9 of 631 (1.4%) inside 09:30-16:00 America/New_York, which is the session 1043 of 1071 USD equity feeds on Pyth carry, over 12 listed overrides</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the two definitions of the session agree on almost every activation</b><p><em>12 inside the UTC window against 9 inside the exchange calendar, a difference of 3 across 631 activations</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>a fresh activation reconciles tighter than an old one</b><p><em>median 2.1% on the 75 activations within 10 days against 4.7% on the 90 older than 60, so the residual is the stock moving, not the method</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the multiplier reinvests the net dividend, not the gross</b><p><em>the implied price over the market reads 1.035 on the net figure against 1.479 on the gross across 391 events at a rate above 29%, so the net is the one landing on a share price; on the 40 zero-rate events, where the two figures are the same number, both read 1.007, which is the control</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the reconciliation covers the field, not a chosen handful</b><p><em>443 reconciliations across 351 names</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the multiplier moves while the US market is shut</b><p><em>640 activations, 12 (1.9%) inside 13:00-21:00 UTC; most common times 00:30 x407, 23:55 x177, 00:15 x11, 01:15 x5</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the exchange&#x27;s own calendar agrees the market was shut</b><p><em>9 of 640 (1.4%) inside 09:30-16:00 America/New_York, which is the session 1043 of 1071 USD equity feeds on Pyth carry, over 12 listed overrides</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the two definitions of the session agree on almost every activation</b><p><em>12 inside the UTC window against 9 inside the exchange calendar, a difference of 3 across 640 activations</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the parsed calendar agrees with Pyth&#x27;s own session boundaries</b><p><em>Pyth puts the next open at Thu 17 Sep 09:30 and the next close at Thu 17 Sep 16:00, and 1043 feeds carrying this calendar agree on both; the parser matches at 5 of 5 boundary probes</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>a fresh activation reconciles tighter than an old one</b><p><em>median 2.1% on the 75 activations within 10 days against 5.2% on the 90 older than 60, so the residual is the stock moving, not the method</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the multiplier reinvests the net dividend, not the gross</b><p><em>the implied price over the market reads 1.035 on the net figure against 1.478 on the gross across 400 events at a rate above 29%, so the net is the one landing on a share price; on the 40 zero-rate events, where the two figures are the same number, both read 1.006, which is the control</em></p></div></div>
 <div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>where the two price fields disagree, the reconciliation picks the one this run used</b><p><em>10 events where the two price fields differ by over 20%; the field this run used reconciles to a median error of 0.7%, the field it rejected to 33.1%</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the field named multiplier is not the multiplier</b><p><em>361 of 777 mints differ</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the read rule matches the issuer&#x27;s own current value on every mint</b><p><em>777 agreed, 0 disagreed, 0 published no value</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the read rule matches the multiplier the runtime applies, on a strided sample</b><p><em>111 agreed, 0 disagreed, 0 unavailable</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the activation split agrees with the event counts</b><p><em>407 never, 288 exactly one, 82 two or more</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the two aggregation loops cover the same symbols</b><p><em>unrounded $6,338,030.10 vs $6,338,030.10, difference $0.00</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the ledger and the headline are the same total</b><p><em>ledger $6,338,028 vs headline $6,338,030, drift $2.10 within $186 from 370 rounded rows</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the withheld total covers every withholding rate, not only the dominant one</b><p><em>all rates $6,338,030 vs 30%-only $6,307,817, the rest is $30,213</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the meter fills: net plus withheld is gross</b><p><em>$24,245,993 = $17,907,963 + $6,338,030</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>what was paid and what is still forward add up to the whole</b><p><em>paid $23,676,471 of $24,245,993, forward $569,522</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the reference price is converted out of the underlying&#x27;s own currency</b><p><em>31 of 684 priced mints are non-dollar listings and every one is converted at the ECB rate for 2026-09-16; 0 converted by nothing</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the London listings are read as pence, not pounds</b><p><em>27 LSE mints priced, the published value is between 74 and 74 times the dollar price</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the implied gross yield is plausible for an equity book</b><p><em>0.71% on $3,341,418,857 across the 361 mints that both pay and quote</em></p></div></div>
-<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the price pass covered enough of the field to state a yield</b><p><em>684 of 777 mints quoted</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the field named multiplier is not the multiplier</b><p><em>370 of 927 mints differ</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the read rule matches the issuer&#x27;s own current value on every mint</b><p><em>927 agreed, 0 disagreed, 0 published no value</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the read rule matches the multiplier the runtime applies, on a strided sample</b><p><em>133 agreed, 0 disagreed, 0 unavailable</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the activation split agrees with the event counts</b><p><em>548 never, 297 exactly one, 82 two or more</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the two aggregation loops cover the same symbols</b><p><em>unrounded $6,373,807.61 vs $6,373,807.61, difference $0.00</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the ledger and the headline are the same total</b><p><em>ledger $6,373,805 vs headline $6,373,808, drift $2.61 within $190 from 379 rounded rows</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the withheld total covers every withholding rate, not only the dominant one</b><p><em>all rates $6,373,808 vs 30%-only $6,343,594, the rest is $30,213</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the meter fills: net plus withheld is gross</b><p><em>$24,365,252 = $17,991,444 + $6,373,808</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>what was paid and what is still forward add up to the whole</b><p><em>paid $23,795,729 of $24,365,252, forward $569,522</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the reference price is converted out of the underlying&#x27;s own currency</b><p><em>31 of 784 priced mints are non-dollar listings and every one is converted at the ECB rate for 2026-09-16; 0 converted by nothing</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the London listings are read as pence, not pounds</b><p><em>27 LSE mints priced, the published value is 74.3 times the dollar price on every one of them, because the ratio is pinned to 100 divided by the GBP rate of 1.345587 rather than varying with the share; drop the division and it reads 0.74</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the currency mistake is small in the book and large in the total</b><p><em>the London listings are 1.53% of the converted book and 100% of the gap between the converted and face-value totals</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the implied gross yield is plausible for an equity book</b><p><em>0.71% on $3,386,560,534 across the 370 mints that both pay and quote</em></p></div></div>
+<div class="check"><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.6 5.2l2.2 2.2 4.6-4.9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>the price pass covered enough of the field to state a yield</b><p><em>784 of 927 mints quoted</em></p></div></div>
     </div>
   </div>
 </section>
@@ -789,13 +792,13 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       </div>
       <div>
         <h3>The reference price is not always in dollars</h3>
-        <p>124 of the 777 mints track an equity that does not trade in
+        <p>174 of the 927 mints track an equity that does not trade in
           dollars, and the reference price published beside them is quoted in the underlying's own
           currency. 31 of the priced mints are non-dollar, and 27 of
           those are London listings quoted in pence, so each is divided by 100 before it is
           converted at the ECB rate for 2026-09-16. Read as dollars instead, the same
-          prices value the book at $13,223,746,197 rather than
-          $5,990,316,967, a factor of 2.21, and the yield
+          prices value the book at $13,638,378,887 rather than
+          $6,416,996,434, a factor of 2.13, and the yield
           denominator with it. The conversion is asserted on every non-dollar listing, because
           this is a mistake a plausible-looking yield does not catch.</p>
       </div>
@@ -815,7 +818,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       </div>
       <div>
         <h3>This is one issuer</h3>
-        <p>777 mints from Backed's own asset API, which is exhaustive over what Backed
+        <p>927 mints from Backed's own asset API, which is exhaustive over what Backed
           publishes and is not a census of every equity token on Solana. Backpack issues more and
           they are not counted here.</p>
       </div>

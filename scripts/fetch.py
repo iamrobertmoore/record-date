@@ -3,12 +3,13 @@
 
     python3 scripts/fetch.py            writes data.json and prints the findings
 
-Four sources, all public and none authenticated:
+Five sources, all public and none authenticated:
 
   api.xstocks.fi  the issuer's own asset list and corporate-action feed
   Solana RPC      the mint accounts, read directly
   Jupiter         prices and liquidity
   docs.xstocks.fi the published mechanics, quoted rather than paraphrased
+  Pyth            the US exchange calendar, and the session boundaries beside it
 
 The script asserts the things the page claims. If an assertion fails the page is wrong and
 the script says so, rather than publishing a stale number.
@@ -48,6 +49,18 @@ US_SESSION_CLOSE_UTC = 21 * 60         # 21:00
 # Pyth publishes the exchange calendar alongside its feed directory, with no key. Its price values
 # do need a key, so this build takes the session definition from Pyth and prices from elsewhere.
 # That is worth being explicit about: the calendar is Pyth's, the numbers beside it are not.
+#
+# Verified 17 September 2026, because the boundary matters and it moved:
+#
+#   /v2/price_feeds            free, no key. Carries `schedule` (the calendar) and `market_hours`
+#                              (`is_open`, plus absolute `next_open` / `next_close` unix seconds).
+#   /v2/updates/price/latest   401 unauthorized. Hermes required authentication from 26 Aug 2026.
+#
+# `market_hours` is Hermes metadata and is NOT in the on-chain price message, so a Solana program
+# cannot read it: Pyth Core's `PriceFeedMessage` carries feed_id, price, conf, exponent,
+# publish_time, prev_publish_time, ema_price and ema_conf, and no session field. The `MarketSession`
+# type belongs to Pyth Pro (Lazer) on Sui and Iota. So the calendar is consumed off chain, and is
+# checked against Pyth's own published session boundaries rather than read from a program.
 PYTH_FEEDS = "https://hermes.pyth.network/v2/price_feeds"
 
 # The ECB's daily reference rates, republished by Frankfurter, with no key. Needed because
@@ -120,17 +133,29 @@ def rpc(method, params, tries=6):
 def fetch_assets():
     """Every xStock deployed on Solana.
 
-    Paginated. Page one is 100 alphabetically early symbols and does not contain NVDAx, so
-    taking the first page gives a confident wrong answer. That trap is why this loops.
+    Paginated, and the page index is the trap. The two endpoints on this API do **not** agree:
+    `/assets` is **0-indexed** (page 0 is a real page of 100, page 10 is empty) while
+    `/corporate-actions/upcoming` is **1-indexed** (page 0 returns HTTP 400). Reading `/assets`
+    from page 1 therefore drops a whole page and looks like nothing is wrong.
+
+    This build did exactly that until 17 September 2026, and reported 827 mints where the API
+    serves 927. The missing 100 were not sampled, they were absent: every figure computed over
+    the field was computed over 89% of it. Found by disbelieving a jump from 777 to 827 in one
+    hour, which is 50 new listings, and is not a thing that happens.
+
+    So: start at page 0, loop until a page comes back empty, and refuse to accept a walk that
+    stopped because it ran out of range rather than because the data ended.
     """
     rows = {}
-    for page in range(1, 14):
+    pages = 0
+    for page in range(0, 40):
         payload = get_json(
             "%s/assets?pageSize=100&page=%d" % (XSTOCKS_API, page)
         )
         nodes = payload.get("nodes") or []
         if not nodes:
             break
+        pages += 1
         for asset in nodes:
             for deployment in asset.get("deployments") or []:
                 if deployment.get("network") != "Solana":
@@ -145,13 +170,18 @@ def fetch_assets():
                     "underlying": asset.get("underlyingSymbol"),
                     # The currency the underlying trades in, and the venue. Both are needed to
                     # read a price: the token is dollar-denominated but the reference price beside
-                    # it is not, and 124 of the 777 mints are not US listings.
+                    # it is not, and 124 of the mints are not US listings.
                     "currency": (asset.get("underlying") or {}).get("currency") or "USD",
                     "venue": (
                         (asset.get("trading") or {}).get("exchange") or {}
                     ).get("abbreviation"),
                 }
                 break
+    else:
+        raise RuntimeError(
+            "asset pagination stopped at the %d page cap rather than at the end of the data, "
+            "so the walk is truncated" % pages
+        )
     return rows
 
 
@@ -229,6 +259,10 @@ def fetch_exchange_calendar():
 
     The dominant schedule is taken rather than any one symbol's, because the whole US equity set
     shares one and taking the most common avoids picking a symbol that happens to trade elsewhere.
+
+    Pyth also states the same session a second way, as absolute unix seconds for the next open and
+    the next close. That is an independent description rather than a restatement of the grammar, so
+    it is carried out of here to check `parse_schedule` against the publisher's own arithmetic.
     """
     feeds = get_json(PYTH_FEEDS)
     usd = [
@@ -243,6 +277,21 @@ def fetch_exchange_calendar():
         raise RuntimeError("Pyth returned no scheduled USD equity feeds")
     schedule, n = counts.most_common(1)[0]
     tz, weekly, overrides = parse_schedule(schedule)
+
+    # The consensus across the feeds that carry this calendar. They describe one session, so they
+    # should not disagree with each other; taking the mode means one stale listing cannot move it.
+    bounds = Counter(
+        (f["market_hours"]["next_open"], f["market_hours"]["next_close"])
+        for f in usd
+        if f["attributes"].get("schedule") == schedule
+        and isinstance(f.get("market_hours"), dict)
+        and f["market_hours"].get("next_open")
+        and f["market_hours"].get("next_close")
+    )
+    if not bounds:
+        raise RuntimeError("Pyth published no session boundaries for the US equity calendar")
+    (next_open, next_close), n_bounds = bounds.most_common(1)[0]
+
     return {
         "timezone": tz,
         "weekly": weekly,
@@ -254,6 +303,9 @@ def fetch_exchange_calendar():
             for f in usd if f["attributes"].get("display_symbol")
         }),
         "schedule": schedule,
+        "next_open": next_open,
+        "next_close": next_close,
+        "feeds_agreeing_on_boundaries": n_bounds,
     }
 
 
@@ -908,12 +960,20 @@ def main():
     # the assertion is the conversion check further down.
     priced_value_as_read = Decimal(0)
     pence_priced = 0
+    # The converted book split by the currency the underlying is quoted in. The split is the part
+    # of the currency result that is worth stating: a slice of the book small enough to be a
+    # footnote is the whole of the error, and that only reads as surprising if the slice is
+    # measured rather than asserted.
+    value_by_currency = {}
     for mint, parsed in mints.items():
         price = prices.get(mint) or {}
         if not price.get("usd"):
             continue
         supply = Decimal(parsed["supply"]) / (Decimal(10) ** parsed["decimals"])
-        priced_value += supply * Decimal(repr(price["usd"]))
+        contribution = supply * Decimal(repr(price["usd"]))
+        priced_value += contribution
+        ccy = price.get("currency") or "USD"
+        value_by_currency[ccy] = value_by_currency.get(ccy, Decimal(0)) + contribution
         local = price.get("local")
         priced_value_as_read += supply * Decimal(repr(local if local is not None else price["usd"]))
         if price.get("currency") == "GBP":
@@ -1270,6 +1330,20 @@ def main():
         print("  [%s] %s: %s" % ("ok" if condition else "FAIL", name, detail))
 
     print("\nchecks")
+    # The two endpoints on this API disagree about page indexing: `/assets` is 0-indexed and
+    # `/corporate-actions` is 1-indexed. Reading `/assets` from page 1 drops 100 assets, and it
+    # looks exactly like a smaller field rather than a bug: no error, no gap, just fewer rows.
+    # This re-reads page 0 and requires its symbols to be in the walk. It is the check that would
+    # have caught the defect, and it costs one request.
+    page0 = get_json("%s/assets?pageSize=100&page=0" % XSTOCKS_API).get("nodes") or []
+    page0_symbols = {a.get("symbol") for a in page0 if a.get("symbol")}
+    have = {v.get("symbol") for v in assets.values()}
+    absent = sorted(page0_symbols - have)
+    check("the asset walk starts at page 0, so it is not one page short",
+          bool(page0_symbols) and not absent,
+          "%d symbols on page 0 of the issuer's asset API, %d of them present in the %d mints read%s"
+          % (len(page0_symbols), len(page0_symbols) - len(absent), len(assets),
+             "" if not absent else "; missing %s" % ", ".join(absent[:5])))
     check("every mint read is Token-2022 with a scaled-ui-amount extension",
           len(mints) == len(assets), "%d of %d" % (len(mints), len(assets)))
     # The parser does not scan for the header, it computes it from a fixed 165 byte base region
@@ -1367,6 +1441,30 @@ def main():
           "across %d activations"
           % (timing["inside"], timing.get("inside_calendar", 0),
              abs(timing["inside"] - timing.get("inside_calendar", 0)), timing["n"]))
+    # Pyth states the session a second time, as absolute unix seconds for the next open and the
+    # next close. Checking the parser against those boundaries is what turns the calendar from a
+    # reading of a grammar into a measurement: the parser has to agree with the publisher at the
+    # open, at the close, and one minute either side of each. Run on a half day this exercises the
+    # override path, which is the part most likely to be wrong.
+    if calendar is not None and calendar.get("next_open") and calendar.get("next_close"):
+        zone = zoneinfo.ZoneInfo(calendar["timezone"])
+
+        def _local(ts):
+            return datetime.datetime.fromtimestamp(ts, zone).strftime("%a %d %b %H:%M")
+
+        opens, closes = calendar["next_open"], calendar["next_close"]
+        probes = [(opens - 60, False), (opens, True), (closes - 60, True),
+                  (closes, True), (closes + 60, False)]
+        got = [session_open(datetime.datetime.fromtimestamp(t, datetime.timezone.utc), calendar)
+               for t, _ in probes]
+        want = [w for _, w in probes]
+        agree = sum(1 for a, b in zip(got, want) if a == b)
+        check("the parsed calendar agrees with Pyth's own session boundaries",
+              agree == len(probes),
+              "Pyth puts the next open at %s and the next close at %s, and %d feeds carrying this "
+              "calendar agree on both; the parser matches at %d of %d boundary probes"
+              % (_local(opens), _local(closes),
+                 calendar.get("feeds_agreeing_on_boundaries", 0), agree, len(probes)))
     check("a fresh activation reconciles tighter than an old one",
           len(fresh) >= 5 and len(stale) >= 5
           and median(fresh) < 0.05 and median(stale) > 2 * median(fresh),
@@ -1544,9 +1642,53 @@ def main():
     ]
     check("the London listings are read as pence, not pounds",
           len(pence_factor) >= 10 and all(50 < f < 150 for f in pence_factor),
-          "%d LSE mints priced, the published value is between %.0f and %.0f times the dollar "
-          "price"
-          % (len(pence_factor), min(pence_factor or [0]), max(pence_factor or [0])))
+          "%d LSE mints priced, the published value is %.1f times the dollar price on every one "
+          "of them, because the ratio is pinned to 100 divided by the GBP rate of %.6f rather "
+          "than varying with the share; drop the division and it reads %.2f"
+          % (len(pence_factor), sum(pence_factor) / len(pence_factor) if pence_factor else 0,
+             fx["usd_per"].get("GBP", 0), 1 / fx["usd_per"].get("GBP", 1)))
+    # The currency mistake has two halves, and the README states both, so both are computed here
+    # rather than derived by hand beside the prose. The first is the share of the converted book
+    # that sits in London listings, which is small. The second is how much of the gap between the
+    # converted and face-value totals that small share accounts for, which is nearly all of it.
+    # Stated together they are the finding; stated alone either one is a number.
+    #
+    # The gap is decomposed by currency rather than approximated, because the multiplier is not the
+    # same for every non-dollar listing and getting it wrong is easy: reading a euro listing's
+    # published figure as dollars multiplies it by 1/rate, which is *less* than one, while reading a
+    # London listing's multiplies it by 100/rate, which is about 74. A first version of this check
+    # used a flat 100 for the pence case and reported that the London listings were 135% of the gap.
+    # They cannot be more than all of it. The decomposition is what makes the number checkable.
+    def read_multiplier(ccy):
+        rate = fx["usd_per"].get(ccy)
+        if not rate:
+            return None
+        return (Decimal(100) if ccy == "GBP" else Decimal(1)) / Decimal(repr(rate))
+
+    gap = priced_value_as_read - priced_value
+    gaps = {}
+    unrated = []
+    for ccy, value in value_by_currency.items():
+        if ccy == "USD":
+            continue
+        mult = read_multiplier(ccy)
+        if mult is None:
+            unrated.append(ccy)
+            continue
+        gaps[ccy] = (mult - 1) * value
+    pence_gap = gaps.get("GBP", Decimal(0))
+    pence_share = (
+        value_by_currency.get("GBP", Decimal(0)) / priced_value if priced_value else Decimal(0)
+    )
+    check("the currency mistake is small in the book and large in the total",
+          Decimal("0.002") < pence_share < Decimal("0.20")
+          and gap > 0
+          and not unrated
+          and pence_gap / gap > Decimal("0.9"),
+          "the London listings are %.2f%% of the converted book and %.0f%% of the gap between "
+          "the converted and face-value totals%s"
+          % (float(pence_share) * 100, float(pence_gap / gap) * 100 if gap else 0,
+             "" if not unrated else "; no ECB rate for " + ", ".join(sorted(unrated))))
     check("the implied gross yield is plausible for an equity book",
           Decimal("0.004") < implied_yield < Decimal("0.05"),
           "%.2f%% on %s across the %d mints that both pay and quote"
@@ -1592,6 +1734,21 @@ def main():
             "pence_priced": pence_priced,
             "market_value_as_read_usd": str(priced_value_as_read.quantize(Decimal("1"))),
             "market_value_converted_usd": str(priced_value.quantize(Decimal("1"))),
+            # What the face-value total is divided by, and the currency mix that sets it. The
+            # README states the factor and says what it depends on, so both are computed here
+            # instead of being carried in prose where nothing can check them.
+            "read_over_converted": (
+                round(float(priced_value_as_read / priced_value), 4) if priced_value else None
+            ),
+            "value_by_currency_usd": {
+                k: str(v.quantize(Decimal("1")))
+                for k, v in sorted(value_by_currency.items(), key=lambda kv: -kv[1])
+            },
+            "pence_share_of_book": (
+                round(float(value_by_currency.get("GBP", Decimal(0)) / priced_value), 5)
+                if priced_value
+                else None
+            ),
             "pence_quoted": sorted(
                 a["symbol"] for a in assets.values() if a.get("currency") == "GBP"
             ),
