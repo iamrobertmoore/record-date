@@ -47,6 +47,10 @@ h3{font:650 15px/1.35 var(--sans);letter-spacing:-.005em}
 .top{position:sticky;top:0;z-index:20;background:rgba(251,250,247,.9);
   backdrop-filter:saturate(1.6) blur(10px);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:20px;height:58px}
+/* The nav is 59px tall and the section eyebrow is 10px, so a jump to a section used to land with
+   7px of the section number underneath the bar. The numbers are what the sections are for, so the
+   anchors are given the bar's height back. Measured in a browser, not guessed. */
+section[id]{scroll-margin-top:74px}
 .brand{display:flex;align-items:center;gap:9px;font:650 13.5px/1 var(--sans);color:var(--ink);flex:none}
 .brand svg{display:block}
 nav{display:flex;gap:16px;margin-left:auto;font:500 12.5px/1 var(--sans);color:var(--muted);flex-wrap:wrap}
