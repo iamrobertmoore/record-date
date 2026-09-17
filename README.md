@@ -216,7 +216,7 @@ If any check fails the script prints why and **refuses to build the page**. It i
 ```bash
 # the program
 anchor build --arch v1                                       # --arch v1 is required, see below
-cargo test --manifest-path programs/record_date/Cargo.toml   # 18 unit tests, 30 integration tests
+cargo test --manifest-path programs/record_date/Cargo.toml   # 49 tests: 18 unit and 31 integration
 
 # a warning is a build failure here, so the list cannot grow unread
 cargo clippy --manifest-path programs/record_date/Cargo.toml --all-targets -- -D warnings
