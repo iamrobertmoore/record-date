@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-09-17T14:10:34.650Z",
+  "mint": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq",
+  "effectiveAt": 1789654231,
+  "deltaSeconds": 2,
+  "insideWindow": true,
+  "entitlementHex": "40b20206000000000000000000000000",
+  "pendingHex": "01",
+  "logs": [
+    "Program log: Record Date: DEMOx activation was 2s ago, inside the recommended 15 minute pause: true"
+  ],
+  "entitlementLogs": [
+    "Program log: Record Date: 100000000 raw units of DEMOx at multiplier 1008400000000000000e-18 = 100840000 units, multiplier effective 1789654231"
+  ],
+  "signature": "28PumW49gSYhbagpK4wxVphPceMcNjkioNcjyuWzLLg4AovRXCSaXhTV75eESE8pGHZ4TAjFDt5qnjh9M3eroc21"
+}

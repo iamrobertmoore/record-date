@@ -6,6 +6,7 @@
 
 **Reads a tokenized stock's dividend out of the Token-2022 mint account, resolves the multiplier that is actually live, and records every activation on chain, so a venue can tell when the dividend moves and refuses to settle inside the window the issuer only recommends pausing for.**
 
+<a href="https://iamrobertmoore.github.io/record-date/desk.html"><b>Settlement desk</b></a> &nbsp;·&nbsp;
 <a href="https://iamrobertmoore.github.io/record-date/"><b>Evidence page</b></a> &nbsp;·&nbsp;
 <a href="https://explorer.solana.com/address/ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG?cluster=devnet"><b>Program on devnet</b></a> &nbsp;·&nbsp;
 <a href="docs/architecture.svg"><b>Architecture</b></a> &nbsp;·&nbsp;
@@ -60,6 +61,7 @@ The third is a venue, and it is the one this entry is written for. The issuer's 
 
 | Try this | Watch what happens |
 |---|---|
+| [Open the settlement desk](https://iamrobertmoore.github.io/record-date/desk.html) | Pick a registered mint and the deployed program answers, live, over plain RPC. The desk has no key and no backend: it assembles the transaction in the browser, asks the program what a holding is worth, and applies the fifteen minute rule to the program's own reading of how long ago the activation was. On four of the five devnet mints the field named `multiplier` disagrees with the live value, and the desk shows both answers side by side |
 | [Open the evidence page](https://iamrobertmoore.github.io/record-date/) | Every figure above, with the eight freshest reconciliations and the median gap against the market bucketed by age |
 | [Fetch NVDAx's multiplier history](https://api.xstocks.fi/api/v2/public/assets/NVDAx/multiplier/history?page=0&pageSize=5&network=Solana) | The issuer's own record of each activation, with the previous and new multiplier side by side and no API key |
 | [Open the program on devnet](https://explorer.solana.com/address/ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG?cluster=devnet) | The deployed program, its IDL, and the receipt accounts it writes |

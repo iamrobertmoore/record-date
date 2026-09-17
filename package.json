@@ -12,7 +12,9 @@
     "demo": "node scripts/demo.mjs",
     "demo:status": "node scripts/demo.mjs --status",
     "fetch": "python3 scripts/fetch.py",
-    "page": "python3 scripts/build_page.py"
+    "page": "python3 scripts/build_page.py && python3 scripts/build_desk.py",
+    "desk": "node scripts/desk_snapshot.mjs",
+    "desk:page": "python3 scripts/build_desk.py"
   },
   "dependencies": {
     "@solana/spl-token": "^0.4.15",

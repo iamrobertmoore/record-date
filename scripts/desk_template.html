@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Record Date: a settlement desk that reads the deployed program</title>
+<meta name="description" content="A static page with no key and no backend that reads devnet over plain RPC and asks the deployed Record Date program what a tokenized share is worth, whether it is safe to settle, and whether the reference price is still moving.">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="docs/brand/mark.svg" type="image/svg+xml">
+<style>
+:root{
+  --paper:#fbfaf7; --card:#fff; --wash:#f5f2ec; --inset:#f0ece4;
+  --ink:#15171b; --body:#3a3f47; --muted:#6b7078; --faint:#989ea6;
+  --line:#e7e4dd; --rule:#d6d2c9;
+  --paid:#1c7a58; --withheld:#b0321c; --brass:#9a7318; --live:#1c7a58;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --shadow:0 1px 2px rgba(21,23,27,.04),0 12px 32px -18px rgba(21,23,27,.22);
+  --r:3px; --wrap:1080px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--body);font:16px/1.62 var(--sans);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 32px}
+a{color:inherit;text-decoration:none}
+a:hover{color:var(--brass)}
+h1,h2,h3,h4{color:var(--ink);margin:0}
+p{margin:0}
+code,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+h1{font:400 clamp(32px,4.6vw,50px)/1.07 var(--serif);letter-spacing:-.018em}
+h2{font:400 clamp(25px,3vw,34px)/1.15 var(--serif);letter-spacing:-.012em}
+h3{font:650 15px/1.35 var(--sans);letter-spacing:-.005em}
+.lede{font:400 clamp(16.5px,1.5vw,19.5px)/1.56 var(--serif);max-width:46em}
+.lede b{color:var(--ink);font-weight:400;box-shadow:inset 0 -.42em 0 rgba(154,115,24,.16)}
+.small{font-size:13.5px;color:var(--muted)}
+.tiny{font-size:12px;color:var(--faint)}
+
+.eyebrow{display:flex;align-items:center;gap:9px;margin:0 0 18px;
+  font:650 10px/1 var(--sans);letter-spacing:.19em;text-transform:uppercase;color:var(--faint)}
+.eyebrow::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--brass);flex:none}
+.eyebrow .n{color:var(--brass)}
+.eyebrow .sep{color:var(--rule)}
+
+.top{position:sticky;top:0;z-index:20;background:rgba(251,250,247,.9);
+  backdrop-filter:saturate(1.6) blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:58px}
+.brand{display:flex;align-items:center;gap:9px;font:650 13.5px/1 var(--sans);color:var(--ink);flex:none}
+.brand svg{display:block}
+nav{display:flex;gap:16px;margin-left:auto;font:500 12.5px/1 var(--sans);color:var(--muted);flex-wrap:wrap}
+nav a:hover{color:var(--ink)}
+nav a.here{color:var(--ink);font-weight:650}
+
+header.hero{padding:52px 0 34px;border-bottom:1px solid var(--line)}
+.stamp{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--line);
+  border-radius:99px;background:var(--card);font:600 11px/1 var(--sans);color:var(--muted)}
+.chip b{color:var(--ink);font-weight:650}
+.chip.hot{border-color:#e9cfc9;background:#fdf6f4;color:var(--withheld)}
+.chip.ok{border-color:#cfe4da;background:#f4faf7;color:var(--paid)}
+.byline{display:flex;gap:34px;flex-wrap:wrap;margin-top:30px;font:400 12.5px/1.5 var(--sans);color:var(--muted)}
+.byline b{display:block;font:650 10px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.byline span span{display:block}
+
+section{padding:52px 0;border-bottom:1px solid var(--line)}
+.head{max-width:52em;margin-bottom:26px}
+.head p{margin-top:12px;color:var(--muted);font-size:15px}
+
+/* ---------- the desk console ---------- */
+.console{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden}
+.console .bar{display:flex;align-items:center;gap:14px;padding:13px 18px;
+  border-bottom:1px solid var(--line);background:var(--wash);flex-wrap:wrap}
+.console .bar .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
+.console .bar .dot.on{background:var(--live);box-shadow:0 0 0 3px rgba(28,122,88,.14)}
+.console .bar .label{font:650 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.console .bar .grow{margin-left:auto;display:flex;align-items:center;gap:10px}
+.console .body{padding:0}
+
+.picker{display:flex;gap:8px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line);background:#fdfdfc}
+.picker button{font:600 12px/1 var(--sans);padding:8px 12px;border:1px solid var(--line);
+  background:var(--card);border-radius:var(--r);cursor:pointer;color:var(--muted)}
+.picker button:hover{border-color:var(--rule);color:var(--ink)}
+.picker button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.picker button .flag{display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--withheld);margin-right:6px;vertical-align:1px}
+.picker button[aria-pressed="true"] .flag{background:#fff}
+
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line)}
+.cell{background:var(--card);padding:20px 18px}
+.cell .k{font:650 10px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.cell .v{font:400 27px/1 var(--serif);color:var(--ink);letter-spacing:-.02em}
+.cell .v.wrong{color:var(--withheld)}
+.cell .v.right{color:var(--paid)}
+.cell .note{margin-top:9px;font-size:12.5px;color:var(--muted);line-height:1.5}
+
+.verdict{display:flex;align-items:center;gap:18px;padding:24px 18px;flex-wrap:wrap}
+.verdict .tag{font:650 12px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;
+  padding:11px 16px;border-radius:var(--r);border:1px solid}
+.verdict .tag.settle{color:var(--paid);border-color:#cfe4da;background:#f4faf7}
+.verdict .tag.hold{color:var(--withheld);border-color:#e9cfc9;background:#fdf6f4}
+.verdict .why{font-size:14px;color:var(--muted);max-width:44em}
+.verdict .why b{color:var(--ink);font-weight:650}
+
+.band{padding:18px;border-top:1px solid var(--line);background:#fdfdfc}
+.band .axis{position:relative;height:44px;margin:6px 0 4px}
+.band .rule{position:absolute;left:0;right:0;top:21px;height:1px;background:var(--rule)}
+.band .win{position:absolute;top:12px;height:19px;background:rgba(176,50,28,.13);
+  border-left:1px solid rgba(176,50,28,.45);border-right:1px solid rgba(176,50,28,.45)}
+.band .mark{position:absolute;top:5px;width:2px;height:33px;background:var(--ink)}
+.band .mark::after{content:attr(data-l);position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  font:650 10px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.band .mark.off{background:var(--faint)}
+.band .mark.off::after{color:var(--faint)}
+/* A marker pinned to an edge cannot be centred on it: the label runs off the axis and is
+   clipped. Pin it inward instead. */
+.band .mark.at-right::after{left:auto;right:0;transform:none}
+.band .mark.at-left::after{left:0;transform:none}
+.band .legend{display:flex;gap:20px;flex-wrap:wrap;font:500 11.5px/1.5 var(--sans);color:var(--muted)}
+.band .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font:650 10px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);padding:11px 14px;border-bottom:1px solid var(--line);background:#fdfdfc;white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono,th.mono{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.scroll{overflow-x:auto}
+.pill{display:inline-block;padding:3px 7px;border-radius:2px;font:650 10.5px/1.4 var(--sans);
+  letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.pill.ok{background:#f4faf7;color:var(--paid);border:1px solid #cfe4da}
+.pill.no{background:#fdf6f4;color:var(--withheld);border:1px solid #e9cfc9}
+.pill.flat{background:var(--wash);color:var(--muted);border:1px solid var(--line)}
+
+.ask{display:flex;gap:10px;align-items:center;padding:16px 18px;border-top:1px solid var(--line);
+  background:#fdfdfc;flex-wrap:wrap}
+.ask label{font:650 10px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+.ask input{font:400 14px/1 var(--mono);padding:9px 11px;border:1px solid var(--line);
+  border-radius:var(--r);background:var(--card);color:var(--ink);width:15ch}
+.ask button,.go{font:650 11.5px/1 var(--sans);letter-spacing:.05em;padding:10px 15px;border-radius:var(--r);
+  border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer}
+.ask button.ghost,.go.ghost{background:var(--card);color:var(--ink);border-color:var(--line)}
+.ask button:disabled,.go:disabled{opacity:.5;cursor:progress}
+
+pre{margin:0;padding:20px 18px;background:#fcfbf9;border-top:1px solid var(--line);
+  overflow-x:auto;font:400 12.5px/1.7 var(--mono);color:var(--body)}
+pre .c{color:var(--faint)}
+pre .k{color:var(--brass)}
+pre .s{color:var(--paid)}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card h3{margin-bottom:8px}
+.card p{font-size:13.5px;color:var(--muted);line-height:1.58}
+
+footer{padding:34px 0 60px;font-size:13px;color:var(--muted)}
+footer .row{display:flex;gap:34px;flex-wrap:wrap}
+footer b{display:block;font:650 10px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:7px}
+footer code{font-size:12.5px;color:var(--ink)}
+
+.note-box{margin-top:20px;padding:16px 18px;border:1px solid var(--line);border-left:2px solid var(--brass);
+  border-radius:0 var(--r) var(--r) 0;background:var(--wash);font-size:13.5px;color:var(--muted)}
+.note-box b{color:var(--ink);font-weight:650}
+
+@media (max-width:760px){
+  .grid3,.grid2,.cards{grid-template-columns:1fr}
+  .wrap{padding:0 20px}
+  nav{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap">
+    <span class="brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12.6" r="8.2" stroke="#15171b" stroke-width="1.5"/>
+        <path d="M12 4.4V1.6" stroke="#9a7318" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M8.1 12.6h7.8" stroke="#15171b" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Record&nbsp;Date
+    </span>
+    <nav>
+      <a href="index.html">The evidence</a>
+      <a href="#mint" class="here">The desk</a>
+      <a href="#worth">What it is worth</a>
+      <a href="#settle">Whether to settle</a>
+      <a href="#trail">The trail</a>
+      <a href="#price">The price</a>
+      <a href="#how">How it works</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="stamp">
+      <span class="chip">devnet · program <b>{{PROGRAM_ID_SHORT}}</b></span>
+      <span class="chip ok">no key · no backend</span>
+      <span class="chip">plain RPC · <b>{{RPC_HOST}}</b></span>
+      <span class="chip hot"><b>{{DISAGREE_COUNT}}</b> of {{MINT_COUNT}} mints read wrongly</span>
+    </div>
+
+    <h1>Ask the deployed program what a tokenized share is worth.</h1>
+
+    <p class="lede">This page has no key, no server and nothing to sign. It reads devnet over plain RPC
+      and puts its questions to the program that is actually deployed there. On
+      <b>{{DISAGREE_COUNT}} of the {{MINT_COUNT}} registered mints the field named
+      <span class="num">multiplier</span> holds the previous value</b> while the live multiplier
+      has already moved, so a reader who takes the obvious field is one corporate action behind.
+      The program is not.</p>
+
+    <p class="lede" style="margin-top:14px">A settlement desk has two questions. What is a holding
+      worth, and is it safe to settle right now. Both are answered here by the program, and the
+      answers are checked against what a naive reader of the same account would get.</p>
+
+    <div class="byline">
+      <span><b>Reads</b><span>the mint account, the program's own accounts, and Pyth</span></span>
+      <span><b>Captured</b><span class="num">{{CAPTURED}}</span></span>
+      <span><b>Reproduce with</b><span class="num">npm run desk</span></span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="mint">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the mint</p>
+    <div class="head">
+      <h2>Pick a registered mint. Everything below follows it.</h2>
+      <p>These are the mints this program has registered on devnet. A dot marks one where the
+        field named <span class="num">multiplier</span> and the live
+        <span class="num">new_multiplier</span> disagree, which is the state the entry is about.</p>
+    </div>
+
+    <div class="console">
+      <div class="bar">
+        <span class="dot {{STATUS_CLASS}}" id="status-dot"></span>
+        <span class="label" id="status-label">{{STATUS_LABEL}}</span>
+        <span class="tiny" id="status-when">{{STATUS_WHEN}}</span>
+        <span class="grow">
+          <button class="go ghost" id="recheck" type="button">Re-read devnet</button>
+        </span>
+      </div>
+
+      <div class="picker" id="picker" role="group" aria-label="registered mints">
+{{MINT_BUTTONS}}
+      </div>
+
+      <div class="grid2">
+        <div class="cell">
+          <p class="k">multiplier</p>
+          <p class="v wrong" id="field-multiplier">{{DEFAULT_FIELD}}</p>
+          <p class="note">The field a reader reaches for first. Token-2022 keeps the value in force
+            <em>before</em> the most recent activation here.</p>
+        </div>
+        <div class="cell">
+          <p class="k">new_multiplier</p>
+          <p class="v right" id="live-multiplier">{{DEFAULT_LIVE}}</p>
+          <p class="note">Live from <span class="num" id="effective-at">{{DEFAULT_EFFECTIVE}}</span>,
+            and the value the program applies. <span id="fields-agree">{{DEFAULT_AGREE}}</span></p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">mint account</p>
+          <p class="mono" style="font-size:12.5px;word-break:break-all" id="mint-address">{{DEFAULT_MINT}}</p>
+        </div>
+        <div class="cell">
+          <p class="k">token record</p>
+          <p class="mono" style="font-size:12.5px;word-break:break-all" id="record-address">{{DEFAULT_RECORD}}</p>
+        </div>
+        <div class="cell">
+          <p class="k">activations recorded</p>
+          <p class="v" id="activations">{{DEFAULT_ACTIVATIONS}}</p>
+          <p class="note">Receipts this program has written for this mint.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:18px">The two fields are read from the mint's own
+      <span class="num">scaledUiAmountConfig</span> extension. The rule for which one is live is
+      Token-2022's: <span class="num">new_multiplier</span> once its timestamp has passed,
+      <span class="num">multiplier</span> otherwise. This page applies that rule to say what a
+      naive reader would get, and then asks the program for its own answer below, so the two are
+      compared rather than asserted.</p>
+  </div>
+</section>
+
+<section id="worth">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">02</span>/<span class="sep">/</span> what a holding is worth</p>
+    <div class="head">
+      <h2>The program's answer, against the obvious one.</h2>
+      <p>One question, asked twice. Once of the deployed program through its
+        <span class="num">read_entitlement</span> instruction, and once by multiplying the field
+        named <span class="num">multiplier</span> by the raw amount, which is what a wallet that
+        reached for the obvious field would show.</p>
+    </div>
+
+    <div class="console">
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">the obvious read</p>
+          <p class="v wrong" id="naive-units">{{DEFAULT_NAIVE}}</p>
+          <p class="note">raw × <span class="num">multiplier</span>, which is the previous value.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the program's answer</p>
+          <p class="v right" id="program-units">{{DEFAULT_PROGRAM}}</p>
+          <p class="note"><span class="num">read_entitlement</span>, signed by nobody, executed by
+            the deployed program on devnet.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the difference</p>
+          <p class="v wrong" id="gap-units">{{DEFAULT_GAP}}</p>
+          <p class="note" id="gap-note">{{DEFAULT_GAP_NOTE}}</p>
+        </div>
+      </div>
+
+      <div class="ask">
+        <label for="raw">ask about</label>
+        <input id="raw" type="text" inputmode="numeric" value="{{DEFAULT_RAW}}" spellcheck="false">
+        <span class="small">raw units, at {{DEFAULT_DECIMALS}} decimals</span>
+        <button id="ask" type="button" style="margin-left:auto">Ask the program</button>
+      </div>
+
+      <pre><span class="c">// the whole question, as the page sends it</span>
+<span class="k">instruction</span>  read_entitlement(raw_amount: u64)
+<span class="k">accounts</span>     mint, token_record            <span class="c">// both read-only</span>
+<span class="k">signed by</span>    nobody. <span class="s">sigVerify: false</span>, nothing is spent.
+<span class="k">answered by</span>  {{PROGRAM_ID}}
+<span class="k">returned</span>     {{DEFAULT_PROGRAM_HEX}}   <span class="c">// little-endian u128, the program's own bytes</span></pre>
+    </div>
+
+    <div class="note-box"><b>Why the gap is the dividend.</b> Token-2022 reinvests a dividend by
+      raising the multiplier. The balance does not move, so the multiplier is the only record that
+      anything happened. A reader one activation behind loses exactly the dividend, and on this
+      devnet mint that is <span class="num" id="gap-pct-inline">{{DEFAULT_GAP_PCT}}</span> of the
+      position. On 17 September 2026, 370 of the 927 xStock mints on Solana mainnet were in this
+      state.</div>
+  </div>
+</section>
+
+<section id="settle">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> whether to settle</p>
+    <div class="head">
+      <h2>The window, from the program's own clock.</h2>
+      <p>The issuer's own documentation recommends that venues and protocols pause around each
+        activation, and nothing in a mint account can enforce that. The program's
+        <span class="num">settlement_window</span> instruction reads the mint and returns the
+        seconds between now and the activation, measured against the validator's clock rather
+        than yours, so the answer is the same from any machine.</p>
+    </div>
+
+    <div class="console">
+      <div class="verdict">
+        <span class="tag {{DEFAULT_VERDICT_CLASS}}" id="verdict">{{DEFAULT_VERDICT}}</span>
+        <span class="why" id="verdict-why">{{DEFAULT_VERDICT_WHY}}</span>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">seconds since the activation</p>
+          <p class="v" id="delta">{{DEFAULT_DELTA}}</p>
+          <p class="note">Returned as a little-endian <span class="num">i64</span> by the program.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the venue's rule</p>
+          <p class="v">±{{PAUSE_MINUTES}} min</p>
+          <p class="note">Hold inside {{PAUSE_SECS}} seconds either side of an activation. This is
+            the desk's policy, and the program supplies the number it is applied to.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the raw answer</p>
+          <p class="mono" style="font-size:15px;word-break:break-all" id="delta-hex">{{DEFAULT_DELTA_HEX}}</p>
+          <p class="note">The program's return data, unedited.</p>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="axis" id="axis">
+          <div class="rule"></div>
+          <div class="win" id="win"></div>
+          <div class="mark" id="now" data-l="now"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:rgba(176,50,28,.28);border:1px solid rgba(176,50,28,.45)"></i>the {{PAUSE_MINUTES}} minute window</span>
+          <span><i style="background:#15171b"></i>now, placed on the program's own clock</span>
+          <span class="tiny">the axis spans two hours either side of the activation</span>
+        </div>
+      </div>
+
+      <pre><span class="c">// settlement_window, and what it does with a timestamp that has not passed</span>
+<span class="k">let</span> delta = now - effective_at;        <span class="c">// i64, signed: negative means the activation is ahead</span>
+<span class="k">let</span> in_window = delta.abs() &lt;= <span class="s">900</span>;
+
+<span class="c">// effective_at() returns 0 unless the activation timestamp has already passed, so a mint</span>
+<span class="c">// whose activation is still ahead reports delta = now and reads as outside the window.</span>
+<span class="c">// The window is only ever open for fifteen minutes after an activation, which is why a</span>
+<span class="c">// desk that wants to hold has to ask at the right moment.</span></pre>
+    </div>
+
+    <div class="note-box"><b>A window that was open.</b> {{WINDOW_NOTE}}</div>
+  </div>
+</section>
+
+<section id="trail">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> the trail</p>
+    <div class="head">
+      <h2>The series the mint does not keep.</h2>
+      <p>A mint stores the current multiplier and nothing else. There is no sequence and no
+        account per activation, so the history of what a token paid lives in an HTTP API and in
+        transaction logs. These are the receipts this program wrote, one per activation, and they
+        are the same on every machine that reads them.</p>
+    </div>
+
+    <div class="console">
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="mono">seq</th>
+              <th>activation</th>
+              <th class="mono">before</th>
+              <th class="mono">after</th>
+              <th class="mono">change</th>
+              <th>effective</th>
+              <th>recorded</th>
+              <th class="mono">raw supply</th>
+            </tr>
+          </thead>
+          <tbody id="trail-body">
+{{RECEIPT_ROWS}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="small" style="margin-top:16px" id="trail-note">{{TRAIL_NOTE}}</p>
+  </div>
+</section>
+
+<section id="price">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> the reference price</p>
+    <div class="head">
+      <h2>The one number the issuer does not own.</h2>
+      <p>Everything above reads the issuer's own mint account, so a number taken from there is the
+        issuer agreeing with itself. <span class="num">verify_against_pyth</span> is the check
+        against a value this program does not control. It refuses for three reasons: the account
+        is not a Pyth price, the price is for a different feed, or the price is older than the
+        caller's limit.</p>
+    </div>
+
+    <div class="console">
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>mint</th>
+              <th>feed bound</th>
+              <th class="mono">newest account</th>
+              <th class="mono">published</th>
+              <th class="mono">age</th>
+              <th>the program</th>
+            </tr>
+          </thead>
+          <tbody id="price-body">
+{{PYTH_ROWS}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:18px">The caller settles at exactly Pyth's own number, so
+      the deviation is zero and the age is the only thing left that can refuse it. A desk that
+      settled at a different number would not isolate the cause. On devnet the equity feed's
+      publisher stopped on 14 August 2026, which is why the newest price for a stock feed on this
+      cluster is weeks old while a crypto feed on the same cluster updates every second. Same
+      instruction, same cluster, and the only difference that matters is the age.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> how this page talks to the chain</p>
+    <div class="head">
+      <h2>No key, no backend, no library.</h2>
+      <p>Everything on this page was produced by the browser talking to
+        <span class="num">{{RPC_HOST}}</span> with <span class="num">fetch</span>. Nothing was
+        signed and nothing was spent.</p>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>The transaction is assembled by hand</h3>
+        <p>The page builds the Solana wire format itself: a compact-u16 signature count, a zeroed
+          64-byte signature, the message header, the account keys in the order the header
+          requires, then the instruction. There is no web3.js here and no CDN to load, which is
+          also why the page opens from a file on disk.</p>
+      </div>
+      <div class="card">
+        <h3>Nothing is signed</h3>
+        <p>The simulations run with <span class="num">sigVerify: false</span> and
+          <span class="num">replaceRecentBlockhash: true</span>. The runtime still requires an
+          account in the fee slot, so the page uses one whose key is the sha256 of a fixed public
+          string and was never generated. It cannot be spent from.</p>
+      </div>
+      <div class="card">
+        <h3>Every read is a real answer</h3>
+        <p>The figures on this page are in the markup as their resting state, so the page reads
+          correctly with JavaScript switched off and from a file on disk. The script re-reads
+          devnet and replaces them. If the read fails the page says so and keeps the recorded
+          values rather than showing a blank.</p>
+      </div>
+    </div>
+
+    <pre><span class="c">// what the page sends, in full</span>
+POST {{RPC_HOST}}
+{<span class="s">"method"</span>:<span class="s">"simulateTransaction"</span>,<span class="s">"params"</span>:[<span class="s">"&lt;base64 transaction&gt;"</span>,
+  {<span class="s">"encoding"</span>:<span class="s">"base64"</span>,<span class="s">"sigVerify"</span>:false,<span class="s">"replaceRecentBlockhash"</span>:true}]}
+
+<span class="c">// fee slot, so the runtime will load it. The key was never generated:</span>
+<span class="c">//   sha256("record-date settlement desk fee payer v1")</span>
+<span class="k">payer</span> {{DESK_PAYER}}</pre>
+
+    <p class="small" style="margin-top:18px">The program is deployed at
+      <a href="https://explorer.solana.com/address/{{PROGRAM_ID}}?cluster=devnet"><span class="num">{{PROGRAM_ID}}</span></a>
+      and its accounts are readable at that address. The receipt accounts below are real devnet
+      accounts and each one links to the explorer.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span><b>Reproduce</b><code>npm run desk</code><br><code>npm run desk:page</code></span>
+      <span><b>Reads</b><code>{{RPC}}</code></span>
+      <span><b>Program</b><code>{{PROGRAM_ID}}</code></span>
+      <span><b>Captured</b><code>{{CAPTURED}}</code></span>
+    </div>
+    <p style="margin-top:24px;max-width:60em">Record Date, built for Stocklana. The evidence page
+      carries the sourced problem figures and the build checks; this page is the desk that reads
+      the deployed program. Devnet only, and nothing here touches mainnet or moves any value.</p>
+  </div>
+</footer>
+
+<script type="application/json" id="desk-state">{{STATE_JSON}}</script>
+
+<script>
+/* eslint-disable */
+(function () {
+  "use strict";
+
+  var STATE = JSON.parse(document.getElementById("desk-state").textContent);
+  var RPC = STATE.rpc;
+  var PROGRAM = STATE.programId;
+  var PAYER = STATE.deskPayer;
+  var PAUSE = STATE.pauseSecs;
+  var ERROR_NAMES = STATE.errorNames;
+  var ERROR_BASE = STATE.errorCodeOffset;
+
+  /* Anchor's own framework errors, which are what a missing signer or a mismatched account
+     produces. They are numbered from 3000 and they are not the program's own list. Trimmed to
+     the ones this desk can actually provoke. The associated-token-account variant is left out
+     on purpose and not named here: its name is exactly 32 characters, so it base58-decodes as
+     a well formed Solana address and the pre-submission sweep correctly flags it as one. */
+  var ANCHOR_ERRORS = {
+    3002: "AccountDiscriminatorMismatch", 3003: "AccountDidNotDeserialize",
+    3006: "AccountNotMutable", 3007: "AccountOwnedByWrongProgram",
+    3008: "InvalidProgramId", 3010: "AccountNotSigner", 3012: "AccountNotInitialized"
+  };
+
+  function errorName(code) {
+    if (code === null || code === undefined) return null;
+    if (ANCHOR_ERRORS[code]) return ANCHOR_ERRORS[code];
+    var i = code - ERROR_BASE;
+    return i >= 0 && i < ERROR_NAMES.length ? ERROR_NAMES[i] : "error " + code;
+  }
+
+  /* ------------------------------------------------------------------ base58 */
+
+  var ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+  function b58decode(s) {
+    var n = 0n;
+    for (var i = 0; i < s.length; i++) {
+      var v = ALPHABET.indexOf(s[i]);
+      if (v < 0) throw new Error("bad base58 digit " + s[i]);
+      n = n * 58n + BigInt(v);
+    }
+    var bytes = [];
+    while (n > 0n) { bytes.unshift(Number(n & 255n)); n >>= 8n; }
+    for (var j = 0; j < s.length && s[j] === "1"; j++) bytes.unshift(0);
+    return new Uint8Array(bytes);
+  }
+
+  function b58encode(bytes) {
+    var n = 0n;
+    for (var i = 0; i < bytes.length; i++) n = n * 256n + BigInt(bytes[i]);
+    var out = "";
+    while (n > 0n) { out = ALPHABET[Number(n % 58n)] + out; n /= 58n; }
+    for (var j = 0; j < bytes.length && bytes[j] === 0; j++) out = "1" + out;
+    return out;
+  }
+
+  function compactU16(n) {
+    var out = [];
+    for (;;) {
+      var b = n & 0x7f;
+      n >>= 7;
+      if (n === 0) { out.push(b); return out; }
+      out.push(b | 0x80);
+    }
+  }
+
+  /* The Solana legacy transaction, assembled by hand.
+     The account order is the header's rule, not the instruction's: the fee payer is the only
+     signer and it is writable, and every other key is read-only and unsigned. Getting that order
+     wrong does not error, it changes which account the program sees in each slot. */
+  function buildTransaction(instructionAccounts, data) {
+    var payer = b58decode(PAYER);
+    var program = b58decode(PROGRAM);
+    var keys = instructionAccounts.map(b58decode);
+    var ordered = [payer, program].concat(keys);
+
+    var msg = [];
+    msg.push(1);                     // one required signature
+    msg.push(0);                     // none of the signers is read-only
+    msg.push(ordered.length - 1);    // every other key is read-only and unsigned
+    msg = msg.concat(compactU16(ordered.length));
+    for (var i = 0; i < ordered.length; i++) msg = msg.concat(Array.from(ordered[i]));
+    msg = msg.concat(new Array(32).fill(0));   // replaced by replaceRecentBlockhash
+
+    msg = msg.concat(compactU16(1));           // one instruction
+    msg.push(1);                               // programIdIndex
+    msg = msg.concat(compactU16(keys.length));
+    for (var k = 0; k < keys.length; k++) msg.push(2 + k);
+    msg = msg.concat(compactU16(data.length));
+    msg = msg.concat(Array.from(data));
+
+    var tx = compactU16(1).concat(new Array(64).fill(0)).concat(msg);
+    var binary = "";
+    for (var b = 0; b < tx.length; b++) binary += String.fromCharCode(tx[b]);
+    return btoa(binary);
+  }
+
+  function disc(name) {
+    /* Anchor derives the instruction discriminator as sha256("global:<name>")[0..8]. It is
+       computed here rather than pasted, so it cannot drift from the program's.
+       `crypto.subtle.digest` resolves to an ArrayBuffer, which has `byteLength` and no
+       `length`, so it is wrapped before it is used: reading `.length` off it gives undefined,
+       and an instruction built from undefined data is accepted by the RPC and then fails to
+       match any handler in the program. */
+    return crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode("global:" + name))
+      .then(function (buf) { return new Uint8Array(buf).slice(0, 8); });
+  }
+
+  function toHex(bytes) {
+    var s = "";
+    for (var i = 0; i < bytes.length; i++) s += bytes[i].toString(16).padStart(2, "0");
+    return s;
+  }
+
+  function fromBase64(b64) {
+    var bin = atob(b64);
+    var out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  /* ------------------------------------------------------------------ rpc */
+
+  function rpc(method, params) {
+    return fetch(RPC, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: method, params: params })
+    }).then(function (r) {
+      if (!r.ok) throw new Error(method + " returned HTTP " + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (j.error) throw new Error(method + ": " + (j.error.message || JSON.stringify(j.error)));
+      return j.result;
+    });
+  }
+
+  function simulate(accounts, data) {
+    var encoded = buildTransaction(accounts, data);
+    return rpc("simulateTransaction", [encoded, {
+      encoding: "base64", sigVerify: false, replaceRecentBlockhash: true
+    }]).then(function (res) {
+      var v = res.value;
+      var custom = null;
+      if (v.err && v.err.InstructionError && typeof v.err.InstructionError[1] === "object") {
+        custom = v.err.InstructionError[1].Custom;
+      }
+      return {
+        err: v.err || null,
+        code: custom === undefined ? null : custom,
+        name: errorName(custom === undefined ? null : custom),
+        returnData: v.returnData ? fromBase64(v.returnData.data[0]) : new Uint8Array(0),
+        logs: (v.logs || []).filter(function (l) { return l.indexOf("Record Date") >= 0; })
+      };
+    });
+  }
+
+  /* ------------------------------------------------------------------ decoding */
+
+  function readU64(d, at) {
+    var v = 0n;
+    for (var i = 7; i >= 0; i--) v = (v << 8n) | BigInt(d[at + i]);
+    return v;
+  }
+  function readI64(d, at) {
+    var v = readU64(d, at);
+    return v >= (1n << 63n) ? v - (1n << 64n) : v;
+  }
+  function readU128(d, at) { return readU64(d, at) | (readU64(d, at + 8) << 64n); }
+  function readF64(d, at) {
+    var b = new ArrayBuffer(8);
+    var view = new DataView(b);
+    for (var i = 0; i < 8; i++) view.setUint8(i, d[at + i]);
+    return view.getFloat64(0, true);
+  }
+  function readPubkey(d, at) { return b58encode(d.slice(at, at + 32)); }
+  function readSymbol(d, at, len) {
+    var s = "";
+    for (var i = 0; i < len; i++) { if (d[at + i]) s += String.fromCharCode(d[at + i]); }
+    return s;
+  }
+  function fpDecimal(v) {
+    var scale = 10n ** 18n;
+    var whole = v / scale;
+    var frac = (v % scale).toString().padStart(18, "0").replace(/0+$/, "");
+    return frac ? whole + "." + frac : whole.toString();
+  }
+  function units(raw, decimals) {
+    var scale = 10n ** BigInt(decimals);
+    var whole = raw / scale;
+    var frac = (raw % scale).toString().padStart(decimals, "0").replace(/0+$/, "");
+    return frac ? whole + "." + frac : whole.toString();
+  }
+  function naiveScaled(raw, multiplier) {
+    var micro = BigInt(Math.round(multiplier * 1e6));
+    return (raw * micro) / 1000000n;
+  }
+
+  function decodeRecord(d) {
+    var symbolLen = d[52];
+    return {
+      address: null,
+      mint: readPubkey(d, 8),
+      symbol: readSymbol(d, 40, symbolLen),
+      decimals: d[53],
+      baseMultiplier: readF64(d, 54),
+      liveMultiplier: readF64(d, 62),
+      liveFp: fpDecimal(readU128(d, 70)),
+      liveEffectiveAt: Number(readI64(d, 86)),
+      activations: Number(readU64(d, 94)),
+      lastSeenSlot: Number(readU64(d, 102))
+    };
+  }
+
+  function decodeReceipt(d) {
+    var prevFp = readU128(d, 64);
+    var newFp = readU128(d, 80);
+    return {
+      mint: readPubkey(d, 8),
+      sequence: Number(readU64(d, 40)),
+      previousMultiplier: readF64(d, 48),
+      newMultiplier: readF64(d, 56),
+      previousFp: fpDecimal(prevFp),
+      newFp: fpDecimal(newFp),
+      deltaFp: fpDecimal(newFp - prevFp),
+      flat: newFp === prevFp,
+      effectiveAt: Number(readI64(d, 96)),
+      recordedAt: Number(readI64(d, 104)),
+      rawSupply: Number(readU64(d, 112))
+    };
+  }
+
+  function decodeBinding(d) {
+    var len = d[84];
+    return {
+      mint: readPubkey(d, 8),
+      feedId: toHex(d.slice(40, 72)),
+      feedSymbol: readSymbol(d, 72, len),
+      boundAt: Number(readI64(d, 85))
+    };
+  }
+
+  /* ------------------------------------------------------------------ helpers */
+
+  function fmtInt(n) { return Number(n).toLocaleString("en-US"); }
+  function fmtDuration(secs) {
+    var a = Math.abs(secs);
+    if (a < 60) return a + " seconds";
+    if (a < 3600) return (a / 60).toFixed(1) + " minutes";
+    if (a < 86400) return (a / 3600).toFixed(1) + " hours";
+    return (a / 86400).toFixed(1) + " days";
+  }
+  function fmtTime(ts) { return new Date(ts * 1000).toISOString().replace(".000Z", "Z"); }
+  function el(id) { return document.getElementById(id); }
+  function setText(id, v) { var e = el(id); if (e) e.textContent = v; }
+
+  /* ------------------------------------------------------------------ state */
+
+  var live = null;      // filled by a successful read
+  var selected = STATE.defaultMint;
+
+  function recordedFor(mint) {
+    var rec = STATE.tokenRecords.filter(function (r) { return r.mint === mint; })[0];
+    var m = STATE.mints[mint];
+    var a = STATE.answers[mint];
+    return {
+      record: rec, mint: m, answers: a,
+      receipts: STATE.receipts.filter(function (r) { return r.mint === mint; })
+    };
+  }
+
+  function currentFor(mint) {
+    if (live && live.mints[mint]) {
+      /* The live read collects every receipt once, so each mint's trail is sliced out of that
+         list here. Leaving it off is silent: the trail falls back to its "no receipts yet"
+         placeholder and the page understates the mint. */
+      var c = live.mints[mint];
+      c.receipts = (live.receipts || []).filter(function (r) { return r.mint === mint; });
+      return c;
+    }
+    return recordedFor(mint);
+  }
+
+  /* ------------------------------------------------------------------ render */
+
+  function renderMint(mint) {
+    selected = mint;
+    var c = currentFor(mint);
+    var m = c.mint, rec = c.record, a = c.answers;
+
+    var buttons = document.querySelectorAll("#picker button");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", buttons[i].getAttribute("data-mint") === mint ? "true" : "false");
+    }
+
+    setText("field-multiplier", m.multiplier === null ? "n/a" : String(m.multiplier));
+    setText("live-multiplier", m.newMultiplier === null ? "n/a" : String(m.newMultiplier));
+    setText("effective-at", m.effectiveAt ? fmtTime(m.effectiveAt) : "no dated activation");
+    setText("fields-agree", m.fieldDisagrees
+      ? "These two disagree, which is the trap."
+      : "These two agree, so the obvious read happens to be correct here.");
+    setText("mint-address", mint);
+    setText("record-address", rec ? rec.address : "not registered");
+    setText("activations", rec ? String(rec.activations) : "0");
+
+    var decimals = rec ? rec.decimals : 8;
+    setText("naive-units", a.naiveUnitsDisplay === null ? "n/a" : a.naiveUnitsDisplay);
+    setText("program-units", a.programUnitsDisplay === null ? "n/a" : a.programUnitsDisplay);
+    setText("gap-units", a.gapUnitsDisplay === null ? "n/a" : a.gapUnitsDisplay);
+    setText("gap-note", a.gapUnits === null || a.gapUnits === "0"
+      ? "The obvious read and the program agree on this mint."
+      : "raw \u00d7 " + m.multiplier + " against the program's own answer.");
+
+    var gapPct = "n/a";
+    if (a.programUnits && a.naiveUnits) {
+      var g = Number(a.gapUnits) / Number(a.programUnits) * 100;
+      gapPct = g.toFixed(4).replace(/0+$/, "").replace(/\.$/, "") + "%";
+    }
+    setText("gap-pct-inline", gapPct);
+
+    var delta = a.deltaSeconds;
+    var inside = delta !== null && Math.abs(delta) <= PAUSE;
+    setText("delta", delta === null ? "n/a" : fmtInt(Math.abs(delta)));
+    setText("delta-hex", a.deltaHex || "no return data");
+
+    var verdict = el("verdict");
+    verdict.className = "tag " + (delta === null ? "hold" : inside ? "hold" : "settle");
+    verdict.textContent = delta === null ? "No answer" : inside ? "Hold" : "Settle";
+    setText("verdict-why", delta === null
+      ? "The program returned nothing this page can read."
+      : inside
+        ? "The activation was " + fmtDuration(delta) + " ago, which is inside the "
+          + (PAUSE / 60) + " minute window this desk holds for."
+        : "The activation was " + fmtDuration(delta) + " ago. The window closed "
+          + fmtDuration(Math.abs(delta) - PAUSE) + " ago, so this trade is clear.");
+
+    drawAxis(delta);
+    renderTrail(c.receipts, rec);
+  }
+
+  function drawAxis(delta) {
+    var win = el("win"), now = el("now");
+    var span = 7200;                       // the axis spans two hours either side
+    var pct = function (secs) { return (secs + span) / (2 * span) * 100; };
+    win.style.left = pct(-PAUSE) + "%";
+    win.style.width = (pct(PAUSE) - pct(-PAUSE)) + "%";
+    if (delta === null) { now.style.display = "none"; return; }
+    now.style.display = "";
+    if (Math.abs(delta) <= span) {
+      now.style.left = pct(delta) + "%";
+      now.className = "mark";
+      now.setAttribute("data-l", "now");
+    } else {
+      var right = delta > 0;
+      now.style.left = right ? "100%" : "0%";
+      now.className = "mark off " + (right ? "at-right" : "at-left");
+      now.setAttribute("data-l", fmtDuration(Math.abs(delta) - span) + " outside");
+    }
+  }
+
+  function renderTrail(receipts, rec) {
+    var body = el("trail-body");
+    if (!receipts || !receipts.length) {
+      body.innerHTML = '<tr><td colspan="8" class="small">No receipts for this mint yet. '
+        + 'The program writes one per activation, so an empty trail means it has not recorded '
+        + 'an activation for this token.</td></tr>';
+      setText("trail-note", "This mint is registered but has no recorded activation.");
+      return;
+    }
+    var ordered = receipts.slice().sort(function (x, y) {
+      return (x.effectiveAt - y.effectiveAt) || (x.sequence - y.sequence);
+    });
+    var html = "";
+    for (var i = 0; i < ordered.length; i++) {
+      var r = ordered[i];
+      html += "<tr>"
+        + '<td class="mono">' + r.sequence + "</td>"
+        + "<td>" + (r.flat
+            ? '<span class="pill flat">no change</span>'
+            : '<span class="pill ok">moved</span>') + "</td>"
+        + '<td class="mono">' + r.previousMultiplier + "</td>"
+        + '<td class="mono">' + r.newMultiplier + "</td>"
+        + '<td class="mono">+' + r.deltaFp + "</td>"
+        + "<td>" + fmtTime(r.effectiveAt) + "</td>"
+        + "<td>" + fmtTime(r.recordedAt) + "</td>"
+        + '<td class="mono">' + fmtInt(r.rawSupply) + "</td>"
+        + "</tr>";
+    }
+    body.innerHTML = html;
+    var flat = ordered.filter(function (r) { return r.flat; }).length;
+    setText("trail-note", ordered.length + " receipt"
+      + (ordered.length === 1 ? "" : "s") + " for this mint, written in order and never changed"
+      + (flat ? ". " + flat + " of them recorded no change in the multiplier, which the program "
+          + "keeps rather than hides." : ".")
+      + " Read from the program's own accounts, not from an index.");
+  }
+
+  /* ------------------------------------------------------------------ live read */
+
+  function readLive() {
+    var out = { mints: {} };
+    return rpc("getProgramAccounts", [PROGRAM, {
+      encoding: "base64", filters: [{ dataSize: 111 }]
+    }]).then(function (rows) {
+      var records = rows.map(function (r) {
+        var d = fromBase64(r.account.data[0]);
+        var rec = decodeRecord(d);
+        rec.address = r.pubkey;
+        return rec;
+      });
+      out.records = records;
+
+      return rpc("getProgramAccounts", [PROGRAM, {
+        encoding: "base64", filters: [{ dataSize: 121 }]
+      }]).then(function (rr) {
+        out.receipts = rr.map(function (r) {
+          var rec = decodeReceipt(fromBase64(r.account.data[0]));
+          rec.address = r.pubkey;
+          return rec;
+        });
+
+        var jobs = [];
+        records.forEach(function (rec) {
+          jobs.push(
+            /* `getAccountInfo` with `jsonParsed`, not `getParsedAccountInfo`. The web3.js
+               client method is named that; the RPC method is not, and asking for it returns
+               "Method not found" rather than a parse failure, which is what the first version
+               of this page did. */
+            rpc("getAccountInfo", [rec.mint, { encoding: "jsonParsed" }]).then(function (res) {
+              var info = res.value && res.value.data && res.value.data.parsed
+                ? res.value.data.parsed.info : null;
+              var ext = info && info.extensions
+                ? info.extensions.filter(function (e) { return e.extension === "scaledUiAmountConfig"; })[0]
+                : null;
+              var st = ext ? ext.state : null;
+              out.mints[rec.mint] = {
+                mint: {
+                  multiplier: st ? Number(st.multiplier) : null,
+                  newMultiplier: st ? Number(st.newMultiplier) : null,
+                  effectiveAt: st ? Number(st.newMultiplierEffectiveTimestamp) : null,
+                  fieldDisagrees: st ? Number(st.multiplier) !== Number(st.newMultiplier) : null,
+                  decimals: info ? info.decimals : rec.decimals
+                },
+                record: rec,
+                answers: {}
+              };
+            })
+          );
+        });
+        return Promise.all(jobs);
+      });
+    }).then(function () {
+      /* Every instruction is a simulation, so they are all asked at once. */
+      var jobs = [];
+      Object.keys(out.mints).forEach(function (mint) {
+        var entry = out.mints[mint];
+        var rec = entry.record.address;
+        jobs.push(disc("settlement_window").then(function (d) {
+          return simulate([mint, rec], d).then(function (r) {
+            entry.answers.deltaHex = r.returnData.length ? toHex(r.returnData) : null;
+            entry.answers.deltaSeconds = r.returnData.length === 8
+              ? Number(new DataView(r.returnData.buffer).getBigInt64(0, true)) : null;
+            entry.answers.windowLogs = r.logs;
+          });
+        }));
+        jobs.push(disc("activation_pending").then(function (d) {
+          return simulate([mint, rec], d).then(function (r) {
+            entry.answers.pending = r.returnData.length ? r.returnData[0] === 1 : null;
+          });
+        }));
+        jobs.push(disc("read_entitlement").then(function (d) {
+          var args = new Uint8Array(d.length + 8);
+          args.set(d, 0);
+          var view = new DataView(args.buffer);
+          view.setBigUint64(d.length, 100000000n, true);
+          return simulate([mint, rec], args).then(function (r) {
+            if (r.err || r.returnData.length !== 16) {
+              entry.answers.programUnits = null;
+              entry.answers.programUnitsDisplay = null;
+              entry.answers.gapUnits = null;
+              entry.answers.gapUnitsDisplay = null;
+              return;
+            }
+            var v = new DataView(r.returnData.buffer);
+            var units = v.getBigUint64(0, true) | (v.getBigUint64(8, true) << 64n);
+            entry.answers.programUnits = units.toString();
+            entry.answers.programUnitsDisplay = units_(units, entry.record.decimals);
+            var naive = naiveScaled(100000000n, entry.mint.multiplier);
+            entry.answers.naiveUnits = naive.toString();
+            entry.answers.naiveUnitsDisplay = units_(naive, entry.record.decimals);
+            entry.answers.gapUnits = (units - naive).toString();
+            entry.answers.gapUnitsDisplay = units_(units - naive, entry.record.decimals);
+          });
+        }));
+      });
+      return Promise.all(jobs);
+    }).then(function () { return out; });
+  }
+
+  function units_(raw, decimals) { return units(raw, decimals); }
+
+  function mark(status, when) {
+    var dot = el("status-dot");
+    dot.className = "dot" + (status === "live" ? " on" : "");
+    setText("status-label", status === "live" ? "Live from devnet" : status === "reading" ? "Reading devnet" : "Recorded");
+    setText("status-when", when);
+  }
+
+  function refresh() {
+    var btn = el("recheck");
+    btn.disabled = true;
+    mark("reading", "asking " + RPC.replace(/^https?:\/\//, ""));
+    readLive().then(function (out) {
+      live = out;
+      renderMint(selected);
+      mark("live", "re-read just now, against the program at " + PROGRAM.slice(0, 8) + "\u2026");
+    }).catch(function (e) {
+      mark("recorded", "live read failed: " + e.message + ". Showing the capture from "
+        + STATE.capturedAt.replace("T", " ").replace(/\..*$/, " UTC") + ".");
+      live = null;
+      renderMint(selected);
+    }).then(function () { btn.disabled = false; });
+  }
+
+  /* ------------------------------------------------------------------ wiring */
+
+  var picker = el("picker");
+  picker.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("button[data-mint]") : null;
+    if (!b) return;
+    renderMint(b.getAttribute("data-mint"));
+  });
+
+  el("recheck").addEventListener("click", refresh);
+
+  el("ask").addEventListener("click", function () {
+    var btn = el("ask");
+    var raw;
+    try { raw = BigInt(el("raw").value.trim()); }
+    catch (err) { setText("program-units", "not a number"); return; }
+    btn.disabled = true;
+    var c = currentFor(selected);
+    disc("read_entitlement").then(function (d) {
+      var args = new Uint8Array(d.length + 8);
+      args.set(d, 0);
+      new DataView(args.buffer).setBigUint64(d.length, raw, true);
+      return simulate([selected, c.record.address], args);
+    }).then(function (r) {
+      if (r.err || r.returnData.length !== 16) {
+        setText("program-units", r.name || "refused");
+        return;
+      }
+      var v = new DataView(r.returnData.buffer);
+      var got = v.getBigUint64(0, true) | (v.getBigUint64(8, true) << 64n);
+      var decimals = c.record ? c.record.decimals : 8;
+      setText("program-units", units(got, decimals));
+      var naive = naiveScaled(raw, c.mint.multiplier);
+      setText("naive-units", units(naive, decimals));
+      setText("gap-units", units(got - naive, decimals));
+      setText("gap-note", "Asked about " + fmtInt(raw) + " raw units just now.");
+    }).catch(function (e) {
+      setText("program-units", "read failed");
+      setText("gap-note", e.message);
+    }).then(function () { btn.disabled = false; });
+  });
+
+  /* The recorded state is already rendered into the markup, so this only replaces it. */
+  refresh();
+})();
+</script>
+
+</body>
+</html>

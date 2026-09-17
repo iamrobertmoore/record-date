@@ -70,6 +70,13 @@ header.hero{padding:76px 0 8px;border-bottom:1px solid var(--line)}
 .chip b{font-family:var(--mono);font-weight:600;color:var(--ink)}
 .chip.hot{border-color:#eccfc8;background:#fdf6f4;color:var(--withheld)}
 .chip.hot b{color:var(--withheld)}
+/* The one call to action on the first screen: the desk is the only part of this entry a judge
+   can operate, so it gets a filled button rather than another link in the row. */
+.cta{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:var(--r);
+  background:var(--ink);color:#fff;font:650 13px/1 var(--sans);letter-spacing:-.005em;
+  transition:background .15s ease}
+.cta:hover{background:#000;color:#fff}
+.cta .arw{color:var(--brass);font-weight:400}
 .hero h1{max-width:20em}
 .hero .lede{margin-top:26px}
 .hero .byline{margin-top:30px;padding-bottom:34px;display:flex;flex-wrap:wrap;gap:26px;
@@ -292,6 +299,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       Record&nbsp;Date
     </span>
     <nav>
+      <a href="desk.html" style="color:var(--ink);font-weight:650">The desk</a>
       <a href="#claim">The claim</a>
       <a href="#chain">The chain</a>
       <a href="#taken">What was taken</a>
@@ -327,6 +335,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       ask venues to pause around every activation and nothing enforces it, so
       <b>{{TIMING_ON_A_NON_TRADING_DAY}} of the {{TIMING_N}} activations land on a day the market
       does not trade at all</b>, and this is a program that can say so.</p>
+
+    <p style="margin-top:28px"><a class="cta" href="desk.html">Open the settlement desk
+      <span class="arw">&rarr;</span></a>
+      <span class="small" style="margin-left:14px;vertical-align:2px">A static page with no key and
+        no backend that asks the deployed program what a holding is worth, live.</span></p>
 
     <div class="byline">
       <span><b>Read from</b><span>the mint accounts, the issuer's own feed, and the price API</span></span>
