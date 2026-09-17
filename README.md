@@ -33,9 +33,9 @@ The multiplier reinvests the **net** dividend, and that is asserted rather than 
 
 What ExDate and SolanaRWA are both built as is a **holder's statement**: what a wallet was paid, read back from the chain. ExDate ships no program of any kind, and says so.
 
-What this entry is built as is a **venue's control**. The two things below are the ones I could not find written down anywhere, and they are the two the program exists for:
+What this entry is built as is a **venue's control**, and the timing ground is not empty. [Kamino](https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792), the first major lending protocol to take tokenized equities as collateral, already holds corporate-action timestamps and mitigates outside trading hours with a **price band on the price feed it accepts**. A band is a heuristic applied to a price. What is not there is a timestamp a program can read without one, which is the first thing below. The second is a unit error in the field the prior art recommends:
 
-1. **When the activations land**, counted against the exchange's own published calendar rather than a window I chose. 631 activations, and **57 of them take effect on a day the US market does not trade at all**.
+1. **When the activations land**, counted against the exchange's own published calendar rather than a window I chose. 631 activations, and **57 of them take effect on a day the US market does not trade at all**. The premise is the organiser's own number rather than mine: the Solana Foundation's 13 September newsletter reports that **63% of tokenized-equity volume settles outside US market hours**.
 2. **The price the issuer publishes beside each mint is not always in dollars.** 124 of the 777 mints track an equity that does not trade in dollars, and the reference feed quotes them in the underlying's own currency. Read at face value, the 27 London listings priced in pence took the market value from $5.99bn to $13.22bn.
 
 ---
@@ -88,7 +88,7 @@ It grows across the first four buckets. Across 434 reconciliations on 342 names:
 
 ## When the multiplier moves
 
-The issuer's own docs tell venues and protocols to pause for fifteen minutes around each activation, and say nothing enforces it. Whether that matters depends entirely on when the activations land, which the issuer publishes and nobody I could find has counted. So I counted them. All **631** activations the feed and multiplier history carry, by the minute of the day they take effect:
+The issuer's own docs tell venues and protocols to pause for fifteen minutes around each activation, and say nothing enforces it. Whether that matters depends entirely on when the activations land, which the issuer publishes and, as far as I can find, nobody has counted. So I counted them. All **631** activations the feed and multiplier history carry, by the minute of the day they take effect:
 
 | Time (UTC) | Activations | New York clock |
 |---|---:|---|
@@ -97,11 +97,11 @@ The issuer's own docs tell venues and protocols to pause for fifteen minutes aro
 | 00:15 | 11 | 20:15 ET the previous day |
 | 01:15 | 5 | 21:15 ET the previous day |
 
-**619 of the 631, or 98.1%, fall outside US trading hours, and 93.8% of the sample lands on those four minutes.**
+**622 of the 631, or 98.6%, fall outside the US regular session as the exchange itself defines it, and 93.8% of the sample lands on those four minutes.**
 
-That is a count against a window I chose, and a window I chose is not a definition the exchange publishes. A wide one can also be wrong about a holiday without looking wrong. So the same claim is measured a second time from inputs that share nothing with the first: the calendar Pyth publishes in its feed directory, with no key, giving `America/New_York`, a 09:30 to 16:00 session, and twelve listed holiday and half-day overrides. **Against the exchange's own calendar, 9 of the 631 fall inside the session.** The two definitions disagree about three activations and agree about the other 628.
+That is measured twice, because one definition of "the market is open" would be mine and the other is the exchange's. The first is a fixed UTC window drawn wide at 13:00 to 21:00, which covers the session under both daylight time and standard time and can only make the finding harder to reach: by that definition 619 of the 631, or 98.1%, are outside. The second is the calendar Pyth publishes in its feed directory, with no key: `America/New_York`, a 09:30 to 16:00 session, and twelve listed holiday and half-day overrides. Against that, 9 of the 631 fall inside the session, so 622 are outside. The two are computed independently and the build requires both to agree the market is shut. They disagree about three activations and agree about the other 628.
 
-The sharper number is the one neither window is needed for. **57 activations, 9.03% of the sample, take effect on a day the market does not trade at all.** On those days the pause is not merely advisable: there is no continuous price, no closing auction, and no market to trade against.
+The sharper number is the one neither window is needed for. **57 activations, 9.03% of the sample, take effect on a day the market does not trade at all.** On those days the pause is not merely advisable. The underlying is shut for the whole session and the token is not, which is the premise this finding rests on rather than an assumption: the Solana Foundation's 13 September newsletter reports that **63% of tokenized-equity volume settles outside US market hours**, and the event brief names that as a theme.
 
 This is the part of the story that is not a bug in anyone's code. Activation is scheduled for 00:30 UTC the day after the ex-date, four and a half hours after the US close and ten hours before the next open. The fifteen minute pause is what stands in for a market, and it is a recommendation in a document rather than a constraint in a program. **Nothing can enforce it from inside a mint account, which is why this entry ships a program instead of a warning.**
 
@@ -155,7 +155,7 @@ The program is deployed to devnet at `ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtm
 | `activation_pending` | One byte: has the multiplier moved since this program last looked? A cranker calls this first so it does not pay for a transaction that reverts. |
 | `settlement_window` | Seconds since the last activation. A protocol that wants to follow the issuer's own advice to pause refuses to settle while that is inside 900. |
 
-The first four instructions are the read done properly. **`settlement_window` is the one that exists because of the timing finding, and it is the instruction no other entry in this field has.** The issuer's docs ask venues to pause fifteen minutes either side of an activation. Nothing can enforce that from inside a mint account, because a mint account has no opinion about who is trading against it. What a program can do is hold the timestamp of the last activation in an account any other program can read, which turns a recommendation in a document into a value a venue can branch on. It does not stop anyone trading; it makes non-compliance a choice rather than an accident.
+The first four instructions are the read done properly. **`settlement_window` is the one that exists because of the timing finding, and it is the issuer's own recommended pattern moved on chain rather than an invention.** Their docs tell integrators to fetch the pending multiplier with its activation timestamp and "adopt it locally once the activation timestamp is reached". A poller that does that is a private opinion; a program that holds the timestamp in an account any other program can read is a shared fact, and it is the difference between advice and a primitive. The issuer's docs ask venues to pause fifteen minutes either side of an activation. Nothing can enforce that from inside a mint account, because a mint account has no opinion about who is trading against it. What a program can do is hold the timestamp of the last activation in an account any other program can read, which turns a recommendation in a document into a value a venue can branch on. It does not stop anyone trading; it makes non-compliance a choice rather than an accident.
 
 The mint is parsed as raw bytes rather than through the `spl-token-2022` crate, because the program does not link against the program that owns the mint.
 
@@ -199,6 +199,8 @@ cargo test --manifest-path programs/record_date/Cargo.toml   # 12 unit tests, 13
 scripts/deploy.sh devnet                                     # refuses to deploy a mismatched id
 ```
 
+**The integration tests read a real mint, not a fixture written to match the parser.** `fixtures/nvdax_mint.bin` is the actual 679-byte account of the NVDAx mint (`Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh`) read from Solana mainnet, and `the_fixture_is_the_real_account_it_claims_to_be` asserts the layout on that account rather than on a synthetic one. Which is which, so the claim is not read as larger than it is: the Rust parser is proven on **one** real xStock, and the 777-mint assertions come from `scripts/fetch.py`, which implements the same offsets independently. Two implementations agreeing on a layout is the cross-check.
+
 ```bash
 # the whole loop on devnet, against the deployed program, with no mocks
 npm install
@@ -228,7 +230,8 @@ deployed ELF content is identical to the built one: true
 - **No arbitrage is claimed.** Liquidity behind these tokens is thin. The deepest pool carries about $1.8m. The two-field section above is the reason a price comparison against the underlying was not pursued as a trading claim: on some mints the pool quote is not a price at all, so a spread against the underlying is measuring the pool's thinness rather than an opportunity.
 - **The age gradient is not monotonic and is not claimed to be.** It holds from fresh to sixty days and comes back down in the oldest bucket. The build asserts the weaker, testable version.
 - **The window is the feed's, not a clean year.** 6 March 2026 to 24 September 2026, scaled to a year rather than twelve measured months. Supply is today's rather than time weighted, so a token that minted heavily after its dividend is over-counted. The feed is an upcoming feed, so the window runs seven days past the build date: **$23,676,471 of the $24,245,993 gross is dated on or before today and $569,522 is still forward.** Both are reported and a check proves they add up. Read the annual figure as an order of magnitude.
-- **The read rule, the withholding rate and the dollar total are not this entry's findings.** They are ExDate's, published on 13 September 2026, and Solana's own Token-2022 documentation describes the read rule. What this entry adds is the timing against the exchange's calendar, the currency the reference price is quoted in, and a program that can enforce the pause the issuer only recommends.
+- **The read rule, the withholding rate and the dollar total are not this entry's findings.** They are ExDate's, published on 13 September 2026, and Solana's own Token-2022 documentation describes the read rule. **Nor is the timing area unoccupied.** Kamino holds corporate-action timestamps and runs a price band outside trading hours, and other entrants in this event are working the same ground. What this entry adds is narrower than an earlier draft of it claimed: a timestamp a program can read without a price feed, and the currency the reference price is quoted in.
+- **The field is not empty and this entry is not alone in it.** 91 projects were submitted at the time of writing and none are published, so this is what competitors claim rather than what I could verify they do. Four are on the same ground: `openbell-solana` gates execution on off-hours premiums and raw-versus-scaled amount mistakes, `basis-terminal` productises the price gap, `multiplier` is a corporate-actions oracle, and `corporate-action-guard` (3 September 2026, before this event opened) issues fail-closed preflight receipts against stale corporate-action state on a different chain. I read their READMEs, not their code.
 - **This is one issuer.** 777 mints from Backed's own asset API, which is exhaustive over what Backed publishes and is not a census of every equity token on Solana.
 
 ---
@@ -248,6 +251,9 @@ All public, none authenticated.
 | exchange rates, for the non-dollar listings | `https://api.frankfurter.app/latest` (ECB reference rates) |
 | the exchange calendar, for the timing claim | `https://hermes.pyth.network/v2/price_feeds` |
 | the underlying's currency and venue | `https://api.xstocks.fi/api/v2/public/assets` |
+| the pause recommendation, and the polling pattern this program implements | [docs.xstocks.fi/developers/multipliers](https://docs.xstocks.fi/developers/multipliers) |
+| 63% of tokenized-equity volume outside market hours | [Solana Foundation newsletter, 13 September 2026](https://solanacompass.com/news/solana-tokenized-stocks-beat-nyse-and-nasdaq-combined-in-volume-with-63-of-trades-after-market-hours) |
+| the venue that already holds corporate-action timestamps | [Kamino governance forum, 14 July 2025](https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792) |
 | dividend mechanics | [docs.xstocks.fi/docs/dividends-and-stock-splits](https://docs.xstocks.fi/docs/dividends-and-stock-splits) |
 | the multiplier contract | [docs.xstocks.fi/developers/multipliers](https://docs.xstocks.fi/developers/multipliers) |
 | the read rule, in code | [`process_update_multiplier`](https://github.com/solana-program/token-2022/blob/main/program/src/extension/scaled_ui_amount/processor.rs) |
@@ -255,7 +261,7 @@ All public, none authenticated.
 
 Pyth's price *values* need a key and are not used here. Its feed directory, which carries the exchange calendar, is public, and the build takes the session definition from it and the numbers beside it from elsewhere. The source comment in `fetch.py` says so rather than leaving it to be inferred.
 
-**Prior art this entry is built on top of:** [ExDate](https://github.com/AlperJ/exdate) (the read rule, the withholding rate, the dollar total, and the split-versus-dividend distinction), [SolanaRWA](https://solanarwa.app) (per-holder dividend records on this chain since May 2026), and [Lido's stETH reward history](https://stake.lido.fi/rewards) (the same mechanic on Ethereum since 2021).
+**Prior art this entry is built on top of:** [ExDate](https://github.com/AlperJ/exdate) (the read rule, the withholding rate, the dollar total, and the split-versus-dividend distinction), [SolanaRWA](https://solanarwa.app) (per-holder dividend records on this chain since May 2026), [Kamino](https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792) (corporate-action timestamps and a price band outside trading hours, in production since July 2025), and [Lido's stETH reward history](https://stake.lido.fi/rewards) (the same mechanic on Ethereum since 2021).
 
 Built for **Stocklana**, by Robert Moore. MIT licensed.
 

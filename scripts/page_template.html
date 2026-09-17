@@ -379,9 +379,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         <h3>What is different here</h3>
         <p>ExDate and SolanaRWA are both a <em>holder's statement</em>: what a wallet was paid,
           read back from the chain. ExDate ships no program of any kind, and says so. This is a
-          <em>venue's control</em>. The two findings below are the ones I could not find written
-          down anywhere, and they are the two the program exists for: when the activations land
-          against the exchange's own calendar, and the currency the reference price is quoted in.</p>
+          <em>venue's control</em>, and the ground is not empty: Kamino already holds
+          corporate-action timestamps and mitigates outside trading hours with a price band on the
+          feed it accepts. A band is a heuristic applied to a price. What is not there is a
+          timestamp a program reads without one. The other finding below is the currency the
+          reference price is quoted in.</p>
       </div>
     </div>
   </div>
@@ -439,11 +441,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           HTTP API and in transaction logs.</p>
       </div>
       <div class="card">
-        <h3>Why the pause is the only control</h3>
+        <h3>Why the pause needs a number</h3>
         <p>The issuer's own docs recommend that venues and protocols pause for fifteen minutes
-          around each activation. Nothing in a mint account can enforce that, and the
-          recommendation is the whole of the mechanism. It is not a formality that could be
-          dropped either, because of when the activations land.</p>
+          around each activation, and nothing in a mint account can enforce that. Kamino does not
+          pause: it widens a price band on the feed it accepts. Either way the venue has to know
+          when the window is, and the window is the part that is not on chain.</p>
       </div>
     </div>
 
@@ -489,6 +491,15 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       auction to absorb it, and the fifteen minute pause is what stands in for both. A venue that
       does not pause is not making a mistake about a number. It is settling against a position
       whose entitlement moved while it was not looking.</p>
+
+    <p class="small">That the token trades while the underlying does not is not an assumption here.
+      The <a href="https://solanacompass.com/news/solana-tokenized-stocks-beat-nyse-and-nasdaq-combined-in-volume-with-63-of-trades-after-market-hours"><b>Solana
+      Foundation's 13 September newsletter</b></a> reports that <b>63% of tokenized-equity volume
+      settles outside US market hours</b>, and the event brief names it as a theme.
+      <a href="https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792"><b>Kamino</b></a>,
+      the first major lender to take these as collateral, already mitigates that window with a
+      price band on the feed it accepts. A band is a heuristic applied to a price. A timestamp is a
+      fact a program reads without one, and that is what this entry publishes.</p>
   </div>
 </section>
 
