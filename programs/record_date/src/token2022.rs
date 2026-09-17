@@ -39,9 +39,32 @@ const OFF_EFFECTIVE_TS: usize = 40;
 /// Offset of `new_multiplier` inside the body.
 const OFF_NEW_MULTIPLIER: usize = 48;
 
-/// The highest value in the Token-2022 `ExtensionType` enum. A byte pair above this cannot be
-/// an extension header.
-const MAX_EXTENSION_TYPE: u16 = 27;
+/// The highest discriminant in the Token-2022 `ExtensionType` enum, which is what separates an
+/// extension type from a number this parser does not recognise.
+///
+/// This tracks an enum in someone else's crate, so it is a constant that can go stale, and it
+/// did. It read 27 while `PermissionedBurn` had already taken 28, which would have refused a
+/// legitimate mint over an extension this program does not even read. The enum is written out
+/// below so the number is auditable rather than taken on trust:
+///
+/// ```text
+///  0 Uninitialized                 15 TransferHookAccount
+///  1 TransferFeeConfig             16 ConfidentialTransferFeeConfig
+///  2 TransferFeeAmount             17 ConfidentialTransferFeeAmount
+///  3 MintCloseAuthority            18 MetadataPointer
+///  4 ConfidentialTransferMint      19 TokenMetadata
+///  5 ConfidentialTransferAccount   20 GroupPointer
+///  6 DefaultAccountState           21 TokenGroup
+///  7 ImmutableOwner                22 GroupMemberPointer
+///  8 MemoTransfer                  23 TokenGroupMember
+///  9 NonTransferable               24 ConfidentialMintBurn
+/// 10 InterestBearingConfig         25 ScaledUiAmount
+/// 11 CpiGuard                      26 Pausable
+/// 12 PermanentDelegate             27 PausableAccount
+/// 13 NonTransferableAccount        28 PermissionedBurn
+/// 14 TransferHook
+/// ```
+const MAX_EXTENSION_TYPE: u16 = 28;
 
 /// The multiplier as the mint stores it, plus the supply and decimals read alongside.
 #[derive(Debug, Clone, Copy)]
@@ -164,6 +187,16 @@ pub struct MintView {
 /// skip over. A tolerant walk that advanced a byte whenever a header looked implausible would be
 /// a way to return a *different* plausible-looking body without failing, which is worse than
 /// failing. `scripts/fetch.py` measures the density and fails if it ever stops holding.
+///
+/// The walk covers the **whole** TLV area and then returns the offset it found, rather than
+/// returning as soon as it finds one. It used to return early, which meant an entry sitting
+/// after the scaled-ui-amount entry was never looked at: an account whose tail was structurally
+/// malformed was still reported as carrying a good multiplier. The substance of the change is
+/// that a program a venue settles against should not read a number out of an account it has
+/// already established is not laid out the way it claims to be. It costs one comparison per
+/// remaining entry and it changes no answer on a well-formed account, which is measured rather
+/// than asserted: `tests/walk_census.rs` runs this walk over captured live mints and the output
+/// is diffed across the change.
 pub fn find_scaled_ui_amount(data: &[u8]) -> Result<usize> {
     // A mint with no extensions is exactly the 82-byte base state and carries no account-type
     // byte at all, so there is nothing to find and no error to report.
@@ -184,14 +217,33 @@ pub fn find_scaled_ui_amount(data: &[u8]) -> Result<usize> {
     }
 
     let mut off = TLV_START;
-    while off + 4 <= data.len() {
+    let mut found: Option<usize> = None;
+
+    while off < data.len() {
+        let remaining = data.len() - off;
+
+        // A header is four bytes, so fewer than four remaining means the run is ending rather
+        // than continuing. Token-2022 draws the line in a specific place and this mirrors it
+        // rather than picking one: `try_for_each_tlv_extension_type` returns once the remaining
+        // slice is shorter than a *type*, "because the last byte could be used during a
+        // realloc", so one trailing byte is normal. Two or three trailing bytes are enough for
+        // a type and not enough for a length, and the same function calls that malformed
+        // instead of stopping, so the only two or three bytes that are accepted here are the
+        // zero bytes of an `Uninitialized` header.
+        if remaining < 4 {
+            if remaining >= 2 && u16::from_le_bytes([data[off], data[off + 1]]) != 0 {
+                return Err(RecordDateError::TruncatedExtensionHeader.into());
+            }
+            break;
+        }
+
         let ext_type = u16::from_le_bytes([data[off], data[off + 1]]);
         let ext_len = u16::from_le_bytes([data[off + 2], data[off + 3]]);
 
         // `ExtensionType::Uninitialized`. The initialised run has ended, so any extension after
-        // this point is not there.
+        // this point is not there and the walk stops. Token-2022 stops here too.
         if ext_type == 0 {
-            return Err(RecordDateError::NoScaledUiAmount.into());
+            break;
         }
         if ext_type > MAX_EXTENSION_TYPE {
             return Err(RecordDateError::UnknownExtension.into());
@@ -202,12 +254,13 @@ pub fn find_scaled_ui_amount(data: &[u8]) -> Result<usize> {
         // legitimately be larger than any constant picked here.
         //
         // The order here is the point, and it was wrong. This check used to run *after* the
-        // `ScaledUiAmountConfig` branch below, which returns. The loop condition is only
-        // `off + 4 <= data.len()`, so a header at the very end of the account declaring a 56-byte
-        // body passed the loop condition, matched the type, matched the length, and returned an
-        // offset that `read_mint` then sliced past the end of the buffer. Slicing out of bounds
-        // panics; it does not return an error. A crafted mint account could do it, and the one
-        // entry the walk was asked to find was the one entry it never bounds-checked.
+        // `ScaledUiAmountConfig` branch below, which returned. The loop condition was only
+        // `off + 4 <= data.len()`, so a header at the very end of the account declaring a
+        // 56-byte body passed the loop condition, matched the type, matched the length, and
+        // returned an offset that `read_mint` then sliced past the end of the buffer. Slicing
+        // out of bounds panics; it does not return an error. A crafted mint account could do
+        // it, and the one entry the walk was asked to find was the one entry it never
+        // bounds-checked.
         if off + 4 + ext_len as usize > data.len() {
             return Err(RecordDateError::ExtensionOverrunsAccount.into());
         }
@@ -215,11 +268,18 @@ pub fn find_scaled_ui_amount(data: &[u8]) -> Result<usize> {
             if ext_len as usize != SCALED_UI_AMOUNT_LEN {
                 return Err(RecordDateError::BadExtensionLength.into());
             }
-            return Ok(off + 4);
+            // The first one wins, and that is what Token-2022 does rather than a choice made
+            // here: `get_extension_indices` returns as soon as it sees the type, so on an
+            // account carrying the entry twice the token program reads the first and so does
+            // this. The walk still steps over the second one and bounds-checks it.
+            if found.is_none() {
+                found = Some(off + 4);
+            }
         }
         off += 4 + ext_len as usize;
     }
-    Err(RecordDateError::NoScaledUiAmount.into())
+
+    found.ok_or_else(|| RecordDateError::NoScaledUiAmount.into())
 }
 
 /// Parse a mint account.
@@ -494,5 +554,108 @@ mod tests {
         };
         assert_eq!(fresh.effective(0), 1.0);
         assert_eq!(fresh.effective_at(0), 0);
+    }
+
+    #[test]
+    fn an_entry_after_the_one_being_looked_for_is_still_checked() {
+        // The negative control for the whole-area walk, and it is written so that the old walk
+        // fails it rather than merely passing the new one. The scaled-ui entry here is first and
+        // perfectly well formed; what is malformed is the entry *behind* it, which a walk that
+        // returned on finding the first one never looked at. So on the early-returning walk this
+        // test fails its `expect_err`, and on the whole-area walk it passes. That is the
+        // difference the change is supposed to make, stated as something that can fail.
+        let (mut d, body) = synth_mint(1.0344, 1_788_481_800, 1.0344);
+        assert_eq!(find_scaled_ui_amount(&d).unwrap(), body);
+
+        // A `TokenMetadata` entry (19) declaring a 400-byte body the account does not contain.
+        d.extend_from_slice(&19u16.to_le_bytes());
+        d.extend_from_slice(&400u16.to_le_bytes());
+        d.extend(std::iter::repeat_n(0u8, 8));
+
+        let err = find_scaled_ui_amount(&d)
+            .expect_err("a malformed entry behind the target must refuse the whole account");
+        assert!(
+            err.to_string().contains("does not fit inside the account"),
+            "expected the overrun error, got: {err}"
+        );
+        // And `read_mint` refuses it too, so the refusal is not lost between the two.
+        assert!(read_mint(&d).is_err());
+    }
+
+    #[test]
+    fn a_trailing_partial_header_is_refused_unless_it_is_a_terminator() {
+        let (base, _) = synth_mint(1.0, 0, 1.0);
+
+        // One trailing byte. Token-2022 tolerates exactly this on purpose, because the last
+        // byte of an account can be left over from a reallocation, so refusing it would refuse
+        // accounts the token program accepts.
+        let mut one = base.clone();
+        one.push(0xAB);
+        assert_eq!(find_scaled_ui_amount(&one).unwrap(), find_scaled_ui_amount(&base).unwrap());
+
+        // Two trailing zero bytes read as an `Uninitialized` header, which ends the run.
+        let mut two_zero = base.clone();
+        two_zero.extend_from_slice(&[0u8, 0u8]);
+        assert!(find_scaled_ui_amount(&two_zero).is_ok());
+
+        // Two trailing non-zero bytes are enough for a type and not enough for a length, which
+        // Token-2022 calls malformed rather than treating as the end.
+        let mut two = base.clone();
+        two.extend_from_slice(&[19u8, 0u8]);
+        let err = find_scaled_ui_amount(&two).expect_err("a partial header must be refused");
+        assert!(
+            err.to_string().contains("partial extension header"),
+            "expected the partial-header error, got: {err}"
+        );
+
+        // Three trailing non-zero bytes are the same case.
+        let mut three = base.clone();
+        three.extend_from_slice(&[19u8, 0u8, 0u8]);
+        assert!(find_scaled_ui_amount(&three).is_err());
+    }
+
+    #[test]
+    fn the_highest_known_extension_type_is_accepted_and_the_next_one_is_not() {
+        // This constant tracks an enum in someone else's crate and it went stale once already:
+        // it read 27 while `PermissionedBurn` had taken 28, so a mint carrying that extension
+        // would have been refused over a type this program never reads. Pinning both sides means
+        // the next time the enum grows, a test says so rather than a live mint failing in the
+        // field and looking like a parser bug.
+        assert_eq!(MAX_EXTENSION_TYPE, 28);
+
+        // A `PermissionedBurn` entry (28) behind the scaled-ui entry is stepped over.
+        let (mut d, body) = synth_mint(1.0344, 1_788_481_800, 1.0344);
+        d.extend_from_slice(&28u16.to_le_bytes());
+        d.extend_from_slice(&4u16.to_le_bytes());
+        d.extend(std::iter::repeat_n(0u8, 4));
+        assert_eq!(find_scaled_ui_amount(&d).unwrap(), body);
+
+        // One past the enum is not an extension type at all.
+        let (mut d, _) = synth_mint(1.0344, 1_788_481_800, 1.0344);
+        d.extend_from_slice(&29u16.to_le_bytes());
+        d.extend_from_slice(&4u16.to_le_bytes());
+        d.extend(std::iter::repeat_n(0u8, 4));
+        let err = find_scaled_ui_amount(&d).expect_err("29 is not in the enum");
+        assert!(
+            err.to_string().contains("ExtensionType enum"),
+            "expected the unknown-extension error, got: {err}"
+        );
+    }
+
+    #[test]
+    fn the_first_of_two_scaled_ui_entries_is_the_one_returned() {
+        // Token-2022's `get_extension_indices` returns on the first match, so on an account
+        // carrying the entry twice the token program reads the first one. Returning the second
+        // here would report a different multiplier from the one the runtime applies, which is
+        // the exact class of defect this program exists to report.
+        let (mut d, first) = synth_mint(1.10, 1_788_481_800, 1.10);
+        d.extend_from_slice(&EXT_SCALED_UI_AMOUNT.to_le_bytes());
+        d.extend_from_slice(&(SCALED_UI_AMOUNT_LEN as u16).to_le_bytes());
+        d.extend(std::iter::repeat_n(0u8, SCALED_UI_AMOUNT_LEN));
+
+        assert_eq!(find_scaled_ui_amount(&d).unwrap(), first);
+        // The second body is all zeros, so a multiplier of 1.10 proves the first one was read
+        // rather than the second.
+        assert_eq!(read_mint(&d).unwrap().scaled_ui_amount.multiplier, 1.10);
     }
 }

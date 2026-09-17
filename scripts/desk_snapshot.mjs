@@ -373,6 +373,12 @@ const out = {
     "SymbolTooLong", "NotRegistered", "NothingToRecord", "NotPythReceiver", "NotAPriceUpdate",
     "PriceUpdateTooShort", "FeedIdMismatch", "StalePythPrice", "PriceDeviation", "PriceOutOfRange",
     "NegativePythPrice", "FeedSymbolTooLong", "PriceAgeCeilingExceeded",
+    # Added 17 Sep 2026, with the whole-TLV-area walk. Anchor numbers these positionally from
+    # 6000, so a new variant goes on the end and nothing above it moves. This list is a manual
+    # mirror of the enum in `programs/record_date/src/error.rs`, and it silently went one short
+    # the moment the variant was added, which is the argument for asserting the order rather
+    # than trusting it.
+    "TruncatedExtensionHeader",
   ],
   errorCodeOffset: 6000,
 };

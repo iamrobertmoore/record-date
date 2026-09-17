@@ -1,5 +1,10 @@
 use anchor_lang::prelude::*;
 
+// Anchor assigns these codes positionally, starting at 6000, so the order is part of the
+// program's public interface: `StalePythPrice` is 6016 and 6016 is quoted in the README, on the
+// desk page and in the build checks that refuse to publish if it moves. **Add new variants at
+// the end.** Inserting one in the middle renumbers everything below it and breaks a documented
+// claim without breaking anything that runs.
 #[error_code]
 pub enum RecordDateError {
     #[msg("the mint account is not owned by the Token-2022 program")]
@@ -46,4 +51,6 @@ pub enum RecordDateError {
     FeedSymbolTooLong,
     #[msg("the caller asked for a price age longer than this program will accept")]
     PriceAgeCeilingExceeded,
+    #[msg("the account ends in a partial extension header")]
+    TruncatedExtensionHeader,
 }

@@ -95,12 +95,16 @@ MINT_BASE_LEN = 82
 BASE_REGION_LEN = 165
 ACCOUNT_TYPE_MINT = 1
 TLV_START = BASE_REGION_LEN + 1
-# The highest value in the Token-2022 ExtensionType enum. A byte pair above this is not a header.
-# There is deliberately no maximum extension *length* constant: the bound that matters is whether
-# an entry fits inside the account, and that is derived from the account rather than chosen. The
-# largest body the walk steps over on any live xStock mint is measured and reported as
-# `layout.max_extension_len_seen`.
-MAX_EXTENSION_TYPE = 27
+# The highest discriminant in the Token-2022 ExtensionType enum. A byte pair above this is not a
+# header. It tracks an enum in someone else's crate, so it is a number that can go stale, and it
+# did: it read 27 while `PermissionedBurn` had taken 28, which would have refused a legitimate
+# mint over a type neither reader looks at. The Rust constant in
+# `programs/record_date/src/token2022.rs` carries the enum written out; this one has to move with
+# it. There is deliberately no maximum extension *length* constant: the bound that matters is
+# whether an entry fits inside the account, and that is derived from the account rather than
+# chosen. The largest body the walk steps over on any live xStock mint is measured and reported
+# as `layout.max_extension_len_seen`.
+MAX_EXTENSION_TYPE = 28
 
 
 def get_json(url, tries=6, timeout=90):
@@ -361,6 +365,14 @@ def find_scaled_ui_amount(data):
 
     Returns None for anything that is not a mint with a scaled-ui-amount extension, rather than
     scanning past bytes that do not fit the layout.
+
+    This mirrors `find_scaled_ui_amount` in `programs/record_date/src/token2022.rs`, and the two
+    are meant to be read together: a rule that lives in only one of them is a rule the other can
+    drift away from. The walk covers the **whole** TLV area and returns the offset it found rather
+    than returning on finding it, because an account whose tail is structurally malformed is not
+    an account to read a settlement figure out of. On every mint read so far that changes no
+    answer and does more work: four entries sit behind the scaled-ui-amount entry, and they were
+    never looked at before.
     """
     if len(data) <= MINT_BASE_LEN:
         return None  # no extensions at all, so no account-type byte and nothing to find
@@ -372,21 +384,39 @@ def find_scaled_ui_amount(data):
         return None
 
     offset = TLV_START
-    while offset + 4 <= len(data):
+    found = None
+    while offset < len(data):
+        remaining = len(data) - offset
+        # Token-2022 tolerates exactly one trailing byte here, because the last byte of an
+        # account can be left over from a reallocation. Two or three are enough for a type and
+        # not enough for a length, which its own `try_for_each_tlv_extension_type` calls
+        # malformed rather than treating as the end.
+        if remaining < 4:
+            if remaining >= 2 and struct.unpack_from("<H", data, offset)[0] != 0:
+                return None
+            break
         ext_type, ext_len = struct.unpack_from("<HH", data, offset)
-        # ExtensionType::Uninitialized. The initialised run has ended.
+        # ExtensionType::Uninitialized. The initialised run has ended, so nothing after this
+        # point is an extension and the walk stops.
         if ext_type == 0:
-            return None
+            break
         if ext_type > MAX_EXTENSION_TYPE:
+            return None
+        # The bound comes before the match, not after it. It used to sit below, and the branch
+        # below returns, so the one entry this function was asked to find was the one entry it
+        # never bounds-checked.
+        if offset + 4 + ext_len > len(data):
             return None
         if ext_type == 25:
             if ext_len != SCALED_UI_AMOUNT_LEN:
                 return None
-            return offset + 4
-        if offset + 4 + ext_len > len(data):
-            return None
+            # The first one wins, which is what Token-2022 does: its `get_extension_indices`
+            # returns on the first match, so on an account carrying the entry twice the token
+            # program reads the first one.
+            if found is None:
+                found = offset + 4
         offset += 4 + ext_len
-    return None
+    return found
 
 
 def read_mint(data, now):

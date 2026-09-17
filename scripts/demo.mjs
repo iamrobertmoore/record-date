@@ -505,6 +505,9 @@ const ERROR_NAMES = [
   "SymbolTooLong", "NotRegistered", "NothingToRecord", "NotPythReceiver", "NotAPriceUpdate",
   "PriceUpdateTooShort", "FeedIdMismatch", "StalePythPrice", "PriceDeviation", "PriceOutOfRange",
   "NegativePythPrice", "FeedSymbolTooLong", "PriceAgeCeilingExceeded",
+  // Added 17 Sep 2026. Positional from 6000, so it goes on the end; this mirrors the enum
+  // in `programs/record_date/src/error.rs`.
+  "TruncatedExtensionHeader",
 ];
 const ERROR_CODE_OFFSET = 6000;
 
