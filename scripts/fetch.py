@@ -403,7 +403,18 @@ def read_mint(data, now):
 
     # The trap: `multiplier` is the previous value. `new_multiplier` is the live one, once its
     # timestamp has passed. A reader that takes the obvious field is one action behind.
-    live = new if (new != 0.0 and effective_at <= now) else base
+    #
+    # The timestamp decides, and nothing else does, because that is what Token-2022 does:
+    # `ScaledUiAmountConfig::current_multiplier` tests `unix_timestamp >=
+    # new_multiplier_effective_timestamp` and nothing else. This line used to also require
+    # `new != 0.0`. That guard cannot fire on a mint the token program wrote, because
+    # `try_validate_multiplier` in its scaled-ui-amount processor refuses a zero, a subnormal, a
+    # negative, an infinity and a NaN before either field is set. On a mint the token program did
+    # not write it is wrong rather than defensive: there the runtime scales the position by zero
+    # while the guard would report the full base multiplier, and an overstated holding is the
+    # wrong direction to be wrong in for a figure a venue settles against. The Rust program
+    # carries the same rule; the two are meant to be read together.
+    live = new if effective_at <= now else base
     return {
         "supply": struct.unpack_from("<Q", data, 36)[0],
         "decimals": data[44],

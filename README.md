@@ -184,7 +184,9 @@ The `spl-token` client agrees and slices the same offset itself: `getMint` requi
 
 The walk from one header to the next is exact, and that is a decision rather than an omission. **On all 927 mints the extension run is dense and ends exactly at the end of the account**, so there is nothing to skip over. A tolerant walk that advanced a byte whenever a header looked implausible would be a way to return a *different* plausible-looking body without failing, which is worse than failing. The density is measured on every run and the page is not built if it stops holding.
 
-Multipliers are stored as `f64` because that is how the mint stores them, and converted once to a `u128` fixed-point value at 1e18. There is no float arithmetic after that.
+**Every entry the walk steps over is bounds-checked, including the entry it is looking for, and that ordering was wrong until 17 September.** The loop condition is only `off + 4 <= data.len()`, so a header sitting in the last four bytes of an account passed it, matched the type, matched the length, and returned a body offset that `read_mint` then sliced past the end of the buffer. Slicing out of bounds panics rather than returning an error. The check sat below the branch that returns, so the one entry the walk was asked to find was the one entry it never checked. A unit test now builds exactly that account and asserts the refusal; with the old ordering it does not fail politely, it panics with `range end index 226 out of range for slice of length 178`, which is how the defect was confirmed rather than argued about.
+
+Multipliers are stored as `f64` because that is how the mint stores them, and converted once to a `u128` fixed-point value at 1e18. There is no float arithmetic after that, and **two multipliers are never compared as floats**: `TokenRecord` keeps the raw bits of both the trap value and the live one (`base_multiplier_bits`, `live_multiplier_bits`) so the wrong answer stays auditable, and every decision compares the fixed-point form, because `0.0 == -0.0` is true and `NaN != NaN` is true, which makes an `f64` equality test an unsound way to ask whether a multiplier moved. Every comparison in the program is between integers or bytes. The one float comparison is the overflow bound against `u128::MAX as f64` below, and even the Pyth deviation is compared in basis points as a `u128` rather than as a price difference. The conversion fails closed on anything the token program could not have written: `try_validate_multiplier` in Token-2022's scaled-ui-amount processor requires `is_sign_positive() && is_normal()` before it will set either field, so a zero, a subnormal, a negative, an infinity and a NaN are each refused rather than rounded. It also refuses a multiplier below 1e-18, which would otherwise convert to a fixed point of zero and be read downstream as a position worth nothing.
 
 ---
 
@@ -208,7 +210,11 @@ If any check fails the script prints why and **refuses to build the page**. It i
 ```bash
 # the program
 anchor build --arch v1                                       # --arch v1 is required, see below
-cargo test --manifest-path programs/record_date/Cargo.toml   # 12 unit tests, 13 integration tests
+cargo test --manifest-path programs/record_date/Cargo.toml   # 14 unit tests, 30 integration tests
+
+# a warning is a build failure here, so the list cannot grow unread
+cargo clippy --manifest-path programs/record_date/Cargo.toml --all-targets -- -D warnings
+
 scripts/deploy.sh devnet                                     # refuses to deploy a mismatched id
 ```
 

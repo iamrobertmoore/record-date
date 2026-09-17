@@ -699,11 +699,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         ordered receipt that any protocol can read without an API.</p>
     </div>
 
-    <pre><span class="c">// the whole trap, in nine lines</span>
+    <pre><span class="c">// the whole trap, in one comparison</span>
+<span class="c">// Token-2022's ScaledUiAmountConfig::current_multiplier, mirrored exactly: the</span>
+<span class="c">// timestamp decides, and the stored value is not consulted at all.</span>
 <span class="k">pub fn</span> effective(&amp;self, now: i64) -&gt; f64 {
-    <span class="k">if</span> self.new_multiplier != 0.0
-        &amp;&amp; self.new_multiplier_effective_timestamp &lt;= now
-    {
+    <span class="k">if</span> self.new_multiplier_effective_timestamp &lt;= now {
         self.new_multiplier      <span class="c">// live</span>
     } <span class="k">else</span> {
         self.multiplier          <span class="c">// previous. not the multiplier.</span>

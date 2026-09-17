@@ -71,6 +71,15 @@ if flags != 1:
 PY
 
 echo
+echo "linting"
+# `-D warnings`, so a warning is a failure and the list cannot grow unread. This is not piped
+# through grep the way the test step is, and that is deliberate: the exit status here has to be
+# clippy's own, so a refusal aborts the deploy under `set -e` instead of being hidden by a
+# downstream filter that matched something. `--all-targets` covers the tests, which is where
+# three of the six warnings that prompted this lived.
+cargo clippy --manifest-path programs/record_date/Cargo.toml --all-targets -- -D warnings
+
+echo
 echo "testing"
 # `tail -4` used to sit here, and it printed the doc-test run ("running 0 tests ... 0 passed")
 # while hiding the two suites that matter. A guard whose output reads as a pass for the wrong

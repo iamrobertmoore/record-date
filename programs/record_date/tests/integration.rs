@@ -44,7 +44,11 @@ const SYMBOL: &str = "NVDAx";
 /// What the account actually holds, confirmed against the issuer's own multiplier endpoint and
 /// recorded in fixtures/nvdax_expected.json.
 const BASE_MULTIPLIER: f64 = 1.0009180758490996;
-const LIVE_MULTIPLIER: f64 = 1.0017011968010741;
+/// The fixture stores this as `1.001701196801074`. It was written here with a trailing `1`,
+/// which f64 cannot hold: the literal parsed to the same number, so the test was right and the
+/// constant was written one digit longer than the value it names. `clippy::excessive_precision`
+/// is what found it.
+const LIVE_MULTIPLIER: f64 = 1.001701196801074;
 const EFFECTIVE_TIMESTAMP: i64 = 1_789_000_200;
 const SUPPLY: u64 = 32_127_767_286_397;
 const DECIMALS: u8 = 8;
@@ -121,6 +125,11 @@ fn setup() -> (LiteSVM, Keypair, Pubkey) {
 
 /// `anchor_lang::prelude` exports its own `Result`, which is `Result<T, anchor_lang::Error>`, so
 /// the return type here has to be LiteSVM's alias rather than a two-argument `Result`.
+///
+/// LiteSVM's `TransactionError` is over 200 bytes and it is not a type this repo can shrink, so
+/// the lint is allowed here rather than satisfied. The allow is on this one function and not the
+/// file, so an oversized `Err` introduced in our own code still fails the build.
+#[allow(clippy::result_large_err)]
 fn send(svm: &mut LiteSVM, payer: &Keypair, ix: Instruction) -> TransactionResult {
     // LiteSVM keeps a transaction history and rejects a repeat signature as AlreadyProcessed. A
     // read with the same payer and no state change produces a byte-identical transaction, so the
@@ -221,11 +230,8 @@ fn ix_register_mint(payer: &Pubkey, mint: &Pubkey) -> Instruction {
 }
 
 fn ix_record_activation(cranker: &Pubkey, mint: &Pubkey) -> Instruction {
-    let sequence = {
-        // The receipt PDA is seeded with the sequence the record currently holds.
-        let record = registry_and_record_for_sequence(mint);
-        record
-    };
+    // The receipt PDA is seeded with the sequence the record currently holds.
+    let sequence = registry_and_record_for_sequence(mint);
     Instruction {
         program_id: record_date::ID,
         accounts: vec![

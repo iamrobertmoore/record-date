@@ -61,8 +61,19 @@ impl ScaledUiAmount {
     /// **previous** value; the live one is `new_multiplier`, once its timestamp has passed.
     /// A reader that takes `multiplier` is one corporate action behind. On 17 September 2026
     /// that was 370 of the 927 xStock mints on Solana.
+    ///
+    /// The timestamp decides, and nothing else does, because that is what Token-2022 does.
+    /// `ScaledUiAmountConfig::current_multiplier` in
+    /// `interface/src/extension/scaled_ui_amount/mod.rs` is `if unix_timestamp >=
+    /// new_multiplier_effective_timestamp { new_multiplier } else { multiplier }`, with no test
+    /// on the value. This function used to add `new_multiplier != 0.0`, which reads as defensive
+    /// and is not: on an account whose `new_multiplier` is zero and whose timestamp has passed,
+    /// the token program scales the position by zero while this program would have reported the
+    /// full `multiplier`. That is an overstated holding, which is the wrong direction to be
+    /// wrong in for a program a venue settles against. Zero is now caught by `to_fixed_point`,
+    /// so the crafted account fails closed instead of reading as full value.
     pub fn effective(&self, now: i64) -> f64 {
-        if self.new_multiplier != 0.0 && self.new_multiplier_effective_timestamp <= now {
+        if self.new_multiplier_effective_timestamp <= now {
             self.new_multiplier
         } else {
             self.multiplier
@@ -72,7 +83,7 @@ impl ScaledUiAmount {
     /// When the multiplier in force at `now` took effect, or 0 if the mint has never had a
     /// dated activation.
     pub fn effective_at(&self, now: i64) -> i64 {
-        if self.new_multiplier != 0.0 && self.new_multiplier_effective_timestamp <= now {
+        if self.new_multiplier_effective_timestamp <= now {
             self.new_multiplier_effective_timestamp
         } else {
             0
@@ -90,12 +101,27 @@ impl ScaledUiAmount {
 }
 
 /// An f64 multiplier as 1e18 fixed point, rejecting anything not usable as a price ratio.
+///
+/// The test is `is_normal()`, not `is_finite()`, and that is the token program's own rule rather
+/// than a stricter one invented here. `try_validate_multiplier` in Token-2022's scaled-ui-amount
+/// processor requires `is_sign_positive() && is_normal()` before it will write this field, so
+/// zero, a subnormal, a negative, an infinity and a NaN are all values the extension cannot
+/// legitimately hold. `is_normal()` is true of a negative normal, so the sign test beside it is
+/// not redundant.
+///
+/// The truncation check at the end is the second half of the same idea. By then `scaled` is
+/// finite and positive, but a multiplier below 1e-18 still converts to a fixed point of zero,
+/// which downstream reads as a position worth nothing. Returning that zero would be a wrong
+/// number of the right shape, which is the defect this program exists to report.
 pub fn to_fixed_point(x: f64) -> Result<u128> {
-    if !x.is_finite() || x <= 0.0 {
+    if !x.is_normal() || x <= 0.0 {
         return Err(RecordDateError::BadMultiplier.into());
     }
     let scaled = x * 1e18;
     if scaled >= u128::MAX as f64 {
+        return Err(RecordDateError::BadMultiplier.into());
+    }
+    if scaled < 1.0 {
         return Err(RecordDateError::BadMultiplier.into());
     }
     Ok(scaled as u128)
@@ -170,18 +196,26 @@ pub fn find_scaled_ui_amount(data: &[u8]) -> Result<usize> {
         if ext_type > MAX_EXTENSION_TYPE {
             return Err(RecordDateError::UnknownExtension.into());
         }
+        // Every entry has to fit inside the account. This is the bound that matters, and it is
+        // derived from the account rather than chosen: the largest body the walk steps over on
+        // any live xStock mint is 205 bytes, but a variable-length `TokenMetadata` entry could
+        // legitimately be larger than any constant picked here.
+        //
+        // The order here is the point, and it was wrong. This check used to run *after* the
+        // `ScaledUiAmountConfig` branch below, which returns. The loop condition is only
+        // `off + 4 <= data.len()`, so a header at the very end of the account declaring a 56-byte
+        // body passed the loop condition, matched the type, matched the length, and returned an
+        // offset that `read_mint` then sliced past the end of the buffer. Slicing out of bounds
+        // panics; it does not return an error. A crafted mint account could do it, and the one
+        // entry the walk was asked to find was the one entry it never bounds-checked.
+        if off + 4 + ext_len as usize > data.len() {
+            return Err(RecordDateError::ExtensionOverrunsAccount.into());
+        }
         if ext_type == EXT_SCALED_UI_AMOUNT {
             if ext_len as usize != SCALED_UI_AMOUNT_LEN {
                 return Err(RecordDateError::BadExtensionLength.into());
             }
             return Ok(off + 4);
-        }
-        // Every entry has to fit inside the account. This is the bound that matters, and it is
-        // derived from the account rather than chosen: the largest body the walk steps over on
-        // any live xStock mint is 205 bytes, but a variable-length `TokenMetadata` entry could
-        // legitimately be larger than any constant picked here.
-        if off + 4 + ext_len as usize > data.len() {
-            return Err(RecordDateError::ExtensionOverrunsAccount.into());
         }
         off += 4 + ext_len as usize;
     }
@@ -231,7 +265,7 @@ mod tests {
         // MetadataPointer, body 64 zeros
         d.extend_from_slice(&18u16.to_le_bytes());
         d.extend_from_slice(&64u16.to_le_bytes());
-        d.extend(std::iter::repeat(0u8).take(64));
+        d.extend(std::iter::repeat_n(0u8, 64));
         // ScaledUiAmountConfig
         let hdr = d.len();
         d.extend_from_slice(&EXT_SCALED_UI_AMOUNT.to_le_bytes());
@@ -301,7 +335,32 @@ mod tests {
         d[BASE_REGION_LEN] = ACCOUNT_TYPE_MINT;
         d.extend_from_slice(&18u16.to_le_bytes()); // MetadataPointer
         d.extend_from_slice(&500u16.to_le_bytes()); // a body the account does not contain
-        d.extend(std::iter::repeat(0u8).take(8));
+        d.extend(std::iter::repeat_n(0u8, 8));
+        assert!(find_scaled_ui_amount(&d).is_err());
+    }
+
+    #[test]
+    fn an_entry_that_fits_its_header_but_not_its_body_is_refused_not_sliced() {
+        // The header fits, because the loop condition is only `off + 4 <= data.len()`. The body
+        // does not: 8 bytes are present where the header promised 56.
+        //
+        // This is the negative control for the ordering of the bounds check. With the check below
+        // the returning branch, this walk returned an offset 48 bytes past the end of the account
+        // and `read_mint` sliced `data[body..body + 56]` on a buffer that did not contain it,
+        // which panics rather than returning an error. A test that panics is a test that fails,
+        // so this test failing is exactly what the defect looked like.
+        let mut d = vec![0u8; TLV_START];
+        d[BASE_REGION_LEN] = ACCOUNT_TYPE_MINT;
+        d.extend_from_slice(&EXT_SCALED_UI_AMOUNT.to_le_bytes());
+        d.extend_from_slice(&(SCALED_UI_AMOUNT_LEN as u16).to_le_bytes());
+        d.extend(std::iter::repeat_n(0u8, 8));
+
+        let err = read_mint(&d).expect_err("a truncated extension body must not be read");
+        assert!(
+            err.to_string().contains("does not fit inside the account"),
+            "expected the overrun error, got: {err}"
+        );
+        // And the walk alone refuses it too, so the refusal is not coming from somewhere later.
         assert!(find_scaled_ui_amount(&d).is_err());
     }
 
@@ -373,8 +432,67 @@ mod tests {
     #[test]
     fn rejects_multipliers_that_are_not_usable() {
         assert!(to_fixed_point(0.0).is_err());
+        assert!(to_fixed_point(-0.0).is_err());
         assert!(to_fixed_point(-1.0).is_err());
         assert!(to_fixed_point(f64::NAN).is_err());
         assert!(to_fixed_point(f64::INFINITY).is_err());
+        assert!(to_fixed_point(f64::NEG_INFINITY).is_err());
+        // A subnormal is positive and finite and still not a value this extension can hold:
+        // Token-2022's `try_validate_multiplier` requires `is_normal()` before it will write one,
+        // so this is the token program's rule rather than a stricter one invented here.
+        assert!(to_fixed_point(f64::MIN_POSITIVE / 2.0).is_err());
+        // A positive normal that is too small to survive the conversion. 1e-19 times 1e18 is 0.1,
+        // which truncates to a fixed point of zero, and a fixed point of zero reads downstream as
+        // a position worth nothing. Returning it would be a wrong number of the right shape.
+        assert!(to_fixed_point(1e-19).is_err());
+        // The smallest value that does survive, and the largest that is ordinary, so the two
+        // bounds are where this test claims they are rather than merely present.
+        assert_eq!(to_fixed_point(1e-18).unwrap(), 1);
+        assert_eq!(to_fixed_point(1.0).unwrap(), 1_000_000_000_000_000_000);
+    }
+
+    #[test]
+    fn effective_multiplier_follows_the_timestamp_and_not_the_value() {
+        // This is the test that separates this program's rule from a defensive one. Token-2022's
+        // `current_multiplier` tests the timestamp alone, so a stored `new_multiplier` of zero
+        // whose timestamp has passed means the token program scales the position by zero. An
+        // earlier version of `effective` also required `new_multiplier != 0.0`, which reported the
+        // full `multiplier` for that account instead: an overstated holding, and a disagreement
+        // with the program this one is supposed to be reporting.
+        let s = ScaledUiAmount {
+            multiplier: 1.5,
+            new_multiplier_effective_timestamp: 100,
+            new_multiplier: 0.0,
+        };
+        // Before the timestamp, the previous value is in force either way.
+        assert_eq!(s.effective(99), 1.5);
+        // At and after it, the stored new value is, even when it is zero.
+        assert_eq!(s.effective(100), 0.0);
+        assert_eq!(s.effective(i64::MAX), 0.0);
+        // And zero is then refused rather than scaled, so the account fails closed.
+        assert!(s.effective_fixed(100).is_err());
+
+        // The ordinary case is unchanged: a real activation, whose value the token program's own
+        // validation guarantees is a positive normal.
+        let real = ScaledUiAmount {
+            multiplier: 1.0268028384810615,
+            new_multiplier_effective_timestamp: 1_788_481_800,
+            new_multiplier: 1.0344000941634355,
+        };
+        assert_eq!(real.effective(1_788_481_799), 1.0268028384810615);
+        assert_eq!(real.effective(1_788_481_800), 1.0344000941634355);
+        assert_eq!(real.effective_at(1_788_481_799), 0);
+        assert_eq!(real.effective_at(1_788_481_800), 1_788_481_800);
+
+        // A mint that has never had an activation carries `new_multiplier` equal to `multiplier`
+        // with a timestamp of zero, which is what Token-2022's initialiser writes. The timestamp
+        // has always passed, so the new value is returned and it is the same number.
+        let fresh = ScaledUiAmount {
+            multiplier: 1.0,
+            new_multiplier_effective_timestamp: 0,
+            new_multiplier: 1.0,
+        };
+        assert_eq!(fresh.effective(0), 1.0);
+        assert_eq!(fresh.effective_at(0), 0);
     }
 }
