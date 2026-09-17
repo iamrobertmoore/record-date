@@ -88,7 +88,7 @@ It grows across the first four buckets. Across 434 reconciliations on 342 names:
 
 ## When the multiplier moves
 
-The issuer's own docs tell venues and protocols to pause for fifteen minutes around each activation, and say nothing enforces it. Whether that matters depends entirely on when the activations land, which the issuer publishes and, as far as I can find, nobody has counted. So I counted them. All **631** activations the feed and multiplier history carry, by the minute of the day they take effect:
+The issuer's own docs tell venues and protocols to pause for fifteen minutes around each activation, and say nothing enforces it. Whether that matters depends entirely on when the activations land, which the issuer publishes and which, as far as I can find, had not been counted by the minute each one lands on. So I counted them. All **631** activations the feed and multiplier history carry, by the minute of the day they take effect:
 
 | Time (UTC) | Activations | New York clock |
 |---|---:|---|
