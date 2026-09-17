@@ -322,8 +322,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       tokenized stocks that publish a withholding rate lose 30% of the dividend before
       it is reinvested</b>, and about <b>$11.6m a year</b> is withheld before
       the reinvestment, on a surface no holder is shown.</p>
-    <p class="lede">Two other projects read this field before this one did, and they are named in
-      section 01. What neither of them ships is anything a venue can act on. The issuer's own docs
+    <p class="lede">Four projects are named in section 01, and one of them already ships a guard a
+      venue can act on. What none of them has is the count. The issuer's own docs
       ask venues to pause around every activation and nothing enforces it, so
       <b>57 of the 640 activations land on a day the market
       does not trade at all</b>, and this is a program that can say so.</p>
@@ -379,11 +379,14 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         <h3>What is different here</h3>
         <p>ExDate and SolanaRWA are both a <em>holder's statement</em>: what a wallet was paid,
           read back from the chain. ExDate ships no program of any kind, and says so. This is a
-          <em>venue's control</em>, and the ground is not empty: Kamino already holds
+          <em>venue's control</em>, and the ground is not empty. Kamino already holds
           corporate-action timestamps and mitigates outside trading hours with a price band on the
-          feed it accepts. A band is a heuristic applied to a price. What is not there is a
-          timestamp a program reads without one. The other finding below is the currency the
-          reference price is quoted in.</p>
+          feed it accepts, and EquityGuard, another entry in this event, reads the mint's own
+          activation timestamp and refuses execution inside a transition window.
+          <b>An earlier version of this page said that timestamp was not there. That was false.</b>
+          What is not there is the count and the history: 640 activations timed against the
+          exchange's own calendar, and a record of every activation rather than only the latest.
+          The other finding below is the currency the reference price is quoted in.</p>
       </div>
     </div>
   </div>
@@ -501,8 +504,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       settles outside US market hours</b>, and the event brief names it as a theme.
       <a href="https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792"><b>Kamino</b></a>,
       the first major lender to take these as collateral, already mitigates that window with a
-      price band on the feed it accepts. A band is a heuristic applied to a price. A timestamp is a
-      fact a program reads without one, and that is what this entry publishes.</p>
+      price band on the feed it accepts. A band is a heuristic applied to a price, and
+      <a href="https://github.com/Maheshsiddu29/EquityGuard"><b>EquityGuard</b></a>, another entry
+      in this event, has already turned the timestamp itself into a guard. Neither of them has
+      counted when the activations land. That count, and the record behind it, is what this entry
+      publishes.</p>
   </div>
 </section>
 
@@ -829,8 +835,14 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           fresh a price must be is a question about the caller's settlement rather than this
           program's opinion. The measured interval is a weekday pre-market one: the live AAPL
           account advanced its <span class="num">publish_time</span> nine times in three minutes
-          and was never more than 24 seconds old. <b>Weekend behaviour is not measured</b>, which
-          is why the value is an argument and not a constant.</p>
+          and was never more than 24 seconds old. <b>Weekend behaviour is not measured directly
+          here</b>, and the evidence that it matters is sharp: the devnet AAPL account's last write
+          was Friday at <span class="num">16:00:19</span> ET, the exact minute of the close, and
+          another entry in this event reports that nothing is published for US equities between
+          Friday <span class="num">20:00</span> ET and Sunday <span class="num">20:00</span> ET.
+          Every activation observed here lands at <span class="num">20:30</span> ET, so a
+          five-minute rule would refuse every Friday-night corporate action. That is why the value
+          is an argument and not a constant.</p>
       </div>
       <div>
         <h3>This is one issuer</h3>
