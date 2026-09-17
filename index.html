@@ -698,6 +698,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
 <div><b>read_entitlement</b><p>Raw units in the units a wallet should display. Return data is a little-endian u128. Integer arithmetic throughout.</p></div>
 <div><b>activation_pending</b><p>One byte: has the multiplier moved since this program last looked? A cranker calls this first so it does not pay for a transaction that reverts.</p></div>
 <div><b>settlement_window</b><p>Seconds since the last activation. A protocol that wants to follow the issuer&#x27;s advice to pause refuses to settle while that is inside 900.</p></div>
+<div><b>bind_pyth_feed</b><p>Binds a registered mint to a Pyth feed id. The id is stored rather than the price account&#x27;s address, because a PriceUpdateV2 account is rewritten on every publish and its address is not stable.</p></div>
+<div><b>verify_against_pyth</b><p>Reads a Pyth price account and refuses it if the receiver program does not own it, if it is for a different feed, if it is older than a limit the caller sets, or if it differs from the caller&#x27;s price by more than a tolerance the caller sets. This is the only instruction here that compares against a number this program does not own.</p></div>
     </div>
 
     <p class="small" style="margin-top:22px">The mint is read as raw bytes, not through the
@@ -708,7 +710,10 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       an error. Asserted on all 927 mints: the padding is zero in every one and the
       <span class="num">ScaledUiAmountConfig</span> header is at byte 275 in every one.
       <span class="num">cargo test</span> covers the parser, the read rule and the fixed-point
-      arithmetic.</p>
+      arithmetic, and for the Pyth instructions it runs against two
+      <span class="num">PriceUpdateV2</span> accounts captured from mainnet and devnet rather than
+      fixtures written to match the parser, because a fixture built from the parser can never
+      disagree with it.</p>
   </div>
 </section>
 
@@ -817,6 +822,17 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           of this data.</p>
       </div>
       <div>
+        <h3>The Pyth check is a comparison, not a correction</h3>
+        <p>It refuses a price that is stale, for the wrong feed, or too far from Pyth's own. It
+          does not make Pyth right, nothing forces a venue to call it, and a venue that ignores it
+          is unaffected. The age limit is the caller's to set below a one-day ceiling, because how
+          fresh a price must be is a question about the caller's settlement rather than this
+          program's opinion. The measured interval is a weekday pre-market one: the live AAPL
+          account advanced its <span class="num">publish_time</span> nine times in three minutes
+          and was never more than 24 seconds old. <b>Weekend behaviour is not measured</b>, which
+          is why the value is an argument and not a constant.</p>
+      </div>
+      <div>
         <h3>This is one issuer</h3>
         <p>927 mints from Backed's own asset API, which is exhaustive over what Backed
           publishes and is not a census of every equity token on Solana. Backpack issues more and
@@ -835,10 +851,14 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         <span class="num">python3 scripts/fetch.py</span> and it re-fetches all of it and
         re-asserts the checks above.</p>
       <p>One source is used for less than it offers, and it is worth saying which.
-        <b>Pyth's price values need a key and are not used here.</b> Its feed directory, which
-        carries the exchange calendar, is public, so the session definition in section 02 is
-        Pyth's and the numbers beside it are not. The comment in <span class="num">fetch.py</span>
-        says so rather than leaving it to be inferred.</p>
+        <b>Pyth's feed directory</b> is public, and the session definition in section 02 is taken
+        from it. Its <b>price values</b> are a different surface, and the distinction is easy to get
+        wrong: the Hermes HTTP endpoint serves equity price updates only to a key carrying a grant,
+        while Pyth also posts every update to Solana as a <span class="num">PriceUpdateV2</span>
+        account owned by its receiver program, and a posted account is public state. Two of those
+        accounts are committed as test fixtures, read with a plain RPC call and no credential, and
+        the program's <span class="num">verify_against_pyth</span> instruction reads one at
+        settlement time.</p>
     </div>
     <div class="srcs">
 <div><b>mint list, and the underlying&#x27;s currency</b><code>https://api.xstocks.fi/api/v2/public/assets</code></div>

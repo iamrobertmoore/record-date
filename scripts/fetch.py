@@ -47,8 +47,16 @@ US_SESSION_OPEN_UTC = 13 * 60          # 13:00
 US_SESSION_CLOSE_UTC = 21 * 60         # 21:00
 
 # Pyth publishes the exchange calendar alongside its feed directory, with no key. Its price values
-# do need a key, so this build takes the session definition from Pyth and prices from elsewhere.
-# That is worth being explicit about: the calendar is Pyth's, the numbers beside it are not.
+# over HTTP are a different matter: /v2/updates/price/latest is 401 without a key, and a key without
+# an equity grant is refused with 403 and the rule in the error body. So this build takes the
+# session definition from Pyth and prices from elsewhere. That is worth being explicit about: the
+# calendar is Pyth's, the numbers beside it are not.
+#
+# The on-chain route needs nothing from anyone, and the program uses it. Pyth posts every update to
+# Solana as a `PriceUpdateV2` account owned by its receiver program, and a posted account is public
+# state, so scripts/capture_pyth_fixture.py reads one over plain RPC with no credential. Verified
+# 17 September 2026: the live mainnet AAPL account advanced its publish_time nine times in three
+# minutes and was never more than 24 seconds old, sampled at 06:50 ET with the US session shut.
 #
 # Verified 17 September 2026, because the boundary matters and it moved:
 #

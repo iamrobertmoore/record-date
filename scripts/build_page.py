@@ -233,6 +233,14 @@ INSTRUCTIONS = [
     ("settlement_window", "Seconds since the last activation. A protocol that wants to follow "
                           "the issuer's advice to pause refuses to settle while that is inside "
                           "900."),
+    ("bind_pyth_feed", "Binds a registered mint to a Pyth feed id. The id is stored rather than "
+                       "the price account's address, because a PriceUpdateV2 account is rewritten "
+                       "on every publish and its address is not stable."),
+    ("verify_against_pyth", "Reads a Pyth price account and refuses it if the receiver program "
+                            "does not own it, if it is for a different feed, if it is older than "
+                            "a limit the caller sets, or if it differs from the caller's price by "
+                            "more than a tolerance the caller sets. This is the only instruction "
+                            "here that compares against a number this program does not own."),
 ]
 
 
