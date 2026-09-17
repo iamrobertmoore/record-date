@@ -72,7 +72,11 @@ PY
 
 echo
 echo "testing"
-cargo test --manifest-path programs/record_date/Cargo.toml 2>&1 | tail -4
+# `tail -4` used to sit here, and it printed the doc-test run ("running 0 tests ... 0 passed")
+# while hiding the two suites that matter. A guard whose output reads as a pass for the wrong
+# reason is worse than no output, so this shows every suite's summary line.
+cargo test --manifest-path programs/record_date/Cargo.toml 2>&1 \
+  | grep -E "^test result|FAILED|panicked|^error"
 
 echo
 echo "deploying to $CLUSTER"
