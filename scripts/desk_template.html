@@ -207,30 +207,16 @@ footer code{font-size:12.5px;color:var(--ink)}
     <div class="stamp">
       <span class="chip">mainnet · <b>{{HOLDER_COUNT}}</b> real xStocks</span>
       <span class="chip">devnet · program <b>{{PROGRAM_ID_SHORT}}</b></span>
-      <span class="chip ok">no key · no backend</span>
-      <span class="chip hot"><b id="disagree-chip">{{DISAGREE_COUNT}}</b> of <b id="mint-chip">{{MINT_COUNT}}</b> devnet mints read wrongly</span>
+      <span class="chip ok">no key · no backend · nothing to sign</span>
     </div>
 
-    <h1>A tokenized share, what it is worth, and whether it is safe to settle.</h1>
+    <h1>Tokenized stocks pay dividends invisibly, 30% short, and at hours no market is open.</h1>
 
-    <p class="lede">This page has no key, no server and nothing to sign, and it has two halves on two
-      chains. The first reads a real xStock on <b>mainnet</b> over plain RPC and works out the
-      dividend, what was withheld, and whether the settlement window is open. The second reads
-      <b>devnet</b> and puts the same questions to the program that is actually deployed there.</p>
+    <p class="lede">Type any xStock. The desk reads its mint account on mainnet and shows the two
+      multipliers side by side, what your wallet shows against what you own, the dividend withheld
+      before it was reinvested, and whether a settlement would be held right now. Below it, the
+      deployed program answers the same question itself.</p>
 
-    <p class="lede" style="margin-top:14px">The difference between the two matters and the page says
-      which is which at every step. The program is on devnet and cannot be asked about a mainnet
-      mint, so on the mainnet half the verdict is the program's own rule applied in your browser to
-      the mint's own fields, and the page links you to the devnet half to ask the program itself. On
-      <b><span id="disagree-lede">{{DISAGREE_COUNT}}</span> of the <span id="mint-lede">{{MINT_COUNT}}</span> registered devnet mints the field named
-      <span class="num">multiplier</span> holds the previous value</b> while the live multiplier
-      has already moved, so a reader who takes the obvious field is one corporate action behind.</p>
-
-    <div class="byline">
-      <span><b>Reads</b><span>mainnet mint accounts, the issuer's own feed, devnet program accounts, and Pyth</span></span>
-      <span><b>Captured</b><span class="num">{{CAPTURED}}</span></span>
-      <span><b>Reproduce with</b><span class="num">npm run desk</span></span>
-    </div>
   </div>
 </header>
 
@@ -241,12 +227,9 @@ footer code{font-size:12.5px;color:var(--ink)}
     <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> a real xStock, held</p>
     <div class="head">
       <h2>The two multipliers, the dividend that was withheld, and the verdict on your own stock.</h2>
-      <p>This is a real mint on mainnet, not a demo one, and the numbers come from it rather than
-        from a table. <b>None of it is the program's answer.</b> The program is deployed to devnet
-        and has never been asked about a mainnet mint, so the verdict below is the program's own
-        rule from <span class="num">read.rs settlement_window</span>, applied in your browser to
-        the mint's own fields. <a href="#mint">The devnet desk further down asks the program
-        itself.</a></p>
+      <p>A real mint on mainnet, read live. The verdict applies the program's
+        <span class="num">settlement_window</span> rule in your browser;
+        <a href="#mint">the devnet desk</a> asks the deployed program itself.</p>
     </div>
 
     <div class="console">
@@ -269,8 +252,8 @@ footer code{font-size:12.5px;color:var(--ink)}
           <p class="k">the field named multiplier</p>
           <p class="v wrong" id="holder-field">{{HOLDER_FIELD}}</p>
           <p class="note">The previous value. Token-2022 keeps the multiplier in force
-            <em>before</em> the most recent activation here, and this is the field most readers
-            reach for first.</p>
+            <em>before</em> the most recent activation here, and this is the field a reader
+            reaches for first.</p>
         </div>
         <div class="cell">
           <p class="k">the live value, in the field beside it</p>
@@ -354,21 +337,8 @@ footer code{font-size:12.5px;color:var(--ink)}
       </div>
     </div>
 
-    <p class="small" style="margin-top:16px"><b>Where this verdict comes from.</b> The program is on
-      devnet, so it cannot be asked about this mint. What you are reading is the program's own rule
-      from <span class="num">read.rs settlement_window</span>, applied in your browser to the two
-      fields the mint carries: the seconds since the value in force took effect, the seconds until a
-      staged one arrives, and a Hold while either is inside the fifteen minute window.
-      <a href="#mint">The devnet desk below asks the deployed program the same question</a> about a
-      mint it has actually seen, and that answer is the program's own.</p>
-
-    <p class="small" style="margin-top:10px">Read from <span class="num">{{MAINNET_RPC}}</span>, and
-      that is not the endpoint the build behind this page uses. <span class="num">fetch.py</span>
-      reads the 927 mint accounts from <span class="num">api.mainnet-beta.solana.com</span>, which
-      answers a server and refuses any request carrying a browser origin: a
-      <span class="num">getHealth</span> to it comes back <span class="num">403 Access forbidden</span>
-      with <span class="num">access-control-allow-origin: *</span> set, which is a filter rather than
-      a CORS failure. So the page reads a different host, and the two agree on every mint checked.</p>
+    <p class="small" style="margin-top:16px">Read over plain RPC from
+      <span class="num">{{MAINNET_RPC}}</span>, with the build from {{HOLDER_ASOF}} as the fallback.</p>
   </div>
 </section>
 
@@ -558,9 +528,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 } <span class="k">else</span> { -<span class="s">1</span> };
 <span class="k">let</span> until = <span class="k">if</span> live.staged_at &gt; <span class="s">0</span> { live.staged_at - now } <span class="k">else</span> { -<span class="s">1</span> };
 
-<span class="c">// A venue holds while either is inside 900. Before this, one signed number was returned and it</span>
-<span class="c">// could never be negative: a staged activation makes effective_at() return 0, so the answer was</span>
-<span class="c">// "seconds since 1970" and read as 56 years outside the window with an activation minutes away.</span></pre>
+<span class="c">// A venue holds while either is inside 900.</span></pre>
     </div>
 
     <div class="note-box"><b>A window that was open.</b> {{WINDOW_NOTE}}</div>
@@ -572,7 +540,7 @@ footer code{font-size:12.5px;color:var(--ink)}
     <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> the trail</p>
     <div class="head">
       <h2>The series the mint does not keep.</h2>
-      <p>A mint stores the current multiplier and nothing else. There is no sequence and no
+      <p>A mint keeps the latest two multipliers and nothing before them. There is no sequence and no
         account per activation, so the history of what a token paid lives in an HTTP API and in
         transaction logs. These are the receipts this program wrote, one per activation, and they
         are the same on every machine that reads them.</p>

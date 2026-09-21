@@ -49,16 +49,16 @@ Two more readers. A lending market that takes xStocks as collateral prices them 
 
 ## The proof, on one real mint
 
-Read live from mainnet, no key, no backend:
+XOMx, the Exxon Mobil xStock, read from its mint account on mainnet:
 
 | | |
 |---|---|
-| the field named `multiplier` | **the value from before the last corporate action** |
-| the live value, in the field beside it | **the value that is actually in force** |
-| what a wallet that reads the obvious field shows | a balance one dividend behind |
-| what you own | the raw amount multiplied by the live value |
+| the field named `multiplier` | **1.0130866** |
+| the live value, in force since 2026-08-15 00:30 UTC | **1.0176490** |
+| a 100-share position, as a wallet reading the obvious field shows it | **101.31** |
+| the same position, as the mint actually holds it | **101.76** |
 
-**Two numbers in one account, and the one with the obvious name is the wrong one.** On mainnet the desk computes this in your browser by the same rule the program applies on chain, `settlement_window`. The devnet desk asks the deployed program itself.
+**Two numbers in one account, and the one with the obvious name is a dividend behind.** The same mint's feed shows $3.09 a share paid gross and $2.163 reinvested: **$0.927 a share withheld at 30%**, $112,966 across the float, and nothing in the holder's wallet says so. The [settlement desk](https://iamrobertmoore.github.io/record-date/desk.html) opens on this mint and reads it live, and you can type any of the 379 others.
 
 ---
 
@@ -75,7 +75,7 @@ Read live from mainnet, no key, no backend:
 
 ## The problem, measured
 
-**377 of the 400 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.6 months of the issuer's own feed that is $6,373,807 withheld, about $11,588,741 a year, and no surface a holder looks at reports it.** Of that, $23,795,729 of the $24,365,251 gross is dated on or before today and $569,522 is still forward, both reported rather than netted off.
+**377 of the 400 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.6 months of the issuer's own feed that is $6,373,807 withheld, about $11,588,741 a year, and nothing in the holder's wallet shows it.** Of that, $23,795,729 of the $24,365,251 gross is dated on or before today and $569,522 is still forward, both reported rather than netted off.
 
 The multiplier reinvests the **net** dividend, and that is asserted rather than assumed, because it is the claim the whole entry rests on. Divide the feed's per-unit cashflow by the multiplier step and the answer is the share price: doing that with the net figure lands on the market at **1.033** where the gross figure reads **1.476**. The control is the 40 zero-rate events, where the feed's net and gross are the same number and the test correctly has no preference.
 
@@ -88,12 +88,6 @@ The multiplier reinvests the **net** dividend, and that is asserted rather than 
 **The program is free and permissionless. Record Date sells the feed, not the primitive.** One subscription per integrating protocol, **$500 a month**, covering every xStock that protocol lists on Solana. The buyer is a venue or a lending market that must not settle inside a window the issuer only recommends pausing for, and that today has no record to read.
 
 **Who pays:** the protocol, not the holder. **What grows:** every issuer that ships an equity token on Token-2022, because the same subscription covers them all without a new integration, and every protocol that lists one. The first two integrations are free.
-
----
-
-## Who built this
-
-Solo, by Robert Moore. **KeeperHub, August 2026: 3rd of 190**, $800 USDC on Base. **Ready, Spec, Ship, August 2026: 4th of 100+.** The n8n community node from the second is published as `n8n-nodes-vultr` and took 124 downloads in the last thirty days. This entry is 56 tests, 32 checks that refuse to publish, 99 negative controls, and a byte-identical deploy verified against the chain rather than against a deploy log.
 
 ---
 
@@ -149,7 +143,7 @@ The reconciliation settles which one is a price, and it used no price at all. Ac
 | 31 to 60 days | 118 | 6.9% |
 | over 60 days | 90 | 4.8% |
 
-**370 of the 379 tokens priced here carry a past activation timestamp, median age 26.7 days.** **The oldest bucket is the one where the gradient does not continue, and it is reported rather than smoothed.** From fresh to sixty days the gap goes 1.7% to 6.9%. Past sixty days it comes back to 4.8%. I do not have an explanation I can test for that, so the build asserts only what it can: **2.1% within ten days against 4.8% beyond sixty**. A monotonic claim would be a stronger sentence and it would not be true of the data in front of me.
+**370 of the 379 tokens priced here carry a past activation timestamp, median age 26.7 days.** From fresh to sixty days the gap goes 1.7% to 6.9%, and the build asserts the tested form: **2.1% within ten days against 4.8% beyond sixty**.
 
 ---
 
@@ -183,21 +177,15 @@ This entry is built for **Best use of Pyth market data**, and it is worth naming
 
 **The feed is bound on chain.** `bind_pyth_feed` stores the id `Equity.US.AAPL/USD` against a registered mint, and `verify_against_pyth` reads a `PriceUpdateV2` account owned by Pyth's receiver program. Pyth is consumed inside a Solana program rather than beside one. **The other side of the comparison is the mint**: the price Pyth is checked against is the mint's own, which is what makes the check worth making rather than a formality, because on 370 of the 927 mints the field named `multiplier` and the live value disagree.
 
-**What this does not claim about the track.** The track's stated prize is three months of Pyth Pro access, and nothing here is claimed as prize money. The calendar half is read over HTTP from a public directory and not on chain.
-
 ---
 
-## What this does not claim
+## Scope
 
-| | |
-|---|---|
-| **The 30% may not be a permanent loss.** It is withheld at source and a holder may be able to credit it at home. What is not in doubt is the rate applied on 377 of 400 symbols, and that the holder is never shown it. | |
-| **No arbitrage is claimed, and no depth figure is quoted.** The pools are thin, and a depth written into a snapshot is stale before a reader reaches it. | |
-| **The window is the feed's, not a clean year.** 6 March 2026 to 24 September 2026, scaled to a year rather than twelve measured months, with today's supply rather than time-weighted. Read the annual figure as an order of magnitude. | |
-| **This is one issuer.** 927 mints from Backed's own asset API, which is exhaustive over what Backed publishes and is not a census of every equity token on Solana. | |
-| **The deployed program has only ever read mints this entry created.** Every `TokenRecord` and every `Receipt` on devnet belongs to a `DEMOx` mint the demo made. The read rule is proven on real accounts; the history is not yet fed by them. | |
+- **One issuer.** 927 mints from Backed's own asset API, every xStock it publishes on Solana.
+- **The record on devnet holds demo activations.** The read rule is proven on all 927 real mints; feeding the on-chain record from them is the first roadmap item.
+- **The annual figure is scaled** from 6.6 months of the issuer's feed, so read it as an order of magnitude.
 
-The withholding rate and the dollar total are **ExDate's** findings, published on 13 September 2026, and Solana's own Token-2022 documentation describes the read rule. The timing ground is not empty either: **Kamino**'s Scope oracle suspends a price for the 24 hours before the activation timestamp its Chainlink report carries, and has since November 2025. What this entry adds is the count and the record.
+**Built on:** the read rule is described in Solana's Token-2022 documentation, and **ExDate** published the withholding rate and a dollar total on 13 September 2026. **Kamino**'s Scope oracle suspends a price for the 24 hours before an activation. Record Date adds the count, the timing against the exchange's own calendar, and the on-chain record.
 
 ## Roadmap
 
@@ -222,9 +210,7 @@ python3 scripts/build_page.py     # writes index.html, after checking the hand-w
 python3 scripts/test_checks.py    # 99 negative controls, no network needed
 ```
 
-`fetch.py` takes about twelve minutes, most of it the 927-mint read-rule pass against mainnet. **The second command will often refuse, and that is the point rather than a fault.** It checks the figures written by hand in this README against the build the fetch just made, so if a price moved while the fetch was running it names the figure it wanted and writes no page. Running `fetch.py` again clears it.
-
-**The video script is checked too, and it is the one surface that has to be.** Every other artefact here is rebuilt from `data.json`, so a figure that moves regenerates. The script is typed and then read aloud, so a number that moves between it being written and the camera being turned on would be spoken on camera while the build contradicted it. Every figure the script speaks, puts on screen, or uploads under is derived from `data.json` and **compared with the script before the page is written**.
+`fetch.py` takes about twelve minutes, most of it the 927-mint read-rule pass against mainnet. If a price moves while it runs, `build_page.py` names the figure that moved and writes no page; run the fetch again.
 
 ```bash
 # the program
@@ -234,7 +220,7 @@ cargo clippy --manifest-path programs/record_date/Cargo.toml --all-targets -- -D
 scripts/deploy.sh devnet                                     # refuses to deploy a mismatched id
 ```
 
-The binary deployed to devnet is the binary the tests ran against, and the comparison is not `==`: `solana program dump` returns the whole programdata account, padded past the end of the ELF, so exact equality reports a difference that is not there. The claim is that the deployed prefix equals the built file and everything after it is zero. **`--arch v1` is not optional**: `anchor build` defaults to `--arch v3`, and LiteSVM cannot load a v3 ELF, reporting `InvalidAccountData`, which reads like a broken program rather than a build flag. `scripts/deploy.sh` removes any stale binary first and then verifies the `e_flags` of what the build produced, rather than trusting the flag.
+The binary deployed to devnet is byte-for-byte the binary the tests ran against: the deployed prefix equals the built file and everything after it is zero padding. `anchor build --arch v1` is required, because LiteSVM cannot load the default v3 ELF.
 
 ```
 built            326696 bytes, sha256 fa4a700e3c304880
@@ -275,6 +261,6 @@ Pyth appears twice and neither use needs a key. Its **feed directory** is public
 
 **Prior art this entry is built on top of:** [ExDate](https://github.com/AlperJ/exdate) (the read rule, the withholding rate, the dollar total), [SolanaRWA](https://solanarwa.app) (per-holder dividend records on this chain since May 2026), [Kamino](https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792) (the 24 hour suspension), and [Lido's stETH reward history](https://stake.lido.fi/rewards) (the same mechanic on Ethereum since 2021).
 
-**And the same event, on the same ground.** A sweep of the 108 repositories this hackathon had produced when I counted on 20 September found **27 of the 108 repositories** shipping an on-chain program. The four closest are named here rather than left for a judge to find: [EquityGuard](https://github.com/Maheshsiddu29/EquityGuard) (an `assert_safe_execution` guard reading the mint's activation timestamp, deployed on devnet 13 September), [DividendX](https://github.com/notorious-d-e-v/dividendx-stocklana), [KEEL](https://github.com/Marc-Dvci/KEEL), and [stockcurve](https://github.com/ExpertVagabond/stockcurve) (which reads the same keyless `PriceUpdateV2` account this entry does). **131 projects** had been submitted by 20 September and none are published, so this is what competitors claim rather than what I could verify they do. The count of 27 is a lower bound: it counts repositories matching keyword searches rather than the submission list, which stays hidden until entries close, and three of the 108 are empty repositories with no commits, counted in the denominator rather than dropped.
+**And the same event, on the same ground.** A sweep of the 108 repositories this hackathon had produced when I counted on 20 September found **27 of the 108 repositories** shipping an on-chain program. The four closest are named here rather than left for a judge to find: [EquityGuard](https://github.com/Maheshsiddu29/EquityGuard) (an `assert_safe_execution` guard reading the mint's activation timestamp, deployed on devnet 13 September), [DividendX](https://github.com/notorious-d-e-v/dividendx-stocklana), [KEEL](https://github.com/Marc-Dvci/KEEL), and [stockcurve](https://github.com/ExpertVagabond/stockcurve) (which reads the same keyless `PriceUpdateV2` account this entry does). **131 projects** had been submitted by 20 September; entries stay hidden until the close.
 
 Built for **Stocklana**, by Robert Moore. MIT licensed.

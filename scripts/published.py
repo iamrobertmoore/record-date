@@ -212,6 +212,32 @@ def worked_example(data):
     )
 
 
+# The mint the README's proof table is read from. One named mint rather than "the first that has
+# moved", because the table names it and the desk opens on it, so a reordering of the build must not
+# silently swap the company the sentence is about.
+PROOF_SYMBOL = "XOMx"
+
+
+def proof_token(data):
+    """The README's proof mint, or None when the build does not carry it."""
+    return next((t for t in data.get("tokens") or [] if t.get("symbol") == PROOF_SYMBOL), None)
+
+
+def proof_figures(token):
+    """The exact strings the README's proof table carries for `token`, all derived from the build."""
+    base, live = token["base_multiplier"], token["live_multiplier"]
+    when = datetime.datetime.fromtimestamp(token["effective_at"], datetime.timezone.utc)
+    return [
+        "| the field named `multiplier` | **%.7f** |" % base,
+        "| the live value, in force since %s UTC | **%.7f** |" % (when.strftime("%Y-%m-%d %H:%M"), live),
+        "as a wallet reading the obvious field shows it | **%.2f** |" % (100 * base),
+        "as the mint actually holds it | **%.2f** |" % (100 * live),
+        "$%s a share paid gross and $%s reinvested" % (token["gross_per_unit"], token["net_per_unit"]),
+        "**$%s a share withheld at 30%%**" % token["withheld_per_unit"],
+        "%s across the float" % _usd(token["withheld_usd"]),
+    ]
+
+
 def figures(data):
     """The figure strings each hand-written surface should carry, from a build.
 
@@ -330,6 +356,11 @@ def figures(data):
             "differed by more than 20%% on **%d** mints" % len(data["price_diverged"]),
             "The widest is a factor of **%d**" % widest,
         ])
+
+    # The proof table: one real mint, every cell from the build, so the table cannot drift from it.
+    token = proof_token(data)
+    if token is not None:
+        readme.extend(proof_figures(token))
 
     return {"banner": banner, "architecture": architecture, "readme": readme}
 
@@ -558,8 +589,6 @@ README_ALLOWED = {
         "$500": "the subscription price, stated as policy in the business section. A price this "
                 "entry chooses rather than a figure it measures, so no build can produce it and "
                 "the build would have no way to notice it changing.",
-        "$800": "the KeeperHub prize, quoted in the track record as a fact about a past event. "
-                "Nothing in this repository measures it.",
     },
     "percent": {
         "0%": "the bottom of a rate table, written as prose",
@@ -771,6 +800,17 @@ def derivable(data):
     median_age = median_activation_age(data)
     if median_age is not None:
         days.add("%.1f" % median_age)
+
+    # The proof mint's own figures. One named token, not the 927-deep list the walk above skips,
+    # and each is also pinned as an exact string by `proof_figures`, so admitting it here cannot let
+    # a different figure through.
+    token = proof_token(data)
+    if token is not None:
+        for key in ("gross_per_unit", "net_per_unit", "withheld_per_unit", "withheld_usd"):
+            for text in _renditions(token[key]):
+                money.add("$" + text)
+        for key in ("base_multiplier", "live_multiplier"):
+            four_dp.add("%.7f" % token[key])
 
     return {"money": money, "percent": percent, "pair": pairs, "four_dp": four_dp, "days": days}
 

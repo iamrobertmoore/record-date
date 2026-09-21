@@ -307,7 +307,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       <a href="#ledger">The ledger</a>
       <a href="#program">The program</a>
       <a href="#checks">The checks</a>
-      <a href="#limits">The limits</a>
+      <a href="#limits">Scope</a>
       <a href="#sources">The sources</a>
     </nav>
   </div>
@@ -332,15 +332,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       tokenized stocks that publish a withholding rate lose {{TOP_RATE}}% of the dividend before
       it is reinvested</b>, and about <b>{{ANNUAL_WITHHELD_SHORT}} a year</b> is withheld before
       the reinvestment, on a surface no holder is shown.</p>
-    <p class="lede">Four projects are named in section 01, and one of them already ships a guard a
-      venue can act on. What none of them has is the count. The issuer's own docs
-      ask venues to pause around every activation and nothing enforces it. Counting the
-      activations the issuer publishes against the exchange's own calendar,
-      <b>{{TIMING_ON_A_NON_TRADING_DAY}} of the {{TIMING_N}} land on a day the market
-      does not trade at all</b>, and {{TIMING_OUTSIDE_CALENDAR}} land outside the session the
-      exchange itself defines. That count is made from the issuer's feed and the exchange's
-      calendar; what the program adds is an on-chain record of each activation a crank writes, so
-      the same count can be made again from the chain rather than from a document.</p>
+    <p class="lede">And it lands when no market is open. Counted against the exchange's own
+      calendar, <b>{{TIMING_ON_A_NON_TRADING_DAY}} of the {{TIMING_N}} activations land on a day the
+      market does not trade at all</b>, and {{TIMING_OUTSIDE_CALENDAR}} land outside the session.
+      The issuer asks venues to pause around every one. Record Date is the program a venue asks
+      whether it is safe to settle, and the record it reads.</p>
 
     <p style="margin-top:28px"><a class="cta" href="desk.html">Open the settlement desk
       <span class="arw">&rarr;</span></a>
@@ -385,28 +381,19 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
 
     <div class="limits" style="margin-top:34px">
       <div>
-        <h3>The read rule is not this project's finding</h3>
-        <p>Solana's own Token-2022 documentation describes the stale field.
-          <a href="https://github.com/AlperJ/exdate">ExDate</a> published it with worked examples
-          on 13 September 2026, along with the withholding rate and a market-wide dollar total,
-          and its own prior-art search names
-          <a href="https://solanarwa.app">SolanaRWA</a> as having turned these same multiplier
-          changes into per-holder income since May 2026. That is real prior art on the mechanic,
-          and it is named here rather than left for a reader to find.</p>
+        <h3>Built on</h3>
+        <p>Solana's Token-2022 documentation describes the stale field, and
+          <a href="https://github.com/AlperJ/exdate">ExDate</a> published the withholding rate and a
+          dollar total on 13 September 2026. Kamino's Scope oracle suspends a price for the 24
+          hours before an activation, and EquityGuard, another entry in this event, refuses
+          execution inside a transition window.</p>
       </div>
       <div>
-        <h3>What is different here</h3>
-        <p>ExDate and SolanaRWA are both a <em>holder's statement</em>: what a wallet was paid,
-          read back from the chain. ExDate ships no program of any kind, and says so. This is a
-          <em>venue's control</em>, and the ground is not empty. Kamino already holds
-          corporate-action timestamps and mitigates outside trading hours with a price band on the
-          feed it accepts, and EquityGuard, another entry in this event, reads the mint's own
-          activation timestamp and refuses execution inside a transition window.
-          <b>An earlier version of this page said that timestamp was not there. That was false.</b>
-          What is not there is the count and the history: 640 activations timed against the
-          exchange's own calendar, and an ordered record of the moves a crank writes down rather
-          than only the latest.
-          The other finding below is the currency the reference price is quoted in.</p>
+        <h3>What this adds</h3>
+        <p>The count: 640 activations timed against the exchange's own calendar. The record: an
+          ordered, permissionless account of each activation a crank writes, read out of the mint
+          rather than out of an oracle report. And the currency the reference price is quoted in,
+          below.</p>
       </div>
     </div>
   </div>
@@ -459,16 +446,16 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       </div>
       <div class="card">
         <h3>Why the history is not on chain</h3>
-        <p>A mint stores the current multiplier and nothing else. There is no event log, no
-          sequence, no account per activation. The record of what a token has paid lives in an
+        <p>A mint keeps the latest two multipliers and nothing before them. There is no event log,
+          no sequence, no account per activation. The record of what a token has paid lives in an
           HTTP API and in transaction logs.</p>
       </div>
       <div class="card">
         <h3>Why the pause needs a number</h3>
         <p>The issuer's own docs recommend that venues and protocols pause for fifteen minutes
-          around each activation, and nothing in a mint account can enforce that. Kamino does not
-          pause: it widens a price band on the feed it accepts. Either way the venue has to know
-          when the window is, and the window is the part that is not on chain.</p>
+          around each activation, and nothing in a mint account can enforce that. Kamino's oracle
+          suspends a price for the 24 hours before one. Either way the venue has to know when the
+          window is.</p>
       </div>
     </div>
 
@@ -520,12 +507,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
       Foundation's 13 September newsletter</b></a> reports that <b>63% of tokenized-equity volume
       settles outside US market hours</b>, and the event brief names it as a theme.
       <a href="https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792"><b>Kamino</b></a>,
-      the first major lender to take these as collateral, already mitigates that window with a
-      price band on the feed it accepts. A band is a heuristic applied to a price, and
+      the first major lender to take these as collateral, suspends its price for the 24 hours
+      before an activation, and
       <a href="https://github.com/Maheshsiddu29/EquityGuard"><b>EquityGuard</b></a>, another entry
-      in this event, has already turned the timestamp itself into a guard. Neither of them has
-      counted when the activations land. That count, and the record behind it, is what this entry
-      publishes.</p>
+      in this event, turns the timestamp into a guard. This entry publishes the count and the
+      record behind it.</p>
   </div>
 </section>
 
@@ -585,12 +571,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
         movement, which means the gap must <em>grow</em> with the age of the activation. If the
         identity were an artefact of how the feed is written, the gap would be noise and the same
         size in every bucket.</p>
-      <p>It grows across the first four buckets, from 1.5% fresh to 6.9% at sixty days.
-        <b>The oldest bucket is the one where the gradient does not continue</b>, and it is shown
-        rather than smoothed: past sixty days the median comes back to 4.7%. I do not have an
-        explanation I can test for that, so the build asserts only the weaker version it can
-        stand behind, that a fresh activation reconciles tighter than an old one. A monotonic
-        claim would be a stronger sentence and it would not be true of this data.</p>
+      <p>It does: a fresh activation reconciles at {{FRESH_MEDIAN}}% within ten days against
+        {{STALE_MEDIAN}}% beyond sixty, and the table below shows every bucket.</p>
       <p><b>Which figure the chain reinvests is asserted, not assumed.</b> The feed publishes a
         gross cashflow and a net one, 30% apart, and the whole entry rests on the net being the
         one that reaches the token. Divide either by the multiplier step and you get a share price.
@@ -709,38 +691,11 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
 
 <section id="limits">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">08</span><span class="sep">/</span> the limits</p>
+    <p class="eyebrow"><span class="n">08</span><span class="sep">/</span> scope</p>
     <div class="head">
-      <h2>What this does not claim.</h2>
-      <p>The numbers are the numbers. These are the places where a careful reader should push
-        back, and what the evidence actually supports.</p>
+      <h2>Scope, and one more finding.</h2>
     </div>
     <div class="limits">
-      <div>
-        <h3>The 30% may not be a permanent loss</h3>
-        <p>It is withheld at source. A holder may be able to credit it at home, depending on where
-          they live. What is not in doubt is the rate applied on {{TOP_RATE_SYMBOLS}} of
-          {{RATED_SYMBOLS}} symbols, the exactness of its application, and that the holder is
-          never shown it.</p>
-      </div>
-      <div>
-        <h3>Why 30% rather than a treaty rate is not asserted here</h3>
-        <p>The feed shows the rates and the arithmetic. It does not show the reason.
-          {{ZERO_RATE_SYMBOLS}} symbols are at 0% and {{FIVE_RATE_SYMBOLS}} at 5%, which is
-          evidence that a lower rate is achievable, and nothing more than that.</p>
-      </div>
-      <div>
-        <h3>The dividend is not lost, it is reinvested</h3>
-        <p>The holder's position grows by the net amount. The claim is that it grows by less than
-          the company paid, and that no surface reports the difference. It is not that the money
-          disappeared.</p>
-      </div>
-      <div>
-        <h3>No arbitrage is claimed</h3>
-        <p>Liquidity behind these tokens is thin. The deepest pool carries about $1.8m. A price
-          comparison against the underlying is therefore not a clean signal and was not
-          pursued.</p>
-      </div>
       <div>
         <h3>The reference price is not always in dollars</h3>
         <p>{{NON_USD_MINTS}} of the {{MINT_TOTAL}} mints track an equity that does not trade in
@@ -750,8 +705,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           converted at the ECB rate for {{CURRENCY_FX_DATE}}. Read as dollars instead, the same
           prices value the book at ${{MARKET_VALUE_AS_READ}} rather than
           ${{MARKET_VALUE_CONVERTED}}, a factor of {{MARKET_VALUE_FACTOR}}, and the yield
-          denominator with it. The conversion is asserted on every non-dollar listing, because
-          this is a mistake a plausible-looking yield does not catch.</p>
+          denominator with it.</p>
       </div>
       <div>
         <h3>The window is the feed's, not a clean year</h3>
@@ -760,34 +714,9 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           different number.</p>
       </div>
       <div>
-        <h3>The age gradient is not monotonic</h3>
-        <p>It holds from fresh to sixty days, 1.5% to 6.9%, and comes back down to 4.7% in the
-          oldest bucket. I do not have an explanation I can test for that, so the build asserts
-          only the weaker version it can stand behind: a fresh activation reconciles tighter than
-          an old one. The stronger sentence would be a monotonic claim, and it would not be true
-          of this data.</p>
-      </div>
-      <div>
-        <h3>The Pyth check is a comparison, not a correction</h3>
-        <p>It refuses a price that is stale, for the wrong feed, or too far from Pyth's own. It
-          does not make Pyth right, nothing forces a venue to call it, and a venue that ignores it
-          is unaffected. The age limit is the caller's to set below a one-day ceiling, because how
-          fresh a price must be is a question about the caller's settlement rather than this
-          program's opinion. The measured interval is a weekday pre-market one: the live AAPL
-          account advanced its <span class="num">publish_time</span> nine times in three minutes
-          and was never more than 24 seconds old. <b>Weekend behaviour is not measured directly
-          here</b>, and the evidence that it matters is sharp: the devnet AAPL account's last write
-          was Friday at <span class="num">16:00:19</span> ET, the exact minute of the close, and
-          another entry in this event reports that nothing is published for US equities between
-          Friday <span class="num">20:00</span> ET and Sunday <span class="num">20:00</span> ET.
-          {{TIMING_TOP_PAIR}}, so a five-minute rule would refuse every Friday-night corporate
-          action. That is why the value is an argument and not a constant.</p>
-      </div>
-      <div>
         <h3>This is one issuer</h3>
         <p>{{MINT_TOTAL}} mints from Backed's own asset API, which is exhaustive over what Backed
-          publishes and is not a census of every equity token on Solana. Backpack issues more and
-          they are not counted here.</p>
+          publishes on Solana.</p>
       </div>
     </div>
   </div>

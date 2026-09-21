@@ -480,7 +480,7 @@ def main():
         # record and the verification table. The fixture has to move with the allow-list in both
         # directions or the suite reports the fixture rather than the entry, which is what it did
         # when the three new entries were added and this line was not.
-        allowances = ("$9,000. 20% or 30% or 63% or 93.8%. $500 a month. $800 USDC. "
+        allowances = ("$9,000. 20% or 30% or 63% or 93.8%. $500 a month. "
                       "99 of 99 as expected. 27 of the 108 repositories. 33.6 days.")
 
         def readme_fixture(*replace):

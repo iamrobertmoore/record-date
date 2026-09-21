@@ -490,6 +490,7 @@ def main():
     for binding in data["pyth"]["bindings"]:
         mint = binding["mint"]
         symbol = next((r["symbol"] for r in records if r["mint"] == mint), mint[:6])
+        symbol = f"{symbol} \u00b7 {mint[:4]}\u2026"
         feed = data["pyth"]["feeds"].get(binding["feedId"]) or {}
         newest = feed.get("newest")
         verify = feed.get("verify") or {}
@@ -530,8 +531,7 @@ def main():
             f"<span class=\"num\">{captured_since} seconds</span> old and nothing staged, and it "
             f"held. That reading is recorded here because the window is only open for fifteen "
             f"minutes: a live page cannot be made to show a hold on demand, so one was staged and "
-            f"captured. It predates the widening of the return from one number to two, and the "
-            f"seconds-since arithmetic it exercised is the same arithmetic. The activation was "
+            f"captured. The activation was "
             f"written in "
             f'<a href="https://explorer.solana.com/tx/{esc(w["signature"])}?cluster=devnet">'
             f'transaction <span class="num">{esc(w["signature"][:16])}\u2026</span></a>, which a '

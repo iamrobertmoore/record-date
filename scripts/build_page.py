@@ -516,6 +516,8 @@ def render(data):
         "RECON_STALE": "{:.1f}".format(recon["stale_median"] * 100),
         "RECON_STALE_N": str(recon["stale_n"]),
         "RECON_MEDIAN": "{:.1f}".format(recon["median_error"] * 100),
+        "FRESH_MEDIAN": "{:.1f}".format(recon["fresh_median"] * 100),
+        "STALE_MEDIAN": "{:.1f}".format(recon["stale_median"] * 100),
         # Which published figure the chain reinvests, with the zero-rate events as the control.
         "NET_OVER_MARKET": "{:.3f}".format(recon["net_over_market"]),
         "GROSS_OVER_MARKET": "{:.3f}".format(recon["gross_over_market"]),
