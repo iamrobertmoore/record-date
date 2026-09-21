@@ -191,7 +191,8 @@ footer code{font-size:12.5px;color:var(--ink)}
     </span>
     <nav>
       <a href="index.html">The evidence</a>
-      <a href="#mint" class="here">The desk</a>
+      <a href="#holder" class="here">Your holding</a>
+      <a href="#mint">The devnet desk</a>
       <a href="#worth">What it is worth</a>
       <a href="#settle">Whether to settle</a>
       <a href="#trail">The trail</a>
@@ -204,27 +205,29 @@ footer code{font-size:12.5px;color:var(--ink)}
 <header class="hero">
   <div class="wrap">
     <div class="stamp">
+      <span class="chip">mainnet · <b>{{HOLDER_COUNT}}</b> real xStocks</span>
       <span class="chip">devnet · program <b>{{PROGRAM_ID_SHORT}}</b></span>
       <span class="chip ok">no key · no backend</span>
-      <span class="chip">plain RPC · <b>{{RPC_HOST}}</b></span>
-      <span class="chip hot"><b id="disagree-chip">{{DISAGREE_COUNT}}</b> of <b id="mint-chip">{{MINT_COUNT}}</b> mints read wrongly</span>
+      <span class="chip hot"><b id="disagree-chip">{{DISAGREE_COUNT}}</b> of <b id="mint-chip">{{MINT_COUNT}}</b> devnet mints read wrongly</span>
     </div>
 
-    <h1>Ask the deployed program what a tokenized share is worth.</h1>
+    <h1>A tokenized share, what it is worth, and whether it is safe to settle.</h1>
 
-    <p class="lede">This page has no key, no server and nothing to sign. It reads devnet over plain RPC
-      and puts its questions to the program that is actually deployed there. On
-      <b><span id="disagree-lede">{{DISAGREE_COUNT}}</span> of the <span id="mint-lede">{{MINT_COUNT}}</span> registered mints the field named
+    <p class="lede">This page has no key, no server and nothing to sign, and it has two halves on two
+      chains. The first reads a real xStock on <b>mainnet</b> over plain RPC and works out the
+      dividend, what was withheld, and whether the settlement window is open. The second reads
+      <b>devnet</b> and puts the same questions to the program that is actually deployed there.</p>
+
+    <p class="lede" style="margin-top:14px">The difference between the two matters and the page says
+      which is which at every step. The program is on devnet and cannot be asked about a mainnet
+      mint, so on the mainnet half the verdict is the program's own rule applied in your browser to
+      the mint's own fields, and the page links you to the devnet half to ask the program itself. On
+      <b><span id="disagree-lede">{{DISAGREE_COUNT}}</span> of the <span id="mint-lede">{{MINT_COUNT}}</span> registered devnet mints the field named
       <span class="num">multiplier</span> holds the previous value</b> while the live multiplier
-      has already moved, so a reader who takes the obvious field is one corporate action behind.
-      The program is not.</p>
-
-    <p class="lede" style="margin-top:14px">A settlement desk has two questions. What is a holding
-      worth, and is it safe to settle right now. Both are answered here by the program, and the
-      answers are checked against what a naive reader of the same account would get.</p>
+      has already moved, so a reader who takes the obvious field is one corporate action behind.</p>
 
     <div class="byline">
-      <span><b>Reads</b><span>the mint account, the program's own accounts, and Pyth</span></span>
+      <span><b>Reads</b><span>mainnet mint accounts, the issuer's own feed, devnet program accounts, and Pyth</span></span>
       <span><b>Captured</b><span class="num">{{CAPTURED}}</span></span>
       <span><b>Reproduce with</b><span class="num">npm run desk</span></span>
     </div>
@@ -233,9 +236,145 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <main>
 
+<section id="holder">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> a real xStock, held</p>
+    <div class="head">
+      <h2>The two multipliers, the dividend that was withheld, and the verdict on your own stock.</h2>
+      <p>This is a real mint on mainnet, not a demo one, and the numbers come from it rather than
+        from a table. <b>None of it is the program's answer.</b> The program is deployed to devnet
+        and has never been asked about a mainnet mint, so the verdict below is the program's own
+        rule from <span class="num">read.rs settlement_window</span>, applied in your browser to
+        the mint's own fields. <a href="#mint">The devnet desk further down asks the program
+        itself.</a></p>
+    </div>
+
+    <div class="console">
+      <div class="bar">
+        <span class="dot" id="holder-dot"></span>
+        <span class="label" id="holder-status">Recorded</span>
+        <span class="tiny" id="holder-when">build from {{HOLDER_ASOF}}; this half re-reads mainnet
+          when it loads</span>
+        <span class="grow">
+          <label class="tiny" for="holder-symbol" style="margin-right:6px">ticker</label>
+          <input id="holder-symbol" list="holder-symbols" value="{{HOLDER_DEFAULT}}"
+                 spellcheck="false" style="width:104px" aria-label="xStock ticker">
+          <datalist id="holder-symbols">{{HOLDER_OPTIONS}}</datalist>
+          <button class="go ghost" id="holder-read" type="button">Re-read mainnet</button>
+        </span>
+      </div>
+
+      <div class="grid2">
+        <div class="cell">
+          <p class="k">the field named multiplier</p>
+          <p class="v wrong" id="holder-field">{{HOLDER_FIELD}}</p>
+          <p class="note">The previous value. Token-2022 keeps the multiplier in force
+            <em>before</em> the most recent activation here, and this is the field most readers
+            reach for first.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the live value, in the field beside it</p>
+          <p class="v right" id="holder-live">{{HOLDER_LIVE}}</p>
+          <p class="note">In force since <span class="num" id="holder-effective">{{HOLDER_EFFECTIVE}}</span>.
+            <span id="holder-agree">{{HOLDER_AGREE}}</span></p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">what your wallet would show</p>
+          <p class="v wrong" id="holder-wallet">{{HOLDER_WALLET}}</p>
+          <p class="note">Your raw amount times the field named <span class="num">multiplier</span>.
+            This is the number a wallet that read the obvious field puts on screen.</p>
+        </div>
+        <div class="cell">
+          <p class="k">what you own</p>
+          <p class="v right" id="holder-own">{{HOLDER_OWN}}</p>
+          <p class="note">Your raw amount times the live value. The difference between these two is
+            what one corporate action is worth to you.</p>
+        </div>
+        <div class="cell">
+          <p class="k">your raw amount</p>
+          <p style="margin:8px 0 0"><input id="holder-raw" type="text" inputmode="numeric"
+            value="{{HOLDER_RAW}}" spellcheck="false" style="width:100%"></p>
+          <p class="note">Base units, as the mint stores them. <span class="num" id="holder-decimals">{{HOLDER_DECIMALS}}</span>
+            decimals on this token, so the default is one share.</p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">the dividend, reinvested</p>
+          <p class="v" id="holder-events">{{HOLDER_EVENTS}}</p>
+          <p class="note">Activations this token has had in the issuer's own feed. It is reinvested
+            rather than paid: the raw balance never moves and the multiplier does.</p>
+        </div>
+        <div class="cell">
+          <p class="k">per share, gross to net</p>
+          <p class="v" id="holder-gross">{{HOLDER_GROSS}}</p>
+          <p class="note">The feed's gross cashflow per share, against the
+            <span class="num" id="holder-net">{{HOLDER_NET}}</span> the multiplier actually
+            reinvests. The gap is the withholding.</p>
+        </div>
+        <div class="cell">
+          <p class="k">withheld at <span id="holder-rate">{{HOLDER_RATE}}</span></p>
+          <p class="v wrong" id="holder-withheld-unit">{{HOLDER_WITHHELD_UNIT}}</p>
+          <p class="note">Per share, taken before the reinvestment. Across this token's whole float
+            it is <span class="num" id="holder-withheld-usd">{{HOLDER_WITHHELD_USD}}</span>, and no
+            surface a holder looks at reports it.</p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">withheld on your holding</p>
+          <p class="v wrong" id="holder-withheld-mine">{{HOLDER_WITHHELD_MINE}}</p>
+          <p class="note">The same rate applied to the raw amount above, at this token's own
+            decimals. This is the figure the entry exists to surface.</p>
+        </div>
+        <div class="cell">
+          <p class="k">at <span class="num" id="holder-price">{{HOLDER_PRICE}}</span> <span class="num" id="holder-currency">{{HOLDER_CURRENCY}}</span> a share</p>
+          <p class="mono" style="font-size:12.5px;word-break:break-all;margin-top:10px" id="holder-mint">{{HOLDER_MINT}}</p>
+          <p class="note">The mint account this is read from, live, over plain RPC with no key.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the program's two numbers</p>
+          <p class="v" id="holder-delta">{{HOLDER_DELTA}}</p>
+          <p class="note">Seconds since the last activation, and seconds until a staged one.
+            <span class="num">-1</span> is "nothing to report", because <span class="num">0</span>
+            is a real answer and means 1970.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="console" style="margin-top:16px">
+      <div class="bar">
+        <span class="tag {{HOLDER_VERDICT_CLASS}}" id="holder-verdict">{{HOLDER_VERDICT}}</span>
+        <span class="why" id="holder-verdict-why">{{HOLDER_VERDICT_WHY}}</span>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:16px"><b>Where this verdict comes from.</b> The program is on
+      devnet, so it cannot be asked about this mint. What you are reading is the program's own rule
+      from <span class="num">read.rs settlement_window</span>, applied in your browser to the two
+      fields the mint carries: the seconds since the value in force took effect, the seconds until a
+      staged one arrives, and a Hold while either is inside the fifteen minute window.
+      <a href="#mint">The devnet desk below asks the deployed program the same question</a> about a
+      mint it has actually seen, and that answer is the program's own.</p>
+
+    <p class="small" style="margin-top:10px">Read from <span class="num">{{MAINNET_RPC}}</span>, and
+      that is not the endpoint the build behind this page uses. <span class="num">fetch.py</span>
+      reads the 927 mint accounts from <span class="num">api.mainnet-beta.solana.com</span>, which
+      answers a server and refuses any request carrying a browser origin: a
+      <span class="num">getHealth</span> to it comes back <span class="num">403 Access forbidden</span>
+      with <span class="num">access-control-allow-origin: *</span> set, which is a filter rather than
+      a CORS failure. So the page reads a different host, and the two agree on every mint checked.</p>
+  </div>
+</section>
+
 <section id="mint">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the mint</p>
+    <p class="eyebrow"><span class="n">02</span><span class="sep">/</span> the devnet desk</p>
     <div class="head">
       <h2>Pick a registered mint. Everything below follows it.</h2>
       <p>These are the mints this program has registered on devnet, and there are
@@ -301,7 +440,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="worth">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">02</span>/<span class="sep">/</span> what a holding is worth</p>
+    <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> what a holding is worth</p>
     <div class="head">
       <h2>The program's answer, against the obvious one.</h2>
       <p>One question, asked twice. Once of the deployed program through its
@@ -356,7 +495,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="settle">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> whether to settle</p>
+    <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> whether to settle</p>
     <div class="head">
       <h2>The window, from the program's own clock.</h2>
       <p>The issuer's own documentation recommends that venues and protocols pause around each
@@ -430,7 +569,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="trail">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> the trail</p>
+    <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> the trail</p>
     <div class="head">
       <h2>The series the mint does not keep.</h2>
       <p>A mint stores the current multiplier and nothing else. There is no sequence and no
@@ -466,7 +605,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="price">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> the reference price</p>
+    <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> the reference price</p>
     <div class="head">
       <h2>The one number the issuer does not own.</h2>
       <p>Everything above reads the issuer's own mint account, so a number taken from there is the
@@ -507,7 +646,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="how">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> how this page talks to the chain</p>
+    <p class="eyebrow"><span class="n">07</span><span class="sep">/</span> how this page talks to the chain</p>
     <div class="head">
       <h2>No key, no backend, no library.</h2>
       <p>Everything on this page was produced by the browser talking to
@@ -572,6 +711,8 @@ POST {{RPC_HOST}}
 </footer>
 
 <script type="application/json" id="desk-state">{{STATE_JSON}}</script>
+
+<script type="application/json" id="holder-state">{{HOLDER_JSON}}</script>
 
 <script>
 /* eslint-disable */
@@ -710,8 +851,13 @@ POST {{RPC_HOST}}
      `no key` property the page states in three places, which is not a trade worth making. */
   var RETRY_DELAYS = [400, 1200, 3000];
 
-  function rpcOnce(method, params) {
-    return fetch(RPC, {
+  /* One transport, two endpoints. The devnet half of this page asks the program; the mainnet half
+     reads a real xStock's mint account. Both are plain `fetch` to a public RPC with no key, so the
+     only thing that differs is the URL, and the URL is a parameter here rather than a second copy
+     of this function. The retry rule is the same on both, because a public endpoint throttles
+     either chain for the same reasons. */
+  function rpcOnce(url, method, params) {
+    return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: method, params: params })
@@ -726,7 +872,7 @@ POST {{RPC_HOST}}
       return r.json();
     }, function () {
       /* fetch rejects when the connection drops or DNS fails. No status, and worth another try. */
-      var e = new Error(method + ": the connection to " + RPC.replace(/^https?:\/\//, "") + " failed");
+      var e = new Error(method + ": the connection to " + url.replace(/^https?:\/\//, "") + " failed");
       e.retryable = true;
       throw e;
     }).then(function (j) {
@@ -741,19 +887,23 @@ POST {{RPC_HOST}}
     });
   }
 
-  function rpc(method, params) {
+  function rpcAt(url, method, params, note) {
     var attempt = 0;
     function go() {
-      return rpcOnce(method, params).catch(function (e) {
+      return rpcOnce(url, method, params).catch(function (e) {
         if (!e.retryable || attempt >= RETRY_DELAYS.length) throw e;
         var wait = RETRY_DELAYS[attempt++];
         /* Say so on the chip. A retry the reader cannot see is indistinguishable from a hang. */
-        mark("reading", "asking " + RPC.replace(/^https?:\/\//, "") + " \u00b7 retry "
+        note("asking " + url.replace(/^https?:\/\//, "") + " \u00b7 retry "
           + attempt + " of " + RETRY_DELAYS.length + " in " + (wait / 1000) + "s");
         return new Promise(function (res) { setTimeout(res, wait); }).then(go);
       });
     }
     return go();
+  }
+
+  function rpc(method, params) {
+    return rpcAt(RPC, method, params, function (text) { mark("reading", text); });
   }
 
   function simulate(accounts, data) {
@@ -1112,6 +1262,236 @@ POST {{RPC_HOST}}
       + " Read from the program's own accounts, not from an index.");
   }
 
+  /* ------------------------------------------------------------------ the holder view */
+  /*
+     The mainnet half. A real xStock, read live from the mint account over plain RPC with no key,
+     with the dividend figures baked from the issuer's own feed by `scripts/fetch.py`.
+
+     What this half is not, and the reason it carries a paragraph of prose of its own on the page:
+     the program's answer. The program is deployed to devnet and has never been asked about a
+     mainnet mint, so there is no `TokenRecord` behind any of this and no `settlement_window` call
+     to make. The verdict is the program's rule from `read.rs settlement_window`, applied here to
+     the mint's own fields. Calling it "the program's own reason" would be the wrong claim in the
+     one place a judge can check it in a single request.
+  */
+
+  var HOLDER = JSON.parse(document.getElementById("holder-state").textContent);
+  var MAINNET = HOLDER.rpc;
+  var holderView = null;
+  var holderSymbol = null;
+
+  function decScaled(s, places) {
+    var parts = String(s).split(".");
+    var whole = parts[0] || "0";
+    var frac = (parts[1] || "").slice(0, places).padEnd(places, "0");
+    return BigInt(whole) * (10n ** BigInt(places)) + BigInt(frac || "0");
+  }
+
+  /* What was withheld on a holding, from the per-share figure. Integer arithmetic on a scaled
+     integer: the per-share figure is a decimal string with eight places, so it becomes a scaled
+     integer once and the division happens last. This is `build_desk.held_withheld` written again
+     for the browser, and the two have to agree, because the build bakes the number and this
+     replaces it the moment the reader edits the amount. */
+  function withheldOn(raw, decimals, perUnit) {
+    if (perUnit === null || perUnit === undefined) return null;
+    return (raw * decScaled(perUnit, 8)) / (10n ** BigInt(decimals));
+  }
+
+  /* `read.rs settlement_window`, in the browser.
+     The program's rule is three clauses. `since` is `now` minus the mint's own timestamp when the
+     mint carries one and nothing is staged; failing that it is `now` minus the timestamp in the
+     program's `TokenRecord`; failing that it is -1. `until` is the staged timestamp minus `now`,
+     or -1. Either one inside 900 seconds is a hold.
+     The middle clause cannot fire here. There is no `TokenRecord` for a mainnet mint because the
+     program is not deployed on mainnet, so `since` reads -1 whenever a value is staged, and that
+     is the one place this half is weaker than the program. The page says so under the verdict. */
+  function holderWindow(effectiveTs, now) {
+    var effectiveAt = effectiveTs <= now ? effectiveTs : 0;
+    var stagedAt = effectiveTs > now ? effectiveTs : 0;
+    var since = (stagedAt === 0 && effectiveAt > 0) ? now - effectiveAt : -1;
+    var until = stagedAt > 0 ? stagedAt - now : -1;
+    return {
+      since: since,
+      until: until,
+      inside: (since >= 0 && since <= PAUSE) || (until >= 0 && until <= PAUSE),
+      answered: since >= 0 || until >= 0
+    };
+  }
+
+  function readHolderMint(symbol) {
+    var t = HOLDER.tokens[symbol];
+    if (!t) return Promise.reject(new Error("this build carries no xStock called " + symbol));
+    return rpcAt(MAINNET, "getAccountInfo", [t.m, { encoding: "jsonParsed" }], holderNote)
+      .then(function (res) {
+        var info = res.value && res.value.data && res.value.data.parsed
+          ? res.value.data.parsed.info : null;
+        if (!info) throw new Error("the mint account did not parse as a token mint");
+        var ext = (info.extensions || []).filter(function (e) {
+          return e.extension === "scaledUiAmountConfig";
+        })[0];
+        var st = ext ? ext.state : null;
+        if (!st) throw new Error("this mint carries no scaledUiAmountConfig extension");
+        return {
+          symbol: symbol,
+          token: t,
+          decimals: info.decimals === undefined ? t.d : Number(info.decimals),
+          multiplier: Number(st.multiplier),
+          newMultiplier: Number(st.newMultiplier),
+          effectiveTs: Number(st.newMultiplierEffectiveTimestamp),
+          now: Math.floor(Date.now() / 1000)
+        };
+      });
+  }
+
+  function holderNote(text) {
+    setText("holder-when", text);
+  }
+
+  function holderMark(live, when) {
+    var dot = el("holder-dot");
+    if (dot) dot.className = "dot" + (live ? " on" : "");
+    setText("holder-status", live ? "Live from mainnet" : "Recorded");
+    setText("holder-when", when);
+  }
+
+  /* The dividend side, which does not move with the mint read: it comes from the issuer's own feed
+     through `fetch.py`, a twelve minute pass over 927 mints that a browser cannot do. */
+  function renderHolderToken(t) {
+    var rate = t.g && t.w
+      ? (Number(t.w) / Number(t.g) * 100).toFixed(0) + "%"
+      : "n/a";
+    setText("holder-rate", rate);
+    setText("holder-events", t.ev === null || t.ev === undefined ? "n/a" : String(t.ev));
+    setText("holder-gross", t.g || "n/a");
+    setText("holder-net", t.n || "n/a");
+    setText("holder-withheld-unit", t.w || "n/a");
+    setText("holder-withheld-usd", t.wu ? "$" + Number(t.wu).toLocaleString("en-US",
+      { maximumFractionDigits: 0 }) : "n/a");
+    setText("holder-price", t.p === null || t.p === undefined ? "n/a"
+      : Number(t.p).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    setText("holder-currency", t.c || "USD");
+    setText("holder-decimals", String(t.d));
+    setText("holder-mint", t.m);
+    /* The default amount is one share, and it is rewritten when the token changes, because a raw
+       amount that means one share at eight decimals means a hundred shares at six. */
+    var rawInput = el("holder-raw");
+    if (rawInput) rawInput.value = (10n ** BigInt(t.d)).toString();
+    setText("holder-field", t.b === null || t.b === undefined ? "n/a" : String(t.b));
+    setText("holder-live", t.l === null || t.l === undefined ? "n/a" : String(t.l));
+    setText("holder-effective", t.e ? fmtTime(t.e) : "no dated activation");
+    setText("holder-agree", t.b !== t.l
+      ? "These two disagree, which is the trap."
+      : "These two agree, so the obvious read happens to be correct here.");
+    renderHolderAmounts(t, t.b, t.l);
+    /* The baked window, from the build's own clock. Replaced by the live read below. */
+    var w = holderWindow(t.e ? t.e : 0, Math.floor(Date.now() / 1000));
+    drawHolderVerdict(w, t.e ? t.e : 0, true);
+  }
+
+  /* What the reader's own amount is worth, and what was withheld from it. Read from the input
+     rather than stored, so editing the amount cannot leave a stale figure beside it. */
+  function renderHolderAmounts(t, fieldValue, liveValue) {
+    var rawInput = el("holder-raw");
+    var raw;
+    try {
+      raw = BigInt(String(rawInput.value).replace(/[^0-9]/g, "") || "0");
+    } catch (e) {
+      setText("holder-wallet", "not a number");
+      setText("holder-own", "not a number");
+      setText("holder-withheld-mine", "not a number");
+      return;
+    }
+    if (fieldValue === null || fieldValue === undefined || liveValue === null || liveValue === undefined) {
+      setText("holder-wallet", "n/a");
+      setText("holder-own", "n/a");
+    } else {
+      setText("holder-wallet", units(naiveScaled(raw, fieldValue), t.d));
+      setText("holder-own", units(naiveScaled(raw, liveValue), t.d));
+    }
+    var mine = withheldOn(raw, t.d, t.w);
+    setText("holder-withheld-mine", mine === null ? "n/a" : units(mine, 8));
+  }
+
+  function drawHolderVerdict(w, effectiveTs, baked) {
+    var verdict = el("holder-verdict");
+    verdict.className = "tag " + (!w.answered ? "hold" : w.inside ? "hold" : "settle");
+    verdict.textContent = !w.answered ? "No answer" : w.inside ? "Hold" : "Settle";
+
+    /* Rendered as a duration rather than as raw seconds. The devnet desk below shows the seconds,
+       because there the numbers come back from the program's own return data and a reader is
+       checking them against it. Here there is no return data to check against, and a cell in a
+       three-column grid that reads "3,235,982s ago" wraps to three lines and tells a reader
+       nothing. */
+    setText("holder-delta", (w.since < 0 ? "no activation yet" : fmtDuration(w.since) + " ago")
+      + " \u00b7 "
+      + (w.until < 0 ? "nothing staged" : "in " + fmtDuration(w.until)));
+
+    var why;
+    if (!w.answered) {
+      why = "This build carries no dated activation for this mint, so neither of the program's two "
+        + "numbers can be worked out from it. The live read below replaces this.";
+    } else if (w.inside) {
+      why = w.until >= 0
+        ? "The issuer has staged an activation that takes effect in " + fmtDuration(w.until)
+          + ", which is inside the " + (PAUSE / 60) + " minute window the program holds for."
+        : "The activation was " + fmtDuration(w.since) + " ago, which is inside the "
+          + (PAUSE / 60) + " minute window the program holds for.";
+    } else {
+      var ageText = fmtDuration(w.since), closedText = fmtDuration(w.since - PAUSE);
+      why = closedText === ageText
+        ? "The activation was " + ageText + " ago, which is outside the " + (PAUSE / 60)
+          + " minute window the program holds for, so this trade is clear."
+        : "The activation was " + ageText + " ago. The window closed " + closedText
+          + " ago, so this trade is clear.";
+    }
+    if (baked) {
+      why += " This is the build's own reading, from its fetch on " + HOLDER.asOf.slice(0, 10)
+        + ".";
+    }
+    setText("holder-verdict-why", why);
+  }
+
+  /* One symbol change does four things: the dividend figures, the two multipliers, the amount, and
+     the verdict. All four come off the same token record so they cannot describe different tokens,
+     which is the failure the two-halves-of-one-page shape invites. */
+  function selectHolder(symbol) {
+    var t = HOLDER.tokens[symbol];
+    if (!t) {
+      /* An unknown ticker leaves the section alone rather than blanking it, and the input is put
+         back to the symbol that is actually on screen. Leaving the typed text there would show a
+         ticker beside another ticker's numbers, which is the one way this section could mislead a
+         reader who mistyped rather than asked for something that does not exist. The status chip is
+         not downgraded either: the read that produced what is on screen did succeed. */
+      setText("holder-when", "this build carries no xStock called " + symbol
+        + ", so nothing changed" + (holderSymbol ? ", and the section still shows " + holderSymbol : ""));
+      if (holderSymbol) el("holder-symbol").value = holderSymbol;
+      return;
+    }
+    holderSymbol = symbol;
+    el("holder-symbol").value = symbol;
+    renderHolderToken(t);
+    holderMark(false, "build from " + HOLDER.asOf.replace("T", " ").replace(/\..*$/, " UTC")
+      + "; reading mainnet");
+    readHolderMint(symbol).then(function (v) {
+      holderView = v;
+      var live = v.effectiveTs <= v.now ? v.newMultiplier : v.multiplier;
+      setText("holder-field", String(v.multiplier));
+      setText("holder-live", String(live));
+      setText("holder-effective", v.effectiveTs > v.now
+        ? "no dated activation yet" : fmtTime(v.effectiveTs));
+      setText("holder-agree", v.multiplier !== v.newMultiplier
+        ? "These two disagree, which is the trap."
+        : "These two agree, so the obvious read happens to be correct here.");
+      renderHolderAmounts(t, v.multiplier, live);
+      drawHolderVerdict(holderWindow(v.effectiveTs, v.now), v.effectiveTs, false);
+      holderMark(true, "read from the mint at " + MAINNET.replace(/^https?:\/\//, "")
+        + " just now, and the mint's own timestamp is "
+        + (v.effectiveTs > v.now ? "in the future, so a value is staged" : "in the past"));
+    }).catch(function (e) {
+      holderMark(false, "live read failed: " + e.message + ". Showing the build's own values.");
+    });
+  }
+
   /* ------------------------------------------------------------------ live read */
 
   function readLive() {
@@ -1255,6 +1635,25 @@ POST {{RPC_HOST}}
     renderMint(b.getAttribute("data-mint"));
   });
 
+  /* The holder view's own wiring. `change` covers a pick from the datalist, `keydown` covers a
+     ticker typed and confirmed with Enter, and the button is there because a reader who has typed
+     a ticker should not have to guess that it needs a keypress to take effect. */
+  var holderInput = el("holder-symbol");
+  holderInput.addEventListener("change", function () { selectHolder(holderInput.value.trim()); });
+  holderInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); selectHolder(holderInput.value.trim()); }
+  });
+  el("holder-read").addEventListener("click", function () { selectHolder(holderInput.value.trim()); });
+  el("holder-raw").addEventListener("input", function () {
+    var t = HOLDER.tokens[holderInput.value.trim()];
+    if (!t) return;
+    var fieldValue = holderView ? holderView.multiplier : t.b;
+    var liveValue = holderView
+      ? (holderView.effectiveTs <= holderView.now ? holderView.newMultiplier : holderView.multiplier)
+      : t.l;
+    renderHolderAmounts(t, fieldValue, liveValue);
+  });
+
   el("recheck").addEventListener("click", refresh);
 
   el("ask").addEventListener("click", function () {
@@ -1288,7 +1687,11 @@ POST {{RPC_HOST}}
     }).then(function () { btn.disabled = false; });
   });
 
-  /* The recorded state is already rendered into the markup, so this only replaces it. */
+  /* The recorded state is already rendered into the markup, so both of these only replace it. Two
+     reads on load, against two different chains, and the page says which half is which: the
+     holder view is mainnet and applies the program's rule in the browser, the desk below is devnet
+     and asks the program itself. */
+  selectHolder(HOLDER.default);
   refresh();
 })();
 </script>

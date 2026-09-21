@@ -191,7 +191,8 @@ footer code{font-size:12.5px;color:var(--ink)}
     </span>
     <nav>
       <a href="index.html">The evidence</a>
-      <a href="#mint" class="here">The desk</a>
+      <a href="#holder" class="here">Your holding</a>
+      <a href="#mint">The devnet desk</a>
       <a href="#worth">What it is worth</a>
       <a href="#settle">Whether to settle</a>
       <a href="#trail">The trail</a>
@@ -204,27 +205,29 @@ footer code{font-size:12.5px;color:var(--ink)}
 <header class="hero">
   <div class="wrap">
     <div class="stamp">
+      <span class="chip">mainnet · <b>379</b> real xStocks</span>
       <span class="chip">devnet · program <b>ycg2obpK…</b></span>
       <span class="chip ok">no key · no backend</span>
-      <span class="chip">plain RPC · <b>api.devnet.solana.com</b></span>
-      <span class="chip hot"><b id="disagree-chip">5</b> of <b id="mint-chip">6</b> mints read wrongly</span>
+      <span class="chip hot"><b id="disagree-chip">5</b> of <b id="mint-chip">6</b> devnet mints read wrongly</span>
     </div>
 
-    <h1>Ask the deployed program what a tokenized share is worth.</h1>
+    <h1>A tokenized share, what it is worth, and whether it is safe to settle.</h1>
 
-    <p class="lede">This page has no key, no server and nothing to sign. It reads devnet over plain RPC
-      and puts its questions to the program that is actually deployed there. On
-      <b><span id="disagree-lede">5</span> of the <span id="mint-lede">6</span> registered mints the field named
+    <p class="lede">This page has no key, no server and nothing to sign, and it has two halves on two
+      chains. The first reads a real xStock on <b>mainnet</b> over plain RPC and works out the
+      dividend, what was withheld, and whether the settlement window is open. The second reads
+      <b>devnet</b> and puts the same questions to the program that is actually deployed there.</p>
+
+    <p class="lede" style="margin-top:14px">The difference between the two matters and the page says
+      which is which at every step. The program is on devnet and cannot be asked about a mainnet
+      mint, so on the mainnet half the verdict is the program's own rule applied in your browser to
+      the mint's own fields, and the page links you to the devnet half to ask the program itself. On
+      <b><span id="disagree-lede">5</span> of the <span id="mint-lede">6</span> registered devnet mints the field named
       <span class="num">multiplier</span> holds the previous value</b> while the live multiplier
-      has already moved, so a reader who takes the obvious field is one corporate action behind.
-      The program is not.</p>
-
-    <p class="lede" style="margin-top:14px">A settlement desk has two questions. What is a holding
-      worth, and is it safe to settle right now. Both are answered here by the program, and the
-      answers are checked against what a naive reader of the same account would get.</p>
+      has already moved, so a reader who takes the obvious field is one corporate action behind.</p>
 
     <div class="byline">
-      <span><b>Reads</b><span>the mint account, the program's own accounts, and Pyth</span></span>
+      <span><b>Reads</b><span>mainnet mint accounts, the issuer's own feed, devnet program accounts, and Pyth</span></span>
       <span><b>Captured</b><span class="num">2026-09-17 19:54:30.383 UTC</span></span>
       <span><b>Reproduce with</b><span class="num">npm run desk</span></span>
     </div>
@@ -233,9 +236,523 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <main>
 
+<section id="holder">
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> a real xStock, held</p>
+    <div class="head">
+      <h2>The two multipliers, the dividend that was withheld, and the verdict on your own stock.</h2>
+      <p>This is a real mint on mainnet, not a demo one, and the numbers come from it rather than
+        from a table. <b>None of it is the program's answer.</b> The program is deployed to devnet
+        and has never been asked about a mainnet mint, so the verdict below is the program's own
+        rule from <span class="num">read.rs settlement_window</span>, applied in your browser to
+        the mint's own fields. <a href="#mint">The devnet desk further down asks the program
+        itself.</a></p>
+    </div>
+
+    <div class="console">
+      <div class="bar">
+        <span class="dot" id="holder-dot"></span>
+        <span class="label" id="holder-status">Recorded</span>
+        <span class="tiny" id="holder-when">build from 2026-09-17 16:44:53 UTC; this half re-reads mainnet
+          when it loads</span>
+        <span class="grow">
+          <label class="tiny" for="holder-symbol" style="margin-right:6px">ticker</label>
+          <input id="holder-symbol" list="holder-symbols" value="XOMx"
+                 spellcheck="false" style="width:104px" aria-label="xStock ticker">
+          <datalist id="holder-symbols">            <option value="AAPLx"></option>
+            <option value="AAx"></option>
+            <option value="ABBVx"></option>
+            <option value="ABTx"></option>
+            <option value="ACNx"></option>
+            <option value="ADIx"></option>
+            <option value="ADMx"></option>
+            <option value="ADPx"></option>
+            <option value="AEEx"></option>
+            <option value="AEPx"></option>
+            <option value="AFLx"></option>
+            <option value="AGNCx"></option>
+            <option value="AIGx"></option>
+            <option value="AITx"></option>
+            <option value="AIZx"></option>
+            <option value="AJGx"></option>
+            <option value="ALBx"></option>
+            <option value="ALLYx"></option>
+            <option value="ALLx"></option>
+            <option value="AMATx"></option>
+            <option value="AMEx"></option>
+            <option value="AMGNx"></option>
+            <option value="AMPx"></option>
+            <option value="APHx"></option>
+            <option value="APOx"></option>
+            <option value="ARESx"></option>
+            <option value="ARMKx"></option>
+            <option value="ASMLx"></option>
+            <option value="ATOx"></option>
+            <option value="AVGOx"></option>
+            <option value="AVYx"></option>
+            <option value="AWKx"></option>
+            <option value="AZNx"></option>
+            <option value="BACx"></option>
+            <option value="BALLx"></option>
+            <option value="BAMx"></option>
+            <option value="BBYx"></option>
+            <option value="BDXx"></option>
+            <option value="BITXx"></option>
+            <option value="BKRx"></option>
+            <option value="BROx"></option>
+            <option value="BRx"></option>
+            <option value="BWAx"></option>
+            <option value="BWXTx"></option>
+            <option value="BXx"></option>
+            <option value="CASYx"></option>
+            <option value="CATx"></option>
+            <option value="CCIx"></option>
+            <option value="CDWx"></option>
+            <option value="CEGx"></option>
+            <option value="CFGx"></option>
+            <option value="CFx"></option>
+            <option value="CGx"></option>
+            <option value="CHDx"></option>
+            <option value="CHRWx"></option>
+            <option value="CINFx"></option>
+            <option value="CITICx"></option>
+            <option value="CIx"></option>
+            <option value="CKAHx"></option>
+            <option value="CKHUTx"></option>
+            <option value="CLXx"></option>
+            <option value="CMCSAx"></option>
+            <option value="CMEx"></option>
+            <option value="CMIx"></option>
+            <option value="CMSx"></option>
+            <option value="CNPx"></option>
+            <option value="COFx"></option>
+            <option value="COPXx"></option>
+            <option value="COPx"></option>
+            <option value="CORx"></option>
+            <option value="COVELx"></option>
+            <option value="CRDAx"></option>
+            <option value="CRESLx"></option>
+            <option value="CRESMx"></option>
+            <option value="CRMx"></option>
+            <option value="CRSx"></option>
+            <option value="CRx"></option>
+            <option value="CSCOx"></option>
+            <option value="CSLx"></option>
+            <option value="CSXx"></option>
+            <option value="CTASx"></option>
+            <option value="CTSHx"></option>
+            <option value="CTVAx"></option>
+            <option value="CVXx"></option>
+            <option value="Cx"></option>
+            <option value="DELLx"></option>
+            <option value="DHIx"></option>
+            <option value="DHRx"></option>
+            <option value="DKSx"></option>
+            <option value="DLRx"></option>
+            <option value="DOCx"></option>
+            <option value="DOVx"></option>
+            <option value="DOWx"></option>
+            <option value="DTEx"></option>
+            <option value="DUKx"></option>
+            <option value="DVNx"></option>
+            <option value="Dx"></option>
+            <option value="ECLx"></option>
+            <option value="EDx"></option>
+            <option value="EFXx"></option>
+            <option value="EGx"></option>
+            <option value="ELVx"></option>
+            <option value="ELx"></option>
+            <option value="EMRx"></option>
+            <option value="ENTGx"></option>
+            <option value="EQHx"></option>
+            <option value="EQIXx"></option>
+            <option value="EQTx"></option>
+            <option value="ESx"></option>
+            <option value="ETNx"></option>
+            <option value="ETRx"></option>
+            <option value="EVRGx"></option>
+            <option value="EVRx"></option>
+            <option value="EWBCx"></option>
+            <option value="EWGx"></option>
+            <option value="EWQx"></option>
+            <option value="EWUx"></option>
+            <option value="EXCx"></option>
+            <option value="EXEx"></option>
+            <option value="EXRx"></option>
+            <option value="FAAAx"></option>
+            <option value="FANGx"></option>
+            <option value="FASTx"></option>
+            <option value="FCNCAx"></option>
+            <option value="FDSx"></option>
+            <option value="FDXx"></option>
+            <option value="FERGx"></option>
+            <option value="FEZx"></option>
+            <option value="FEx"></option>
+            <option value="FHNx"></option>
+            <option value="FISx"></option>
+            <option value="FIXx"></option>
+            <option value="FLBLx"></option>
+            <option value="FLQMx"></option>
+            <option value="FNFx"></option>
+            <option value="FSMLx"></option>
+            <option value="FTVx"></option>
+            <option value="Fx"></option>
+            <option value="GENx"></option>
+            <option value="GEVx"></option>
+            <option value="GILDx"></option>
+            <option value="GLPIx"></option>
+            <option value="GLWx"></option>
+            <option value="GMx"></option>
+            <option value="GOOGLx"></option>
+            <option value="GPCx"></option>
+            <option value="GPNx"></option>
+            <option value="GSx"></option>
+            <option value="GWWx"></option>
+            <option value="HALx"></option>
+            <option value="HASx"></option>
+            <option value="HBANx"></option>
+            <option value="HCAx"></option>
+            <option value="HDx"></option>
+            <option value="HIGx"></option>
+            <option value="HLTx"></option>
+            <option value="HONx"></option>
+            <option value="HPEx"></option>
+            <option value="HPQx"></option>
+            <option value="HSYx"></option>
+            <option value="HUBBx"></option>
+            <option value="HWMx"></option>
+            <option value="Hx"></option>
+            <option value="IBKRx"></option>
+            <option value="IBMx"></option>
+            <option value="ICEx"></option>
+            <option value="IEMGx"></option>
+            <option value="IFFx"></option>
+            <option value="IJRx"></option>
+            <option value="INVHx"></option>
+            <option value="IPx"></option>
+            <option value="IRMx"></option>
+            <option value="IRx"></option>
+            <option value="ITAx"></option>
+            <option value="ITTx"></option>
+            <option value="IWMx"></option>
+            <option value="JAAAx"></option>
+            <option value="JBHTx"></option>
+            <option value="JBLx"></option>
+            <option value="JNJx"></option>
+            <option value="JPMx"></option>
+            <option value="JPSTx"></option>
+            <option value="Jx"></option>
+            <option value="KEYx"></option>
+            <option value="KHCx"></option>
+            <option value="KIMx"></option>
+            <option value="KKRx"></option>
+            <option value="KLACx"></option>
+            <option value="KMBx"></option>
+            <option value="KMIx"></option>
+            <option value="KNXx"></option>
+            <option value="KOx"></option>
+            <option value="KRx"></option>
+            <option value="KVUEx"></option>
+            <option value="LAMRx"></option>
+            <option value="LDOSx"></option>
+            <option value="LHXx"></option>
+            <option value="LINx"></option>
+            <option value="LLYx"></option>
+            <option value="LMTx"></option>
+            <option value="LNGx"></option>
+            <option value="LNTx"></option>
+            <option value="LPLAx"></option>
+            <option value="LRCXx"></option>
+            <option value="LUVx"></option>
+            <option value="LVSx"></option>
+            <option value="Lx"></option>
+            <option value="MARx"></option>
+            <option value="MASx"></option>
+            <option value="MAx"></option>
+            <option value="MCDx"></option>
+            <option value="MCHPx"></option>
+            <option value="MCKx"></option>
+            <option value="MCOx"></option>
+            <option value="MDTx"></option>
+            <option value="METAx"></option>
+            <option value="METx"></option>
+            <option value="MKSIx"></option>
+            <option value="MLIx"></option>
+            <option value="MLMx"></option>
+            <option value="MMMx"></option>
+            <option value="MOx"></option>
+            <option value="MPCx"></option>
+            <option value="MRKx"></option>
+            <option value="MRVLx"></option>
+            <option value="MSCIx"></option>
+            <option value="MSFTx"></option>
+            <option value="MSIx"></option>
+            <option value="MSx"></option>
+            <option value="MTBx"></option>
+            <option value="MUx"></option>
+            <option value="NDAQx"></option>
+            <option value="NDSNx"></option>
+            <option value="NEEx"></option>
+            <option value="NEMx"></option>
+            <option value="NIx"></option>
+            <option value="NKEx"></option>
+            <option value="NOCx"></option>
+            <option value="NRGx"></option>
+            <option value="NSCx"></option>
+            <option value="NTRSx"></option>
+            <option value="NVDAx"></option>
+            <option value="NVOx"></option>
+            <option value="ODFLx"></option>
+            <option value="OHIx"></option>
+            <option value="OKEx"></option>
+            <option value="OMCx"></option>
+            <option value="ORCLx"></option>
+            <option value="OTISx"></option>
+            <option value="OVVx"></option>
+            <option value="OXYx"></option>
+            <option value="Ox"></option>
+            <option value="PAYXx"></option>
+            <option value="PCARx"></option>
+            <option value="PEGx"></option>
+            <option value="PEPx"></option>
+            <option value="PFEx"></option>
+            <option value="PFGx"></option>
+            <option value="PGx"></option>
+            <option value="PHx"></option>
+            <option value="PKGx"></option>
+            <option value="PLDx"></option>
+            <option value="PMx"></option>
+            <option value="PNFPx"></option>
+            <option value="PNWx"></option>
+            <option value="PPGx"></option>
+            <option value="PPLx"></option>
+            <option value="PRUx"></option>
+            <option value="PRx"></option>
+            <option value="PSAx"></option>
+            <option value="PSXx"></option>
+            <option value="PWRx"></option>
+            <option value="PYPLx"></option>
+            <option value="QCOMx"></option>
+            <option value="QQQx"></option>
+            <option value="Qx"></option>
+            <option value="RBAx"></option>
+            <option value="REGNx"></option>
+            <option value="REGx"></option>
+            <option value="RFx"></option>
+            <option value="RGAx"></option>
+            <option value="RMDx"></option>
+            <option value="RNRx"></option>
+            <option value="ROKx"></option>
+            <option value="ROLx"></option>
+            <option value="ROSTx"></option>
+            <option value="RSx"></option>
+            <option value="RTXx"></option>
+            <option value="SATAx"></option>
+            <option value="SBACx"></option>
+            <option value="SBUXx"></option>
+            <option value="SCCOx"></option>
+            <option value="SCHFx"></option>
+            <option value="SCHWx"></option>
+            <option value="SFx"></option>
+            <option value="SGIx"></option>
+            <option value="SGOVx"></option>
+            <option value="SHWx"></option>
+            <option value="SINOTx"></option>
+            <option value="SJMx"></option>
+            <option value="SNAx"></option>
+            <option value="SNDSCx"></option>
+            <option value="SOLSx"></option>
+            <option value="SOXXx"></option>
+            <option value="SOx"></option>
+            <option value="SPGx"></option>
+            <option value="SPYx"></option>
+            <option value="SREx"></option>
+            <option value="SSNCx"></option>
+            <option value="STRCx"></option>
+            <option value="STRKx"></option>
+            <option value="STZx"></option>
+            <option value="SWKx"></option>
+            <option value="SYFx"></option>
+            <option value="TBLLx"></option>
+            <option value="TERx"></option>
+            <option value="TFCx"></option>
+            <option value="TJXx"></option>
+            <option value="TMOx"></option>
+            <option value="TMUSx"></option>
+            <option value="TPLx"></option>
+            <option value="TPRx"></option>
+            <option value="TQQQx"></option>
+            <option value="TRGPx"></option>
+            <option value="TROWx"></option>
+            <option value="TRUx"></option>
+            <option value="TRVx"></option>
+            <option value="TSCOx"></option>
+            <option value="TSMx"></option>
+            <option value="TSNx"></option>
+            <option value="TWx"></option>
+            <option value="TXNx"></option>
+            <option value="TXRHx"></option>
+            <option value="TXTx"></option>
+            <option value="UDRx"></option>
+            <option value="UIx"></option>
+            <option value="ULSx"></option>
+            <option value="UNHx"></option>
+            <option value="UNPx"></option>
+            <option value="UPSx"></option>
+            <option value="URIx"></option>
+            <option value="VGKx"></option>
+            <option value="VICIx"></option>
+            <option value="VLOx"></option>
+            <option value="VMCx"></option>
+            <option value="VOOx"></option>
+            <option value="VRSKx"></option>
+            <option value="VRSNx"></option>
+            <option value="VRTx"></option>
+            <option value="VTIx"></option>
+            <option value="VTRSx"></option>
+            <option value="VTx"></option>
+            <option value="VUGx"></option>
+            <option value="VXUSx"></option>
+            <option value="Vx"></option>
+            <option value="WABx"></option>
+            <option value="WCCx"></option>
+            <option value="WDCx"></option>
+            <option value="WECx"></option>
+            <option value="WELLx"></option>
+            <option value="WENx"></option>
+            <option value="WFCx"></option>
+            <option value="WHGROx"></option>
+            <option value="WMBx"></option>
+            <option value="WMSx"></option>
+            <option value="WMTx"></option>
+            <option value="WMx"></option>
+            <option value="WRBx"></option>
+            <option value="WSTx"></option>
+            <option value="WTSx"></option>
+            <option value="WWDx"></option>
+            <option value="WYx"></option>
+            <option value="XELx"></option>
+            <option value="XLEx"></option>
+            <option value="XOMx"></option>
+            <option value="XOPx"></option>
+            <option value="XYLx"></option>
+            <option value="YLDEx"></option>
+            <option value="YUMx"></option></datalist>
+          <button class="go ghost" id="holder-read" type="button">Re-read mainnet</button>
+        </span>
+      </div>
+
+      <div class="grid2">
+        <div class="cell">
+          <p class="k">the field named multiplier</p>
+          <p class="v wrong" id="holder-field">1.0130866005227463</p>
+          <p class="note">The previous value. Token-2022 keeps the multiplier in force
+            <em>before</em> the most recent activation here, and this is the field most readers
+            reach for first.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the live value, in the field beside it</p>
+          <p class="v right" id="holder-live">1.017648970535191</p>
+          <p class="note">In force since <span class="num" id="holder-effective">2026-08-15T00:30:00Z</span>.
+            <span id="holder-agree">These two disagree, which is the trap.</span></p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">what your wallet would show</p>
+          <p class="v wrong" id="holder-wallet">1.013087</p>
+          <p class="note">Your raw amount times the field named <span class="num">multiplier</span>.
+            This is the number a wallet that read the obvious field puts on screen.</p>
+        </div>
+        <div class="cell">
+          <p class="k">what you own</p>
+          <p class="v right" id="holder-own">1.017649</p>
+          <p class="note">Your raw amount times the live value. The difference between these two is
+            what one corporate action is worth to you.</p>
+        </div>
+        <div class="cell">
+          <p class="k">your raw amount</p>
+          <p style="margin:8px 0 0"><input id="holder-raw" type="text" inputmode="numeric"
+            value="100,000,000" spellcheck="false" style="width:100%"></p>
+          <p class="note">Base units, as the mint stores them. <span class="num" id="holder-decimals">8</span>
+            decimals on this token, so the default is one share.</p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">the dividend, reinvested</p>
+          <p class="v" id="holder-events">3</p>
+          <p class="note">Activations this token has had in the issuer's own feed. It is reinvested
+            rather than paid: the raw balance never moves and the multiplier does.</p>
+        </div>
+        <div class="cell">
+          <p class="k">per share, gross to net</p>
+          <p class="v" id="holder-gross">3.09</p>
+          <p class="note">The feed's gross cashflow per share, against the
+            <span class="num" id="holder-net">2.163</span> the multiplier actually
+            reinvests. The gap is the withholding.</p>
+        </div>
+        <div class="cell">
+          <p class="k">withheld at <span id="holder-rate">30%</span></p>
+          <p class="v wrong" id="holder-withheld-unit">0.927</p>
+          <p class="note">Per share, taken before the reinvestment. Across this token's whole float
+            it is <span class="num" id="holder-withheld-usd">$112,966</span>, and no
+            surface a holder looks at reports it.</p>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="cell">
+          <p class="k">withheld on your holding</p>
+          <p class="v wrong" id="holder-withheld-mine">0.927</p>
+          <p class="note">The same rate applied to the raw amount above, at this token's own
+            decimals. This is the figure the entry exists to surface.</p>
+        </div>
+        <div class="cell">
+          <p class="k">at <span class="num" id="holder-price">162.05</span> <span class="num" id="holder-currency">USD</span> a share</p>
+          <p class="mono" style="font-size:12.5px;word-break:break-all;margin-top:10px" id="holder-mint">XsaHND8sHyfMfsWPj6kSdd5VwvCayZvjYgKmmcNL5qh</p>
+          <p class="note">The mint account this is read from, live, over plain RPC with no key.</p>
+        </div>
+        <div class="cell">
+          <p class="k">the program's two numbers</p>
+          <p class="v" id="holder-delta">33.7 days ago · nothing staged</p>
+          <p class="note">Seconds since the last activation, and seconds until a staged one.
+            <span class="num">-1</span> is "nothing to report", because <span class="num">0</span>
+            is a real answer and means 1970.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="console" style="margin-top:16px">
+      <div class="bar">
+        <span class="tag settle" id="holder-verdict">Settle</span>
+        <span class="why" id="holder-verdict-why">The activation was 33.7 days ago, which is outside the 15 minute window the program holds for, so this trade is clear.</span>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:16px"><b>Where this verdict comes from.</b> The program is on
+      devnet, so it cannot be asked about this mint. What you are reading is the program's own rule
+      from <span class="num">read.rs settlement_window</span>, applied in your browser to the two
+      fields the mint carries: the seconds since the value in force took effect, the seconds until a
+      staged one arrives, and a Hold while either is inside the fifteen minute window.
+      <a href="#mint">The devnet desk below asks the deployed program the same question</a> about a
+      mint it has actually seen, and that answer is the program's own.</p>
+
+    <p class="small" style="margin-top:10px">Read from <span class="num">https://solana-rpc.publicnode.com</span>, and
+      that is not the endpoint the build behind this page uses. <span class="num">fetch.py</span>
+      reads the 927 mint accounts from <span class="num">api.mainnet-beta.solana.com</span>, which
+      answers a server and refuses any request carrying a browser origin: a
+      <span class="num">getHealth</span> to it comes back <span class="num">403 Access forbidden</span>
+      with <span class="num">access-control-allow-origin: *</span> set, which is a filter rather than
+      a CORS failure. So the page reads a different host, and the two agree on every mint checked.</p>
+  </div>
+</section>
+
 <section id="mint">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the mint</p>
+    <p class="eyebrow"><span class="n">02</span><span class="sep">/</span> the devnet desk</p>
     <div class="head">
       <h2>Pick a registered mint. Everything below follows it.</h2>
       <p>These are the mints this program has registered on devnet, and there are
@@ -306,7 +823,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="worth">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">02</span>/<span class="sep">/</span> what a holding is worth</p>
+    <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> what a holding is worth</p>
     <div class="head">
       <h2>The program's answer, against the obvious one.</h2>
       <p>One question, asked twice. Once of the deployed program through its
@@ -361,7 +878,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="settle">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> whether to settle</p>
+    <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> whether to settle</p>
     <div class="head">
       <h2>The window, from the program's own clock.</h2>
       <p>The issuer's own documentation recommends that venues and protocols pause around each
@@ -435,7 +952,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="trail">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> the trail</p>
+    <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> the trail</p>
     <div class="head">
       <h2>The series the mint does not keep.</h2>
       <p>A mint stores the current multiplier and nothing else. There is no sequence and no
@@ -471,7 +988,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="price">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> the reference price</p>
+    <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> the reference price</p>
     <div class="head">
       <h2>The one number the issuer does not own.</h2>
       <p>Everything above reads the issuer's own mint account, so a number taken from there is the
@@ -514,7 +1031,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
 <section id="how">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> how this page talks to the chain</p>
+    <p class="eyebrow"><span class="n">07</span><span class="sep">/</span> how this page talks to the chain</p>
     <div class="head">
       <h2>No key, no backend, no library.</h2>
       <p>Everything on this page was produced by the browser talking to
@@ -579,6 +1096,8 @@ POST api.devnet.solana.com
 </footer>
 
 <script type="application/json" id="desk-state">{"capturedAt":"2026-09-17T19:54:30.383Z","rpc":"https://api.devnet.solana.com","cluster":"devnet","programId":"ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG","token2022":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","pythReceiver":"rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ","deskPayer":"9GwUYoXLix8k27MjwnYFqzwsn4bKD2tZf5Dcz9ydp9vX","pauseSecs":900,"registry":{"address":"6ZgJXYGsw4VBuiaRD1dTYo1QDMEA6FYcXKKs9Ua5jVyb","authority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","mints":6,"activations":7,"bump":253},"tokenRecords":[{"address":"7MupvMRPG1RCmxsy1xGM9nM3a1mhprNSZv241mrjX1BV","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789578122,"activations":1,"lastSeenSlot":499390177,"bump":254},{"address":"7c3aKW9Z8iJ4kE49zt6KUykYQs7U2hmsrWaWA2Rsh6Je","mint":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789577772,"activations":1,"lastSeenSlot":499388414,"bump":253},{"address":"AAPztUZ42iEEiDc94L4HUj8qXwXmqSYnbuM1A2T6HmWb","mint":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789655348,"activations":1,"lastSeenSlot":499857004,"bump":254},{"address":"As6mSSqM5MdwZzYCFCzbFBJRuUhjP2YkuFbkFDBXGvf5","mint":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789579322,"activations":1,"lastSeenSlot":499397420,"bump":253},{"address":"BCMdUzx6Tr4BD6KuBf4uvNw1gy6FG352Vs1C98VHfZ5C","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789643252,"activations":2,"lastSeenSlot":499783921,"bump":252},{"address":"CWts9sgWUfGckNL8ubfT3NXA1tG8vqVvEgiUonXTS7gY","mint":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789579268,"activations":1,"lastSeenSlot":499397100,"bump":255}],"mints":{"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR":{"address":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789578122,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq":{"address":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1.0042,"newMultiplier":1.0084,"effectiveAt":1789654231,"fieldDisagrees":true,"liveNow":1.0084,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS":{"address":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789655348,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ":{"address":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789579322,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe":{"address":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1.0042,"newMultiplier":1.0042,"effectiveAt":1789643252,"fieldDisagrees":false,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp":{"address":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789579268,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166}},"receipts":[{"address":"aPiExpKAL6cb35K4aTawykwYsJcQFVWKCQiCxYjtGe1","mint":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789577772,"recordedAt":1789577833,"rawSupply":100000000,"bump":254},{"address":"2B6yLrgzquoZgsXtd1dLDjnLgUu6b892R2NCWGH64DCX","mint":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789579268,"recordedAt":1789579269,"rawSupply":100000000,"bump":255},{"address":"B8AqwoXnjXqZFp6PCPbVYs6ai2xtE2fSDmcuSDWARZLp","mint":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789579322,"recordedAt":1789579323,"rawSupply":100000000,"bump":254},{"address":"BBCoat1EfKSR4VNsxBTeoY5t5ygaCTVMQFmDVYKdJ71H","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789643173,"recordedAt":1789643174,"rawSupply":100000000,"bump":252},{"address":"ByEHAz1NLiGi6wTVGr8dSMabMgCCnazET5pdwYzuSsNd","mint":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789655348,"recordedAt":1789655349,"rawSupply":100000000,"bump":255},{"address":"GeFdQaQL4moCYpY2PykzTw5gBssJpsPhzGxFxJsTi2E5","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789578122,"recordedAt":1789578123,"rawSupply":100000000,"bump":254},{"address":"HrFTT4Ygy45ssRLrbchT7Y2d9cDKM8iXxhvx7TEuHtpu","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","sequence":1,"previousMultiplier":1.0042,"newMultiplier":1.0042,"previousFp":"1.0042","newFp":"1.0042","deltaFp":"0","flat":true,"effectiveAt":1789643252,"recordedAt":1789643253,"rawSupply":100000000,"bump":255}],"pyth":{"bindings":[{"address":"9ddmyaZfM4MJiUuGckAHtb5TJ1q8YxAwtv79LyifEsQ","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","feedId":"49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688","feedSymbol":"AAPL","boundAt":1789654087,"bump":255},{"address":"9AHmMAUKeA8SW8adDSrP4EAVu4tCS6qoDMhQbTD4iroz","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","feedId":"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d","feedSymbol":"SOL","boundAt":1789643258,"bump":255},{"address":"GLPvWLXwJXVfVFjzBPoW73b7k1mEJUnb2ziShbxG7DHr","mint":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","feedId":"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d","feedSymbol":"SOL","boundAt":1789655355,"bump":255}],"feeds":{"49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688":{"count":189,"newest":{"address":"DJgUxxLVN1QxAXykPzpH5Kz5feo1bTCBDipGRUYYqMw","price":30592000,"exponent":-5,"publishTime":1786737619},"oldest":{"address":"Fd2tZNSQenmmR1vkUYQ3qCFZieDfUb97PJ5CduWkhrk6","price":23723000,"exponent":-5,"publishTime":1741100149},"verify":{"err":"{\"InstructionError\":[0,{\"Custom\":6016}]}","errorCode":6016,"returnHex":null,"logs":[]}},"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d":{"count":63894,"newest":{"address":"7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE","price":10086833888,"exponent":-8,"publishTime":1789674782},"oldest":{"address":"Es7N3gDAJZPKaPCz1wKtEQnTLWi4GkKrtxdKdW9gs9nv","price":6879382246,"exponent":-8,"publishTime":1702285724},"verify":{"err":null,"errorCode":null,"returnHex":"00801fbac953d477050000000000000000000000000000000000000000000000","logs":["Program log: Record Date: DEMOx verified against Pyth SOL at 100.86833888 (age 82s of a 300s limit), caller said 100868338880000000000e-18, deviation 0bps of a 50-bps tolerance, feed H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"]}}}},"answers":{"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR":{"sinceSeconds":96724,"untilSeconds":-1,"deltaHex":"d479010000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 96724s ago, next in -1s, inside the recommended 15 minute pause: false"]},"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq":{"sinceSeconds":20615,"untilSeconds":-1,"deltaHex":"8750000000000000ffffffffffffffff","insideWindow":false,"pending":true,"oneShareRaw":"100000000","programUnits":"100840000","programUnitsDisplay":"1.0084","naiveUnits":"100420000","naiveUnitsDisplay":"1.0042","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 20615s ago, next in -1s, inside the recommended 15 minute pause: false"]},"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS":{"sinceSeconds":19498,"untilSeconds":-1,"deltaHex":"2a4c000000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 19498s ago, next in -1s, inside the recommended 15 minute pause: false"]},"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ":{"sinceSeconds":95525,"untilSeconds":-1,"deltaHex":"2575010000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 95525s ago, next in -1s, inside the recommended 15 minute pause: false"]},"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe":{"sinceSeconds":31595,"untilSeconds":-1,"deltaHex":"6b7b000000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100420000","naiveUnitsDisplay":"1.0042","gapUnits":"0","gapUnitsDisplay":"0","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 31595s ago, next in -1s, inside the recommended 15 minute pause: false"]},"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp":{"sinceSeconds":95579,"untilSeconds":-1,"deltaHex":"5b75010000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 95579s ago, next in -1s, inside the recommended 15 minute pause: false"]}},"errorNames":["NotToken2022","MintTooShort","MintPaddingNotZero","NotAMint","NoScaledUiAmount","BadExtensionLength","UnknownExtension","ExtensionOverrunsAccount","BadMultiplier","SymbolTooLong","NotRegistered","NothingToRecord","NotPythReceiver","NotAPriceUpdate","PriceUpdateTooShort","FeedIdMismatch","StalePythPrice","PriceDeviation","PriceOutOfRange","NegativePythPrice","FeedSymbolTooLong","PriceAgeCeilingExceeded","TruncatedExtensionHeader","PythPriceNotVerified"],"errorCodeOffset":6000,"defaultMint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR"}</script>
+
+<script type="application/json" id="holder-state">{"rpc":"https://solana-rpc.publicnode.com","asOf":"2026-09-17T16:44:53Z","default":"XOMx","tokens":{"STRCx":{"m":"Xs78JED6PFZxWc2wCEPspZW9kL3Se5J7L5TChKgsidH","d":8,"p":97.94,"c":"USD","b":1.0808929977256367,"l":1.0863570205637327,"e":1789432200,"g":"4.4166663","n":"3.97916631","w":"0.43749999","wu":"223344","ev":7},"PFEx":{"m":"XsAtbqkAP1HJxy7hFDeq7ok6yM43DQ9mQ1Rh861X8rw","d":8,"p":27.675,"c":"USD","b":1.0411821501505005,"l":1.0537129709103943,"e":1784853000,"g":"0.86","n":"0.602","w":"0.258","wu":"165753","ev":2},"NVOx":{"m":"XsfAzPzYrYjd4Dpa9BU3cusBsvWfVB9gBcyGC87S57n","d":8,"p":42.995,"c":"USD","b":1.0306506859428242,"l":1.0370549907437874,"e":1786753800,"g":"1.323186","n":"0.9262302","w":"0.3969558","wu":"130148","ev":2},"CMCSAx":{"m":"XsvKCaNsxg2GN8jjUmq71qukMJr7Q1c5R2Mk9P8kcS8","d":8,"p":23.175,"c":"USD","b":1.0775407627046052,"l":1.0876797409606038,"e":1782865800,"g":"0.66","n":"0.462","w":"0.198","wu":"113925","ev":2},"TBLLx":{"m":"XsqBC5tcVQLYt8wqGCHRnAUUecbRYXoJCReD6w7QEKp","d":8,"p":105.7491,"c":"USD","b":1.0167713949402104,"l":1.0187608513830024,"e":1787529600,"g":"1.50426","n":"1.052982","w":"0.451278","wu":"113672","ev":5},"XOMx":{"m":"XsaHND8sHyfMfsWPj6kSdd5VwvCayZvjYgKmmcNL5qh","d":8,"p":162.05,"c":"USD","b":1.0130866005227463,"l":1.017648970535191,"e":1786753800,"g":"3.09","n":"2.163","w":"0.927","wu":"112966","ev":3},"MRKx":{"m":"XsnQnU7AdbRZYe2akqqpibDdXjkieGFfSkbkjX1Sd1X","d":8,"p":146.8,"c":"USD","b":1.0216625054701978,"l":1.0258591861103177,"e":1789432200,"g":"2.55","n":"1.785","w":"0.765","wu":"108611","ev":3},"YLDEx":{"m":"Xs4uZnG2mzZQKgnmuYboj1PRBtascAvWh5NdVMfz2aW","d":8,"p":55.785,"c":"USD","b":1.0154510048255114,"l":1.0194749276580042,"e":1788566100,"g":"1.59035","n":"1.113245","w":"0.477105","wu":"105875","ev":4},"CVXx":{"m":"XsNNMt7WTNA2sV3jrb1NNfNgapxRF5i4i6GcnTRRHts","d":8,"p":210.265,"c":"USD","b":1.023356544159142,"l":1.0295541831890767,"e":1787099400,"g":"3.56","n":"2.492","w":"1.068","wu":"104221","ev":2},"KOx":{"m":"XsaBXg8dU5cPM6ehmVctMkVqoiRG2ZjMo1cyBJ3AykQ","d":8,"p":88.055,"c":"USD","b":1.0183317967386898,"l":1.0225601246249238,"e":1789432200,"g":"1.59","n":"1.113","w":"0.477","wu":"103027","ev":3},"HDx":{"m":"XszjVtyhowGjSC5odCqBpW1CtXXwXjYokymrk7fGKD3","d":8,"p":304.47,"c":"USD","b":1.0180860139732721,"l":1.023299345701813,"e":1788395400,"g":"6.99","n":"4.893","w":"2.097","wu":"97202","ev":3},"PEPx":{"m":"Xsv99frTRUeornyvCfvhnDesQDWuvns1M852Pez91vF","d":8,"p":133.585,"c":"USD","b":1.0268028384810615,"l":1.0344000941634355,"e":1788481800,"g":"2.96","n":"2.072","w":"0.888","wu":"95765","ev":2},"FLBLx":{"m":"XsCZJYnCmjs5cYZDMLVxVzvMy5AK2oqsWpobS6SYno8","d":8,"p":22.985,"c":"USD","b":1.0131896217148004,"l":1.0171047698353655,"e":1788309000,"g":"0.55929","n":"0.38651245303","w":"0.17277754697","wu":"91403","ev":4},"EWQx":{"m":"Xs1neEMHNaDDSHqE9nvDGkmuX73ZASKcLtQqwmVAQde","d":8,"p":44.41,"c":"USD","b":1.0,"l":1.01632636637,"e":1781481300,"g":"1.087336","n":"0.7611352","w":"0.3262008","wu":"88751","ev":1},"MSFTx":{"m":"XspzcW1PRtgf6Wj92HCiZdjzKCyFekVD8P5Ueh3dRMX","d":8,"p":495.8,"c":"USD","b":1.0045820905025638,"l":1.0059033904787456,"e":1787185800,"g":"2.73","n":"1.911","w":"0.819","wu":"86479","ev":3},"JAAAx":{"m":"XsEYQJtVa51Ww3y28jV1FwheMgmDj8BpxYiCPThcLWW","d":8,"p":50.65,"c":"USD","b":1.008294917627727,"l":1.0111858841100714,"e":1788136200,"g":"1.006152","n":"0.7043064","w":"0.3018456","wu":"72815","ev":5},"EWGx":{"m":"XsM51PKxDNQBZR65VRxRjNqcMWUBoYwHeVn2FR6WXi9","d":8,"p":42.78,"c":"USD","b":1.0,"l":1.01375813519,"e":1781481300,"g":"0.831581","n":"0.5821067","w":"0.2494743","wu":"72334","ev":1},"UNHx":{"m":"XszvaiXGPwvk2nwb3o9C1CX4K6zH8sez11E6uyup6fe","d":8,"p":378.2,"c":"USD","b":1.0229655423325776,"l":1.0273478685368111,"e":1789173000,"g":"4.53","n":"3.171","w":"1.359","wu":"68958","ev":2},"MCDx":{"m":"XsqE9cRRpzxcGKDXj1BJ7Xmg4GRhZoyY1KpmGSxAWT2","d":8,"p":249.21,"c":"USD","b":1.0161604345481776,"l":1.0211807004882871,"e":1788222600,"g":"3.72","n":"2.604","w":"1.116","wu":"62269","ev":2},"FEZx":{"m":"XsbZDdYJKxEBQASz4KBj23NRgymXw2NK6mbNQ6PYhC7","d":8,"p":68.925,"c":"USD","b":1.0,"l":1.01110672995,"e":1782086100,"g":"1.111625","n":"0.7781375","w":"0.3334875","wu":"62099","ev":1},"JNJx":{"m":"XsGVi5eo1Dh2zUpic4qACcjuWGjNv8GCt3dm5XcX6Dn","d":8,"p":267.87,"c":"USD","b":1.0160617811948927,"l":1.0195885202077413,"e":1787617800,"g":"2.68","n":"1.876","w":"0.804","wu":"58697","ev":2},"IBMx":{"m":"XspwhyYPdWVM8XBHZnpS9hgyag9MKjLRyE3tVfmCbSr","d":8,"p":238.3,"c":"USD","b":1.015340763856885,"l":1.0204029187943977,"e":1786149000,"g":"3.37","n":"2.359","w":"1.011","wu":"56149","ev":2},"SPYx":{"m":"XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W","d":8,"p":762.565,"c":"USD","b":1.003909240011759,"l":1.005714560286254,"e":1781755200,"g":"1.903516","n":"1.3324612","w":"0.5710548","wu":"54693","ev":1},"EWUx":{"m":"XsbWCMXPzLdZMLpPtiiWE7M99fySmsnK5eFCWGWfDQ8","d":8,"p":47.925,"c":"USD","b":1.0,"l":1.009889236641,"e":1781481300,"g":"0.666252","n":"0.4663764","w":"0.1998756","wu":"52233","ev":1},"FAAAx":{"m":"Xs8rb8QG9mEuQ41g2cUzuJLZt3xEPQFhvgb9s4obXSn","d":8,"p":50.355,"c":"USD","b":1.0069245220314107,"l":1.009604175864922,"e":1788136200,"g":"0.719","n":"0.5033","w":"0.2157","wu":"52153","ev":4},"BACx":{"m":"XswsQk4duEQmCbGzfqUUWYmi7pV7xpJ9eEmLHXCaEQP","d":8,"p":58.465,"c":"USD","b":1.014331044782208,"l":1.0179352667683526,"e":1788481800,"g":"0.60","n":"0.420","w":"0.180","wu":"51290","ev":2},"JPSTx":{"m":"XsCAXu7xTaZMG9b9KJhNWYapuvNjxPuE4SysZq8uvMq","d":8,"p":50.37,"c":"USD","b":1.0070636829957968,"l":1.0094580396692463,"e":1788309000,"g":"0.68083","n":"0.476581","w":"0.204249","wu":"49236","ev":4},"GSx":{"m":"XsgaUyp4jd1fNBCxgtTKkW64xnnhQcvgaxzsbAq5ZD1","d":8,"p":953.93,"c":"USD","b":1.0123037094337313,"l":1.0157573238042787,"e":1788222600,"g":"9.5","n":"6.65","w":"2.85","wu":"48988","ev":2},"NVDAx":{"m":"Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh","d":8,"p":218.84,"c":"USD","b":1.0009180758490996,"l":1.001701196801074,"e":1789000200,"g":"0.50","n":"0.350","w":"0.150","wu":"48274","ev":2},"JPMx":{"m":"XsMAqkcKsUewDrzVkait4e5u4y8REgtyS7jWgCpLV2C","d":8,"p":350.295,"c":"USD","b":1.0107444463984723,"l":1.0139174713894084,"e":1783295700,"g":"3.0","n":"2.10","w":"0.90","wu":"44693","ev":2},"VGKx":{"m":"XsosCAu1L8Ebpr4SdBDV1EboYDRTWCH8j79UnHYzvbN","d":8,"p":89.455,"c":"USD","b":1.0,"l":1.009406813852,"e":1781742600,"g":"1.1991","n":"0.83937","w":"0.35973","wu":"43574","ev":1},"IEMGx":{"m":"XsFnZawJdLdXfBSEt5Vw29K5vdBiHotdPLjUPafpfHs","d":8,"p":81.635,"c":"USD","b":1.0,"l":1.005582018893,"e":1781481300,"g":"0.658439","n":"0.4609073","w":"0.1975317","wu":"42788","ev":1},"HONx":{"m":"XsRbLZthfABAPAfumWNEJhPyiKDW6TvDVeAeW7oKqA2","d":8,"p":206.77,"c":"USD","b":0.9990655067370947,"l":1.0011576563945983,"e":1786667400,"g":"1.89","n":"1.323","w":"0.567","wu":"42188","ev":2},"PMx":{"m":"Xsba6tUnSjDae2VcopDB6FGGDaxRrewFCDa5hKn5vT3","d":8,"p":189.615,"c":"USD","b":1.0264041049059245,"l":1.0323117557839803,"e":1782347400,"g":"1.47","n":"1.029","w":"0.441","wu":"41092","ev":1},"WENx":{"m":"Xs4uNhvBDAcp2mz3g9XR5q3vzLgmF1ANWxJgWk2d5u3","d":8,"p":7.1077,"c":"USD","b":1.0,"l":1.005903614458,"e":1788222600,"g":"0.07","n":"0.049","w":"0.021","wu":"39768","ev":1},"KVUEx":{"m":"XsDDkXqF1sr1ixW4Y93Geqfd2LbrWxokCjQf9poGN3c","d":8,"p":17.825,"c":"USD","b":1.0,"l":1.007716535433,"e":1786494600,"g":"0.42","n":"0.294","w":"0.126","wu":"39371","ev":2},"QQQx":{"m":"Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ","d":8,"p":716.83,"c":"USD","b":1.0019546533977475,"l":1.0027250296551051,"e":1782086100,"g":"1.54631","n":"1.082417","w":"0.463893","wu":"39241","ev":2},"ABBVx":{"m":"XswbinNKyPmzTa5CskMbCPvMW6G5CMnZXZEeQSSQoie","d":8,"p":262.48,"c":"USD","b":1.0167000651144704,"l":1.0217299849561985,"e":1784075400,"g":"1.73","n":"1.211","w":"0.519","wu":"36390","ev":1},"PGx":{"m":"XsYdjDjNUygZ7yGKfQaB6TxLh2gC6RRjzLtLAGJrhzV","d":8,"p":146.78,"c":"USD","b":1.0162900639357433,"l":1.021558909374661,"e":1784853000,"g":"1.0885","n":"0.76195","w":"0.32655","wu":"35555","ev":1},"GLPIx":{"m":"XsbohnBoBBbXg2scrDy9yzBqeXhNN53F5dcjwFF8XFR","d":8,"p":40.195,"c":"USD","b":1.0,"l":1.014006832601,"e":1789086600,"g":"0.82","n":"0.574","w":"0.246","wu":"34124","ev":1},"IJRx":{"m":"XsyZcb97BzETAqi9BoP2C9D196MiMNBisGMVNje2Thz","d":8,"p":140.295,"c":"USD","b":1.0057408745031338,"l":1.0057408745031338,"e":1789443300,"g":"0.942596","n":"0.6598172","w":"0.2827788","wu":"33548","ev":2},"VICIx":{"m":"XsN9HmM3TqbY317obKz1fYbRvR81MT9qbL5eUSiGto3","d":8,"p":24.15,"c":"USD","b":1.0,"l":1.01312678353,"e":1789605000,"g":"0.46","n":"0.322","w":"0.138","wu":"31477","ev":1},"KHCx":{"m":"XszMPpjvc5nyynUGktkn7JkqkfFYxunE29Rxi4Vo8C5","d":8,"p":24.755,"c":"USD","b":1.0,"l":1.011014948859,"e":1788481800,"g":"0.4","n":"0.28","w":"0.12","wu":"30324","ev":1},"WMTx":{"m":"Xs151QeqTCiuKtinzfRATnUESM2xTU6V9Wy8Vy538ci","d":8,"p":106.54,"c":"USD","b":1.0055069408636728,"l":1.0071845610241497,"e":1787272200,"g":"0.7425","n":"0.51975","w":"0.22275","wu":"29827","ev":3},"TQQQx":{"m":"XsjQP3iMAaQ3kQScQKthQpx9ALRbjKAjQtHg6TFomoc","d":8,"p":71.38,"c":"USD","b":2.0057467223799277,"l":2.008976295242212,"e":1782261000,"g":"0.171229","n":"0.1198603","w":"0.0513687","wu":"29642","ev":1},"CSCOx":{"m":"Xsr3pdLQyXvDJBFgpR5nexCEZwXvigb8wbPYp4YoNFf","d":8,"p":110.81,"c":"USD","b":1.015437250004268,"l":1.0180864518101183,"e":1783295700,"g":"0.42","n":"0.294","w":"0.126","wu":"29465","ev":1},"SGOVx":{"m":"XsYD72ntjj7ZwoFDZCDmN2gamTcLpnywqvG7PQN5vCN","d":8,"p":100.555,"c":"USD","b":1.0104210925243085,"l":1.012578295897736,"e":1788309000,"g":"1.799776","n":"1.2598432","w":"0.5399328","wu":"28425","ev":6},"UPSx":{"m":"XsnqNkeDhvaK8C5B3Z4D1ciCupVAgkw1AdS3U2uEn26","d":8,"p":100.535,"c":"USD","b":1.0,"l":1.010985645933,"e":1786753800,"g":"1.64","n":"1.148","w":"0.492","wu":"27818","ev":1},"MOx":{"m":"XsztStxbbGZE63p8DyD8YCpzyWFJwwy2PNcyaf3cZz8","d":8,"p":69.245,"c":"USD","b":1.0,"l":1.011004107067,"e":1789432200,"g":"1.11","n":"0.777","w":"0.333","wu":"27412","ev":1},"ORCLx":{"m":"XsjFwUPiLofddX5cWFHW35GCbXcSu1BCUGfxoQAQjeL","d":8,"p":151.3,"c":"USD","b":1.0068751347045037,"l":1.009318667481834,"e":1783643400,"g":"1.0","n":"0.70","w":"0.30","wu":"27393","ev":2},"AZNx":{"m":"Xs3ZFkPYT2BN7qBMqf1j1bfTeTm1rFzEFSsQ1z3wAKU","d":8,"p":165.56,"c":"USD","b":0.5111362527152737,"l":0.5111362527152737,"e":1786062600,"g":"1.06","n":"0.742","w":"0.318","wu":"27067","ev":1},"ABTx":{"m":"XsHtf5RpxsQ7jeJ9ivNewouZKJHbPxhPoEy6yYvULr7","d":8,"p":101.22,"c":"USD","b":1.0124527626139281,"l":1.0174717786699443,"e":1784075400,"g":"0.63","n":"0.441","w":"0.189","wu":"26816","ev":1},"OHIx":{"m":"XsAeqdosiRKYKtYRLoao2TQDB16yLRP82MCwd7ibVuH","d":8,"p":47.38,"c":"USD","b":1.0,"l":1.009401540589,"e":1785544200,"g":"0.68","n":"0.476","w":"0.204","wu":"25657","ev":1},"VTx":{"m":"XsEdDDTcVGJU6nvdRdVnj53eKTrsCkvtrVfXGmUK68V","d":8,"p":159.28,"c":"USD","b":1.0072133944469237,"l":1.00974987730554,"e":1781743200,"g":"0.5627","n":"0.39389","w":"0.16881","wu":"25339","ev":1},"CLXx":{"m":"XshmkFbMrRMtVb2HoJw1nc9jGMKNjTWcutT86YpMbKi","d":8,"p":84.31,"c":"USD","b":1.0,"l":1.008083140878,"e":1786494600,"g":"1.25","n":"0.875","w":"0.375","wu":"24181","ev":1},"HPQx":{"m":"Xs23PmjqLoJvcLJ2LyMzi17HmkFua1yZsmcxWd4q8Zz","d":8,"p":33.885,"c":"USD","b":1.0,"l":1.006737247353,"e":1788913800,"g":"0.3","n":"0.21","w":"0.09","wu":"24007","ev":1},"PYPLx":{"m":"XshWQWYVp5ff8CrAEsGmLVKD47nBWi3Ygn5v8wXK27G","d":8,"p":53.32,"c":"USD","b":1.002299929594,"l":1.0040286411936261,"e":1788481800,"g":"0.28","n":"0.196","w":"0.084","wu":"23952","ev":2},"TMUSx":{"m":"XswCi2U1G6Ppbw1QhG45yKb8UKuR1FKLJrquv2FZSD4","d":8,"p":170.0234,"c":"USD","b":1.003777577906,"l":1.0078096296112127,"e":1787877000,"g":"1.02","n":"0.714","w":"0.306","wu":"23900","ev":1},"PRUx":{"m":"XsPhDoJMMgARN4eB8apaPNFUjVBKqx3WtRS4ddBwKVw","d":8,"p":118.78,"c":"USD","b":1.0,"l":1.008089145687,"e":1787617800,"g":"1.4","n":"0.98","w":"0.42","wu":"23809","ev":1},"BBYx":{"m":"Xsac5qkc4B254kpnb2qneeu6qsNX1fPtACeuNEiXWMR","d":8,"p":95.345,"c":"USD","b":1.0,"l":1.007268793943,"e":1789605000,"g":"0.96","n":"0.672","w":"0.288","wu":"23170","ev":1},"LLYx":{"m":"Xsnuv4omNoHozR6EEW5mXkw8Nrny5rB3jVfLqi6gKMH","d":8,"p":1143.48,"c":"USD","b":1.0042886247952578,"l":1.0052945747745534,"e":1786667400,"g":"5.19","n":"3.633","w":"1.557","wu":"23134","ev":3},"PAYXx":{"m":"Xsuo3Vd8T7MVAx3miKJ1beX4sGutzdL3GJsjk1yFbxA","d":8,"p":116.3,"c":"USD","b":1.0,"l":1.007213370281,"e":1785198600,"g":"1.19","n":"0.833","w":"0.357","wu":"22978","ev":1},"DOWx":{"m":"XsKWMeTN8wmhrkoWKy6tXAj6476Guj8zonzQu7jivqP","d":8,"p":29.57,"c":"USD","b":1.0,"l":1.008030154048,"e":1787963400,"g":"0.35","n":"0.245","w":"0.105","wu":"22893","ev":1},"METAx":{"m":"Xsa62P5mvPszXL1krVUnU5ar38bBSVcWAB6fmPCo5Zu","d":8,"p":679.13,"c":"USD","b":1.0016490257902244,"l":1.002298265651938,"e":1781481300,"g":"1.050","n":"0.7350","w":"0.3150","wu":"22851","ev":2},"FLQMx":{"m":"XsZdwvwEAn7KH8bCCo8AkxJmSm4MbaRxcDeh9Gt2VTF","d":8,"p":59.47,"c":"USD","b":1.004295575527,"l":1.004295575527,"e":1782484500,"g":"0.35506","n":"0.248542","w":"0.106518","wu":"22838","ev":1},"CCIx":{"m":"XsbPN4VFi14geuC8D2Tb2u37kQM83VSkfMUyvXsWWoC","d":8,"p":74.03,"c":"USD","b":1.0,"l":1.010027639207,"e":1789432200,"g":"1.0625","n":"0.74375","w":"0.31875","wu":"22748","ev":1},"OKEx":{"m":"XspDMNC416uCcUbngqyAwzk1phuRYdmm6AMsWo3EHd4","d":8,"p":93.26,"c":"USD","b":1.0,"l":1.008247990309,"e":1785544200,"g":"1.07","n":"0.749","w":"0.321","wu":"22346","ev":1},"IPx":{"m":"XsS6AVyq5YpDA5yCUYuwxvkk5hvKvFxAt5tUJik9Y5H","d":8,"p":34.865,"c":"USD","b":1.0,"l":1.007873297665,"e":1786667400,"g":"0.4625","n":"0.32375","w":"0.13875","wu":"22336","ev":1},"KMBx":{"m":"XsNnfg6KXzaRsH8PE9T9YEahq3MQpSZ3dQAa4hcL1SN","d":8,"p":97.76,"c":"USD","b":1.0,"l":1.008300138953,"e":1788481800,"g":"1.28","n":"0.896","w":"0.384","wu":"21917","ev":1},"TROWx":{"m":"Xs8urJdzBSFLaKqxZiMackbXDkyZbwPeAwz7PepQ1eD","d":8,"p":102.98,"c":"USD","b":1.0,"l":1.008601134216,"e":1789432200,"g":"1.3","n":"0.91","w":"0.39","wu":"21181","ev":1},"ARESx":{"m":"Xsm7SVTuyeaeD5fwaWD1RFKX7Rr8WmNGz5j35r5npth","d":8,"p":126.24,"c":"USD","b":1.0,"l":1.007319907049,"e":1789518600,"g":"1.35","n":"0.945","w":"0.405","wu":"21169","ev":1},"BXx":{"m":"XsYtTeabUTJnkxWrHZUChwcKpNq6BbqPbWs9ZgLk4Xa","d":8,"p":125.68,"c":"USD","b":1.0,"l":1.007068493151,"e":1785544200,"g":"1.29","n":"0.903","w":"0.387","wu":"20802","ev":1},"GOOGLx":{"m":"XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN","d":8,"p":345.45,"c":"USD","b":1.001926722393864,"l":1.0023772500603487,"e":1788481800,"g":"0.43","n":"0.301","w":"0.129","wu":"20742","ev":2},"SCHFx":{"m":"XsWAnFM77x6YvpdaZoos79R12o4Yj4r7EVkaTWddzhU","d":8,"p":27.99,"c":"USD","b":1.0,"l":1.004215328467,"e":1782261000,"g":"0.165","n":"0.1155","w":"0.0495","wu":"20629","ev":1},"FISx":{"m":"XsTdkPyDNVtJYUjV7VhyZwtqQmA2Lg4DdTkRjYPD2gQ","d":8,"p":36.655,"c":"USD","b":1.0,"l":1.007995846314,"e":1789086600,"g":"0.44","n":"0.308","w":"0.132","wu":"20586","ev":1},"EXRx":{"m":"XseFccApcVhrqASiXFM97ZkX7a2uDWbUWjC4T82LgAT","d":8,"p":138.39,"c":"USD","b":1.0,"l":1.008134863702,"e":1789432200,"g":"1.62","n":"1.134","w":"0.486","wu":"20355","ev":1},"XLEx":{"m":"Xs54CrhmpVp6uxZXwgSTegrRH2kShh88XFPzgf4BExu","d":8,"p":64.125,"c":"USD","b":1.005010474242,"l":1.005010474242,"e":1782086100,"g":"0.384876","n":"0.2694132","w":"0.1154628","wu":"20307","ev":1},"WECx":{"m":"Xsxq7WqXpiNFrdWSd6CA27LXmCsCrGyC9C3uaebmaqU","d":8,"p":104.301,"c":"USD","b":1.0,"l":1.006045973885,"e":1786667400,"g":"0.9525","n":"0.66675","w":"0.28575","wu":"20007","ev":1},"KIMx":{"m":"XseurSPz9hnmd6k1eQT52a8QC53QcoCoD4qVbPmWzCC","d":8,"p":22.565,"c":"USD","b":1.0,"l":1.008193979933,"e":1788481800,"g":"0.28","n":"0.196","w":"0.084","wu":"19791","ev":1},"Fx":{"m":"XsBNJXGu68cBH5hgFxdqZkeh8cMQv32jeEtZtYTYvfS","d":8,"p":13.73,"c":"USD","b":1.0,"l":1.0075,"e":1786408200,"g":"0.15","n":"0.105","w":"0.045","wu":"19535","ev":1},"LINx":{"m":"XsSr8anD1hkvNMu8XQiVcmiaTP7XGvYu7Q58LdmtE8Z","d":8,"p":458.465,"c":"USD","b":1.0115527020444874,"l":1.0148730104315449,"e":1788395400,"g":"4.8","n":"4.24","w":"0.56","wu":"19502","ev":3},"FNFx":{"m":"XsPH7DxK5rGBdoFSSCpU6HgJZp1mKpRTVnsKQUN1j8B","d":8,"p":43.965,"c":"USD","b":1.0,"l":1.008344795965,"e":1789518600,"g":"0.52","n":"0.364","w":"0.156","wu":"19472","ev":1},"ESx":{"m":"XsgPX8MYf23yPRv9DrT5ofHn4mThBZgkhboLHz5uSx7","d":8,"p":68.6401,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"0.7875","n":"0.55125","w":"0.23625","wu":"19315","ev":1},"AEEx":{"m":"XssLKajmwH79hK14cqp65fFg2Eyteh23nmSaJpKRmzx","d":8,"p":103.77,"c":"USD","b":1.0,"l":1.004930966469,"e":1788568200,"g":"0.75","n":"0.525","w":"0.225","wu":"19256","ev":1},"OMCx":{"m":"XscmXyJYjYbGNhxQsPjjRYsEwscg6uPFJzR6Af7Qi18","d":8,"p":79.295,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"0.8","n":"0.56","w":"0.24","wu":"19205","ev":1},"PNWx":{"m":"XsaZESJuX1EC73t54PmbirdQ5JHPHQsPnMB54bgZLp4","d":8,"p":95.59,"c":"USD","b":1.0,"l":1.006307555203,"e":1785544200,"g":"0.91","n":"0.637","w":"0.273","wu":"19193","ev":1},"TFCx":{"m":"XspgPjzWCN6w4b8xHyfN8NRXrgdNMYx5nsWgiGGeK4R","d":8,"p":48.76,"c":"USD","b":1.0,"l":1.006869220608,"e":1786667400,"g":"0.52","n":"0.364","w":"0.156","wu":"19066","ev":1},"LAMRx":{"m":"XsqZyeL1GGWZzMQ5hh3KckQnXNt3Yt96QHBUdiJSoFS","d":8,"p":147.395,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"1.65","n":"1.155","w":"0.495","wu":"18981","ev":1},"Vx":{"m":"XsqgsbXwWogGJsNcVZ3TyVouy2MbTkfCFhCGGGcQZ2p","d":8,"p":370.92,"c":"USD","b":1.0053649367805917,"l":1.0066699189441244,"e":1786408200,"g":"1.34","n":"0.938","w":"0.402","wu":"18612","ev":2},"SPGx":{"m":"XsUXFEjcDYrp7NuzHtC88JLyirmnLpA8nde1e8eRxEn","d":8,"p":205.64,"c":"USD","b":1.0,"l":1.007433452898,"e":1788913800,"g":"2.25","n":"1.575","w":"0.675","wu":"18467","ev":1},"RFx":{"m":"Xsk2PGWHCQweEwYWNqA72KbuUdNz518MBzHSaBDLowq","d":8,"p":28.735,"c":"USD","b":1.0,"l":1.00702811245,"e":1788222600,"g":"0.3","n":"0.21","w":"0.09","wu":"17950","ev":1},"SJMx":{"m":"XsqtzaHCKV2zsgRYitGJtcecfmBkdJsdrpSXZgQryHE","d":8,"p":123.665,"c":"USD","b":1.0,"l":1.006499212468,"e":1786667400,"g":"1.12","n":"0.784","w":"0.336","wu":"17942","ev":1},"NKEx":{"m":"XsGYpMvKbVt6ViHqRd7cF3s746dAMFBQWcC49hB9VVP","d":8,"p":35.81,"c":"USD","b":1.0,"l":1.007347670251,"e":1788222600,"g":"0.41","n":"0.287","w":"0.123","wu":"17890","ev":1},"AVGOx":{"m":"XsgSaSvNSqLTtFuyWPBhK9196Xb9Bbdyjj4fH3cPJGo","d":8,"p":348.2,"c":"USD","b":1.0037734805715313,"l":1.0048837684862768,"e":1782086100,"g":"1.30","n":"0.910","w":"0.390","wu":"17863","ev":2},"INVHx":{"m":"XsQFmCYjvPGgqYYAth5zNhW8NSCabdamgM1kXMorJs7","d":8,"p":27.34,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"0.3","n":"0.21","w":"0.09","wu":"17825","ev":1},"CRMx":{"m":"XsczbcQ3zfcgAEt9qHQES8pxKAVG5rujPSHQEXi4kaN","d":8,"p":243.415,"c":"USD","b":1.0054716788543585,"l":1.0067077500492987,"e":1789605000,"g":"0.88","n":"0.616","w":"0.264","wu":"17780","ev":2},"Dx":{"m":"XsiYzgRPqPjAaJjpDMo2CaQ7c9khuCwD7Hj1po2dxSj","d":8,"p":64.185,"c":"USD","b":1.0,"l":1.006995807756,"e":1788481800,"g":"0.6675","n":"0.46725","w":"0.20025","wu":"17464","ev":1},"FEx":{"m":"XsLpCFJxUb43H6da8YzrS4j79wuddw8Z4GETup7hKMc","d":8,"p":45.635,"c":"USD","b":1.0,"l":1.006871437619,"e":1786062600,"g":"0.465","n":"0.3255","w":"0.1395","wu":"17382","ev":1},"DOCx":{"m":"XsgtMhyQgTevrWQNyLpHxwQeRAeaxQEtoiV1pNyxmfy","d":8,"p":20.66,"c":"USD","b":1.003423232323,"l":1.0069410957723546,"e":1789173000,"g":"0.20334","n":"0.142338","w":"0.061002","wu":"17130","ev":2},"REGx":{"m":"XsJzAzVt6H498zDafSaWj3htVDYQPmh23jUAM2Rt2qn","d":8,"p":73.015,"c":"USD","b":1.0,"l":1.007017660337,"e":1789086600,"g":"0.755","n":"0.5285","w":"0.2265","wu":"17007","ev":1},"PSAx":{"m":"XsBLm8wotoJMHjonHcr1btz9RwLa3EWjhtbs3DbQphg","d":8,"p":298.115,"c":"USD","b":1.0,"l":1.007109004739,"e":1789432200,"g":"3","n":"2.1","w":"0.9","wu":"16944","ev":1},"KMIx":{"m":"XsQxeWjN2M3Spr5YHRQiM1oQ8fgpJWtdBdg1E2ZrjFg","d":8,"p":31.215,"c":"USD","b":1.0,"l":1.006471410814,"e":1785544200,"g":"0.2975","n":"0.20825","w":"0.08925","wu":"16725","ev":1},"SWKx":{"m":"XsNotS1p6BsTADzMaZVu14SJbuH9V4CYYyRZ8mn6WAQ","d":8,"p":90.105,"c":"USD","b":1.0,"l":1.006039441249,"e":1788568200,"g":"0.84","n":"0.588","w":"0.252","wu":"16612","ev":1},"PRx":{"m":"XsXh1W6QRHJBYdzVrngAxn4t4JQnJBYk7iM2S1hwqdT","d":8,"p":22.895,"c":"USD","b":1.0,"l":1.004573295223,"e":1789518600,"g":"0.16","n":"0.112","w":"0.048","wu":"16369","ev":1},"CMSx":{"m":"Xs6Udev3M1atxRjjXCjAg24BdjYuLs6Qj7eTh7XjEjW","d":8,"p":66.29,"c":"USD","b":1.0,"l":1.005603932584,"e":1786062600,"g":"0.57","n":"0.399","w":"0.171","wu":"16305","ev":1},"EXCx":{"m":"XswJRi3vQhng81dGRXnaUjpyCzM89pwvYyHveT2xzEB","d":8,"p":42.595,"c":"USD","b":1.0,"l":1.006602290591,"e":1788481800,"g":"0.42","n":"0.294","w":"0.126","wu":"16283","ev":1},"CRDAx":{"m":"XshoX6qy11Q4HHcaJKU6h7JVmVqXiAXPLACiGLqLTxZ","d":8,"p":42.84210385510581,"c":"GBP","b":1.0,"l":1.0,"e":1787790600,"g":"0.48","n":"0.336","w":"0.144","wu":"16277","ev":1},"TSNx":{"m":"XsWV8voFNehNEbuBW8cEAMWwjicXCYskUT4616PFZ6a","d":8,"p":52.375,"c":"USD","b":1.0,"l":1.006474428727,"e":1788222600,"g":"0.51","n":"0.357","w":"0.153","wu":"16140","ev":1},"KEYx":{"m":"Xs5GgkWgze4XgU7NC5iXJqvbGufxQBJKH5JRN2MSPWQ","d":8,"p":21.075,"c":"USD","b":1.0,"l":1.006640444239,"e":1788222600,"g":"0.205","n":"0.1435","w":"0.0615","wu":"15959","ev":1},"Ox":{"m":"XsyMphR2LaL2YBiorsZYFhdN96xKTSi64L3pmiAHLc3","d":8,"p":57.02,"c":"USD","b":1.002944280615,"l":1.0060139568018365,"e":1787963400,"g":"0.542","n":"0.3794","w":"0.1626","wu":"15820","ev":2},"HBANx":{"m":"XsuFbhEyBaWikFEfA3QM92rr9VVYm79Lip4cC5rnSp5","d":8,"p":15.915,"c":"USD","b":1.0,"l":1.00685840708,"e":1789605000,"g":"0.155","n":"0.1085","w":"0.0465","wu":"15813","ev":1},"LNTx":{"m":"Xs1WFZQyEwCZwEyZHRxTzd2KoEoa6MVfv2aZeAc2HXK","d":8,"p":66.67,"c":"USD","b":1.0,"l":1.005282832557,"e":1785457800,"g":"0.535","n":"0.3745","w":"0.1605","wu":"15715","ev":1},"WYx":{"m":"XsrTDXGz8cxi4s4vQrX63NhrtZZmPEFkgbsJQG7UERR","d":8,"p":21.725,"c":"USD","b":1.0,"l":1.006380208333,"e":1788481800,"g":"0.21","n":"0.147","w":"0.063","wu":"15619","ev":1},"DUKx":{"m":"XswU7kXY6dGgMqpiWW2jKSYVZMsCWv5LKcLaFBgYzPv","d":8,"p":118.27,"c":"USD","b":1.0,"l":1.006100891638,"e":1786667400,"g":"1.085","n":"0.7595","w":"0.3255","wu":"15591","ev":1},"VTIx":{"m":"XsssYEQjzxBCFgvYFFNuhJFBeHNdLWYeUSP8F45cDr9","d":8,"p":375.405,"c":"USD","b":1.008032959167832,"l":1.0100563088016958,"e":1782433800,"g":"1.0437","n":"0.73059","w":"0.31311","wu":"15590","ev":1},"HASx":{"m":"XsRgwrznvMYsZ1i7ckfxjk6RWR4npsmZT3kqHuRfrva","d":8,"p":89.76,"c":"USD","b":1.0,"l":1.005213320566,"e":1787099400,"g":"0.7","n":"0.49","w":"0.21","wu":"15327","ev":1},"PEGx":{"m":"XsUytoK53kCKfXC61Dn3ZM8sjyVBUpScF111pfMG69U","d":8,"p":70.83,"c":"USD","b":1.0,"l":1.006317349138,"e":1788913800,"g":"0.67","n":"0.469","w":"0.201","wu":"14873","ev":1},"EDx":{"m":"XsESyqE7kRmE1RVQDmo4aiMGMXogeY1Sdo8FQKwAmco","d":8,"p":106.53,"c":"USD","b":1.0,"l":1.005691187248,"e":1787099400,"g":"0.8875","n":"0.62125","w":"0.26625","wu":"14792","ev":1},"CGx":{"m":"XsaLeEQ2RtXLwLYBtJv1wT7CXk4paWCvKxNWMNk4mbZ","d":8,"p":40.56,"c":"USD","b":1.0,"l":1.004971590909,"e":1786753800,"g":"0.35","n":"0.245","w":"0.105","wu":"14777","ev":1},"MAx":{"m":"XsApJFV9MAktqnAc6jqzsHVujxkGm9xcSUffaBoYLKC","d":8,"p":566.72,"c":"USD","b":1.0035467321925013,"l":1.0047223563218923,"e":1783557000,"g":"1.74","n":"1.218","w":"0.522","wu":"14761","ev":2},"GPCx":{"m":"XsAB7oiJL94kURXya1i35Rv9ZoY9EoJSWM3dQ9mZp7t","d":8,"p":131.955,"c":"USD","b":1.0,"l":1.005404374364,"e":1788481800,"g":"1.0625","n":"0.74375","w":"0.31875","wu":"14708","ev":1},"HSYx":{"m":"XscEuBenD5X7CMVdh6MKzTSBQLsKNqmsoLiXHrQMitH","d":8,"p":169.36,"c":"USD","b":1.0,"l":1.005460992908,"e":1786667400,"g":"1.452","n":"1.0164","w":"0.4356","wu":"14673","ev":1},"COPx":{"m":"Xs58CxmUcgT17reeVV64se747XuRfjsJQnpb8DX9TDq","d":8,"p":131.81,"c":"USD","b":1.0,"l":1.004637955513,"e":1786753800,"g":"0.84","n":"0.588","w":"0.252","wu":"14537","ev":1},"EVRGx":{"m":"XswxMcsrN9WpDhX7wDf53ZFGWNhcWYKSa6UY26AgpET","d":8,"p":81.04,"c":"USD","b":1.0,"l":1.005796497081,"e":1787013000,"g":"0.695","n":"0.4865","w":"0.2085","wu":"14492","ev":1},"BRx":{"m":"XsvEMALzsRVnPED4KEAd7pivT5ho9vgqzqZxQxNBkWW","d":8,"p":165.33,"c":"USD","b":1.0,"l":1.004285072447,"e":1788395400,"g":"1.09","n":"0.763","w":"0.327","wu":"14474","ev":1},"SOx":{"m":"Xs5nNLYnMuwBTMQ7KnfCgfsDBa9WehDa1EZqzicarZm","d":8,"p":86.4,"c":"USD","b":1.0,"l":1.005732758621,"e":1786753800,"g":"0.76","n":"0.532","w":"0.228","wu":"14418","ev":1},"PFGx":{"m":"XsChiU9gDeWj7HYrqioNUn8C81jaHZwegfGQdQXHnhd","d":8,"p":117.935,"c":"USD","b":1.0,"l":1.005282544246,"e":1788395400,"g":"0.84","n":"0.588","w":"0.252","wu":"14159","ev":1},"CTSHx":{"m":"XsMNmV7wVizphwXgMtXTVhLDpqmKPdfoYPK3JTXXnYW","d":8,"p":61.43,"c":"USD","b":1.0,"l":1.004080551139,"e":1787013000,"g":"0.33","n":"0.231","w":"0.099","wu":"14093","ev":1},"PPLx":{"m":"Xs12SMK4MA7sLVS8eTged2pXns736u3qe2a1a9io6he","d":8,"p":33.555,"c":"USD","b":1.0,"l":1.005774240232,"e":1789000200,"g":"0.285","n":"0.1995","w":"0.0855","wu":"13994","ev":1},"ADPx":{"m":"XsCBDrb61PyQqTJp7uHhD4vj1MkD5UK6jpxUBbgG7i1","d":8,"p":272.68,"c":"USD","b":1.0,"l":1.004451427075,"e":1789086600,"g":"1.7","n":"1.19","w":"0.51","wu":"13985","ev":1},"DTEx":{"m":"XsVK4gk4X1ANBSKF9DGjy9WseKhBfMUuEmP8v7J8u2G","d":8,"p":130.59,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"1.165","n":"0.8155","w":"0.3495","wu":"13930","ev":1},"TSCOx":{"m":"XsYMTZRVKs9he9redAPMhaBbCbmZvUxMTApsfCZsKzt","d":8,"p":33.065,"c":"USD","b":1.0,"l":1.004802744425,"e":1787358600,"g":"0.24","n":"0.168","w":"0.072","wu":"13804","ev":1},"XOPx":{"m":"XsAk6BoV4kBXUM6WXodKyM21CN92G9jArwAzFvbh3LX","d":8,"p":191.89,"c":"USD","b":1.0,"l":1.003415371022,"e":1782086100,"g":"0.748259","n":"0.5237813","w":"0.2244777","wu":"13740","ev":1},"METx":{"m":"XsGhGG2TNXuJLFL5q7pAomKtMVc2YvVqs4G1hyBZLfw","d":8,"p":98.0,"c":"USD","b":1.0,"l":1.004306406396,"e":1785803400,"g":"0.5925","n":"0.41475","w":"0.17775","wu":"13732","ev":1},"COPXx":{"m":"XsybfiKkD4UmjkAGT2uR8X2sq9AWFtvGJM2KTffoALZ","d":8,"p":86.83,"c":"USD","b":1.0,"l":1.002370480441,"e":1782690900,"g":"0.257976","n":"0.1805832","w":"0.0773928","wu":"13646","ev":1},"XELx":{"m":"Xsr6MgLKmoEmN4aL78MQ2q98R8wJnZ3FaCZUMwkNbNU","d":8,"p":73.5,"c":"USD","b":1.0,"l":1.00559263754,"e":1789432200,"g":"0.5925","n":"0.41475","w":"0.17775","wu":"13619","ev":1},"STZx":{"m":"Xs6eATub8cqKdztx4asCRFMSzMwtNqAUWiDaUPXxUtD","d":8,"p":122.99,"c":"USD","b":1.0,"l":1.005472485769,"e":1785371400,"g":"1.03","n":"0.721","w":"0.309","wu":"13602","ev":1},"PSXx":{"m":"XsYvZVxiNdjuHQQzdCmf4TMSTBgvarV2gLi2akooV8V","d":8,"p":271.06,"c":"USD","b":1.0,"l":1.00369569736,"e":1787013000,"g":"1.27","n":"0.889","w":"0.381","wu":"13577","ev":1},"DVNx":{"m":"Xs8WNVWbYNsHsqEu9WTb9AazMfG7wFxFat11V6mVK1x","d":8,"p":48.285,"c":"USD","b":1.0,"l":1.004504323346,"e":1789432200,"g":"0.32","n":"0.224","w":"0.096","wu":"13550","ev":1},"PLDx":{"m":"XsnXCL5FtHLHH1jW5Nknd5BjuazxnnkCAGR6fWPwPJL","d":8,"p":135.17,"c":"USD","b":1.0,"l":1.005513839812,"e":1789518600,"g":"1.07","n":"0.749","w":"0.321","wu":"13456","ev":1},"VTRSx":{"m":"Xs9uh84WXf2F4P4UVRLvNGwv753ArA69kUk6r4GKVoA","d":8,"p":17.225,"c":"USD","b":1.0,"l":1.005210918114,"e":1787272200,"g":"0.12","n":"0.084","w":"0.036","wu":"13424","ev":1},"UDRx":{"m":"XstJ29hJ96UCddwezTPe9mXLiamEApRt85ChkTSRh5f","d":8,"p":34.52,"c":"USD","b":1.002675276753,"l":1.0055526174542029,"e":1789432200,"g":"0.290","n":"0.2030","w":"0.0870","wu":"13172","ev":2},"SREx":{"m":"XsbicvsCUHE9ja8gTsjzruDxQTKeyij94i3phx3NuNf","d":8,"p":81.6101,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"0.6575","n":"0.46025","w":"0.19725","wu":"13036","ev":1},"NEEx":{"m":"Xs4f5EbxL1bB89N7ADF7smF8fXxifJa3t6SexZufBWA","d":8,"p":81.1576,"c":"USD","b":1.0,"l":1.005226308853,"e":1787877000,"g":"0.6232","n":"0.43624","w":"0.18696","wu":"12837","ev":1},"TMOx":{"m":"Xs8drBWy3Sd5QY3aifG9kt9KFs2K3PGZmx7jWrsrk57","d":8,"p":654.565,"c":"USD","b":1.0024522181978437,"l":1.0029896954311508,"e":1789432200,"g":"1.41","n":"0.987","w":"0.423","wu":"12829","ev":3},"AEPx":{"m":"XsP8GpS93XjmDg5oVVCVqZsffkWadVCqZYp4BFFJnJm","d":8,"p":121.655,"c":"USD","b":1.0,"l":1.005289111588,"e":1786149000,"g":"0.95","n":"0.665","w":"0.285","wu":"12814","ev":1},"AMGNx":{"m":"XsgKwBMbv8LDzEYRgbKtyqsub6QB56PQVzgTGbiGaNe","d":8,"p":381.07,"c":"USD","b":1.0,"l":1.004067046319,"e":1787272200,"g":"2.52","n":"1.764","w":"0.756","wu":"12740","ev":1},"LMTx":{"m":"XssULacY8D3z3a8HoQuLid8wdJHcZLGpSST9MkNFzox","d":8,"p":529.23,"c":"USD","b":1.0,"l":1.004303048661,"e":1788222600,"g":"3.45","n":"2.415","w":"1.035","wu":"12699","ev":1},"DKSx":{"m":"Xs9aEtZqQDzTtb1PLVJ2W2d6NGJSSaJepTsQ2CZAjhn","d":8,"p":123.69,"c":"USD","b":1.0,"l":1.006572029443,"e":1789086600,"g":"1.25","n":"0.875","w":"0.375","wu":"12634","ev":1},"WMBx":{"m":"Xso4umc25VxszLT64SYNT7TMeZudAC75xwNo7qFjJFu","d":8,"p":72.11,"c":"USD","b":1.0,"l":1.00504669047,"e":1789086600,"g":"0.525","n":"0.3675","w":"0.1575","wu":"12613","ev":1},"AAPLx":{"m":"XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp","d":8,"p":336.145,"c":"USD","b":1.0026642075893797,"l":1.0032690125398187,"e":1786149000,"g":"0.27","n":"0.189","w":"0.081","wu":"12496","ev":1},"TSMx":{"m":"XsafvsGtzFqqHgTnA3aPC83EAMkacU5mcGtcSayhpVV","d":8,"p":427.13,"c":"USD","b":1.004065035082054,"l":1.0061874479320332,"e":1789518600,"g":"2.390214","n":"2.1233065","w":"0.2669075","wu":"12480","ev":3},"BDXx":{"m":"Xs3yrczxLidKAArdTKepU5NV8KUmwFM11NMyYbGqWDZ","d":8,"p":184.01,"c":"USD","b":1.0,"l":1.004103852596,"e":1788913800,"g":"1.05","n":"0.735","w":"0.315","wu":"12383","ev":1},"EQHx":{"m":"Xsf8f6sqb9p6JK9oR8UHXk7CmFDvofc1nxeink7AoGA","d":8,"p":54.39,"c":"USD","b":1.0,"l":1.004407135362,"e":1785544200,"g":"0.3","n":"0.21","w":"0.09","wu":"12353","ev":1},"AWKx":{"m":"XsUQA7YBvJyBXDrQy23WNydKWdhVCPRVMxEF6MgXytd","d":8,"p":137.57,"c":"USD","b":1.0,"l":1.004625322997,"e":1786408200,"g":"0.895","n":"0.6265","w":"0.2685","wu":"12284","ev":1},"SBACx":{"m":"Xs3BuKwwLLSgKCKPBeSN5Wje5gP8McsHrt6pnqWzjhs","d":8,"p":182.34,"c":"USD","b":1.0,"l":1.004796360248,"e":1787185800,"g":"1.25","n":"0.875","w":"0.375","wu":"12259","ev":1},"ALLYx":{"m":"XsRifLZvp2XvCpPFQNK6XGTjHSL7sTZmmGyEs4NLAV2","d":8,"p":40.88,"c":"USD","b":1.0,"l":1.004829806808,"e":1785457800,"g":"0.3","n":"0.21","w":"0.09","wu":"12193","ev":1},"IWMx":{"m":"XsbELVbLGBkn7xfMfyYuUipKGt1iRUc2B7pYRvFTFu3","d":8,"p":287.18,"c":"USD","b":1.004730320498842,"l":1.004730320498842,"e":1789443000,"g":"0.695129","n":"0.4865903","w":"0.2085387","wu":"12148","ev":1},"AIGx":{"m":"XsTg4SHooxeYYvQK5Q2wdKBKY46UdtZkF2LfNwbHEtu","d":8,"p":75.375,"c":"USD","b":1.0,"l":1.004606475388,"e":1789518600,"g":"0.5","n":"0.35","w":"0.15","wu":"11985","ev":1},"IRMx":{"m":"XssP4Vb5pahDsdKUXy74gD34DzotHCYKGXegd1KHdiA","d":8,"p":114.375,"c":"USD","b":1.0,"l":1.005397108692,"e":1789432200,"g":"0.864","n":"0.6048","w":"0.2592","wu":"11843","ev":1},"GILDx":{"m":"XsmAFboVqfDwGPgXfd7oCunvYAYSzzkuKE2BDRzwjGy","d":8,"p":149.48,"c":"USD","b":1.0,"l":1.003920497234,"e":1789432200,"g":"0.82","n":"0.574","w":"0.246","wu":"11815","ev":1},"EXEx":{"m":"XsodbeGRpfyAzq1MMqZu7u1vCYNKNDuYrCtofaT1PJK","d":8,"p":88.38,"c":"USD","b":1.0,"l":1.004180515164,"e":1786581000,"g":"0.575","n":"0.4025","w":"0.1725","wu":"11811","ev":1},"SCCOx":{"m":"XsQD8itHh5CdrWMiH8cZPB55KSATjdXsxcSJJ14YCFD","d":8,"p":196.625,"c":"USD","b":1.003847883664,"l":1.019224471246712,"e":1786494600,"g":"1.1","n":"0.77","w":"0.33","wu":"11767","ev":1},"ADMx":{"m":"XsK6kBQe7QDQVmW1PupBZCc4oBpPbsRdPgvqCqvfCXX","d":8,"p":87.54,"c":"USD","b":1.0,"l":1.004414796847,"e":1787099400,"g":"0.52","n":"0.364","w":"0.156","wu":"11669","ev":1},"FHNx":{"m":"XsD9pjJdLHkbvk3hGF13Mq9nY5ELLeGbQAoeDLZcRY8","d":8,"p":24.08,"c":"USD","b":1.0,"l":1.004806138934,"e":1789086600,"g":"0.17","n":"0.119","w":"0.051","wu":"11609","ev":1},"PKGx":{"m":"Xstq2wirnUgqHdMvvWafGVbdtg9y845zxAy7iVixkRU","d":8,"p":234.93,"c":"USD","b":1.0,"l":1.00450141473,"e":1789432200,"g":"1.5","n":"1.05","w":"0.45","wu":"11521","ev":1},"MTBx":{"m":"XsMXtu6uQkfvxCYURytUcQvhFCoqvphtoezVBh42CfZ","d":8,"p":227.57,"c":"USD","b":1.0,"l":1.004488330341,"e":1788222600,"g":"1.5","n":"1.05","w":"0.45","wu":"11512","ev":1},"LVSx":{"m":"Xs9bwo2tkrKRJxr9787rKj2bKcQUMFNtbzruYTrxdst","d":8,"p":41.39,"c":"USD","b":1.0,"l":1.004441624365,"e":1785803400,"g":"0.3","n":"0.21","w":"0.09","wu":"11481","ev":1},"CFGx":{"m":"Xsp9avBowUQeip8NfLXcwfw5VT74kc72BafgYPXN74a","d":8,"p":67.8,"c":"USD","b":1.0,"l":1.004515495723,"e":1785371400,"g":"0.46","n":"0.322","w":"0.138","wu":"11435","ev":1},"DLRx":{"m":"Xstp4CYu1181rhhi7w32Lj6wQZ2VDjFhQNKZwZARk5G","d":8,"p":183.855,"c":"USD","b":1.0,"l":1.004767221168,"e":1789432200,"g":"1.22","n":"0.854","w":"0.366","wu":"11304","ev":1},"EWBCx":{"m":"XsitAUXgChdnHHVx2qa1Fhw6xe5ZPog1XrEGg4Pp5XW","d":8,"p":127.22,"c":"USD","b":1.0,"l":1.00427480916,"e":1785544200,"g":"0.8","n":"0.56","w":"0.24","wu":"11179","ev":1},"NIx":{"m":"XsC3CiuRAFKN99m2ye6q7xrYMx4NuBdr1JR2gVWgFLD","d":8,"p":40.8876,"c":"USD","b":1.0,"l":1.004659418682,"e":1785457800,"g":"0.3","n":"0.21","w":"0.09","wu":"11177","ev":1},"KRx":{"m":"XsHyXCSuYHca6SxpSLb2taKiWkoJA48pVcnqyFguHf5","d":8,"p":60.715,"c":"USD","b":1.0,"l":1.004770225406,"e":1786667400,"g":"0.39","n":"0.273","w":"0.117","wu":"11164","ev":1},"SNAx":{"m":"XsKxGKYM3RsRvdgzAZXAh7HZiReynB5pxvoTLRMJiF9","d":8,"p":373.315,"c":"USD","b":1.0,"l":1.004316292234,"e":1787099400,"g":"2.44","n":"1.708","w":"0.732","wu":"11142","ev":1},"VOOx":{"m":"Xsd7TduTbjuYCFL7Uoujb8SbkZLmUsuYNLn7KdvX21x","d":8,"p":700.995,"c":"USD","b":1.0,"l":1.002032735937,"e":1782433800,"g":"1.9622","n":"1.37354","w":"0.58866","wu":"11107","ev":1},"SBUXx":{"m":"Xs9gd8SGbYQn9kkUYQayn46BdqQbvvUshEF6ZpRAzM7","d":8,"p":97.08,"c":"USD","b":1.0,"l":1.003998157531,"e":1786667400,"g":"0.62","n":"0.434","w":"0.186","wu":"11082","ev":1},"AVYx":{"m":"XsAfpyk9U7qUZKq9STpXyzDaoQjGRe6Yqo7TYebpxkx","d":8,"p":172.44,"c":"USD","b":1.0,"l":1.004044606229,"e":1788309000,"g":"1","n":"0.7","w":"0.3","wu":"11012","ev":1},"PPGx":{"m":"XsoCb51izF2MpU5XghroQDRxtJ2vtcMY9v5Mk1pqaBr","d":8,"p":105.98,"c":"USD","b":1.0,"l":1.004326762446,"e":1786149000,"g":"0.74","n":"0.518","w":"0.222","wu":"10783","ev":1},"WFCx":{"m":"XspHXejQ3A4VeimAqR1mAkvgTWgpmmoNR5CUhwCqzqr","d":8,"p":87.595,"c":"USD","b":1.0,"l":1.003995889942,"e":1786062600,"g":"0.5","n":"0.35","w":"0.15","wu":"10750","ev":1},"ETRx":{"m":"XssZsJPrzg7n9Sc1stfPcB4vygcVeMfz5uZK2gPwNdv","d":8,"p":103.145,"c":"USD","b":1.0,"l":1.004153917478,"e":1786581000,"g":"0.64","n":"0.448","w":"0.192","wu":"10375","ev":1},"OVVx":{"m":"Xs1b4xMzH16fHZuFUoXxni8THVafJ9t5dFL6kPUyG4k","d":8,"p":62.75,"c":"USD","b":1.0,"l":1.003212974296,"e":1789432200,"g":"0.3","n":"0.21","w":"0.09","wu":"10263","ev":1},"FANGx":{"m":"XsdLjeamzdsWW5aBhsGVAaQFcZtCL6yF9nhtWfszGT3","d":8,"p":194.4,"c":"USD","b":1.0,"l":1.00383389763,"e":1786581000,"g":"1.1","n":"0.77","w":"0.33","wu":"10235","ev":1},"FASTx":{"m":"Xs58AdBQTkqkejRvfMrGMQMML1m5xMQKVfKgPmqNhwg","d":8,"p":48.775,"c":"USD","b":1.0,"l":1.00382031906,"e":1785198600,"g":"0.26","n":"0.182","w":"0.078","wu":"10175","ev":1},"CNPx":{"m":"Xsx9i1A6e4xc9r5Gxxy4uZV4YSmwAXBJScvGLRv4nH2","d":8,"p":38.49,"c":"USD","b":1.0,"l":1.004158415842,"e":1787185800,"g":"0.24","n":"0.168","w":"0.072","wu":"10135","ev":1},"OTISx":{"m":"XszGT2Jo6bZz2SZBmhPstvo2xSs37q67nUJS7gtAfvx","d":8,"p":68.91,"c":"USD","b":1.0,"l":1.004217444886,"e":1786667400,"g":"0.44","n":"0.308","w":"0.132","wu":"10026","ev":1},"CIx":{"m":"XsGfYyioN9bfk6M6RGKvucDq8grQehqkBz8ziEtT124","d":8,"p":278.49,"c":"USD","b":1.0,"l":1.003865213082,"e":1788568200,"g":"1.56","n":"1.092","w":"0.468","wu":"10011","ev":1},"AGNCx":{"m":"XsycyYwi9Kekp26jyGg3x5Fo1JDRr3XnTJmVaf5CRUb","d":8,"p":9.995,"c":"USD","b":1.0,"l":1.0077064220183487,"e":1787963400,"g":"0.12","n":"0.084","w":"0.036","wu":"9992","ev":1},"ATOx":{"m":"Xsz1UqWKSjB4X7zcvXV6XVL5eBA2YaRqEjXZVP6GXwZ","d":8,"p":162.615,"c":"USD","b":1.0,"l":1.004195385076,"e":1787358600,"g":"1","n":"0.7","w":"0.3","wu":"9918","ev":1},"CFx":{"m":"XsH9yfX7GuRbCDnNvD4A7x8gvMc8sc8Htz1fQd7VYWw","d":8,"p":133.315,"c":"USD","b":1.0,"l":1.003588210167,"e":1786667400,"g":"0.6","n":"0.42","w":"0.18","wu":"9914","ev":1},"CMEx":{"m":"Xsx234fZF5KMZ5catYi7m9P682Pk9TWWHF5jAfYGZJk","d":8,"p":272.695,"c":"USD","b":1.0,"l":1.003270675341,"e":1788913800,"g":"1.3","n":"0.91","w":"0.39","wu":"9868","ev":1},"IFFx":{"m":"XsXhUW1Mcpff3vCZWb7v3USU5Zpg1nvFPyfzF3XD6NP","d":8,"p":85.54,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"0.4","n":"0.28","w":"0.12","wu":"9812","ev":1},"UNPx":{"m":"Xsehrw5hHiQ16Vfxxctj8ewUhtRCzbCrBYS278ctAAy","d":8,"p":280.94,"c":"USD","b":1.0,"l":1.003233466706,"e":1787963400,"g":"1.42","n":"0.994","w":"0.426","wu":"9718","ev":1},"FSMLx":{"m":"Xs9nAeuqjogYHy2UfL6jYqGmM5MPrRjuz6UYk8H79mZ","d":8,"p":29.4074,"c":"USD","b":1.001700362797,"l":1.001700362797,"e":1782484500,"g":"0.07365","n":"0.051555","w":"0.022095","wu":"9559","ev":1},"OXYx":{"m":"XsRNiTxDeRvxTEMTV5BC98N7cTZXxjNdLnudR8YeB2b","d":8,"p":58.84,"c":"USD","b":1.0,"l":1.003197389886,"e":1789000200,"g":"0.28","n":"0.196","w":"0.084","wu":"9496","ev":1},"MSx":{"m":"XsUucbjDLYbER4WNNffn1eQ9cDnAcFVfLgSZeLHPDZS","d":8,"p":203.76,"c":"USD","b":1.0,"l":1.003832238408,"e":1785457800,"g":"1.15","n":"0.805","w":"0.345","wu":"9445","ev":1},"VXUSx":{"m":"XsLT5v4DAd1kwViPQh3SZiT5kzJfNLxzJxJN1dySZTe","d":8,"p":86.545,"c":"USD","b":1.0,"l":1.003137202554,"e":1781755200,"g":"0.3861","n":"0.27027","w":"0.11583","wu":"9295","ev":1},"AFLx":{"m":"XsQ2JJPzG5EMvkRPSshA1mmpVvGPKBNYQmvuEnzpJhZ","d":8,"p":116.855,"c":"USD","b":1.0,"l":1.003507763082,"e":1787099400,"g":"0.61","n":"0.427","w":"0.183","wu":"9252","ev":1},"CINFx":{"m":"XsNufzbQz3zzhuGTSBi73Rds6wo1ghjn74ooK7ZbLVX","d":8,"p":170.58,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"0.94","n":"0.658","w":"0.282","wu":"9127","ev":1},"YUMx":{"m":"XsNor8pbicnexAYvgvq3p8EXwyRj9UzjYu92ZnrJLqC","d":8,"p":136.93,"c":"USD","b":1.0,"l":1.003511470805,"e":1788913800,"g":"0.75","n":"0.525","w":"0.225","wu":"9106","ev":1},"HALx":{"m":"XsYq2q3UxkwdHmhxJf5wbuXfDWuy5mYP5xsDBVEDK8Q","d":8,"p":33.895,"c":"USD","b":1.0,"l":1.003233695652,"e":1788309000,"g":"0.17","n":"0.119","w":"0.051","wu":"8975","ev":1},"NTRSx":{"m":"XsRx9hY5BQWniDRahLNtV4uyyvQcnaRgrqw5ops842R","d":8,"p":177.645,"c":"USD","b":1.0,"l":1.003286297314,"e":1788481800,"g":"0.88","n":"0.616","w":"0.264","wu":"8969","ev":1},"VLOx":{"m":"XsmMjZH2ex52ecoCqBN1sMADoWQziXpe9j6z6QVmafF","d":8,"p":409.565,"c":"USD","b":1.0,"l":1.002694812486,"e":1785457800,"g":"1.2","n":"0.84","w":"0.36","wu":"8949","ev":1},"PNFPx":{"m":"Xs9pFT45PF5PH1hgwQ5fknXYWVZassVSq4spNswnVtR","d":8,"p":96.51,"c":"USD","b":1.0,"l":1.003288546462,"e":1786062600,"g":"0.5","n":"0.35","w":"0.15","wu":"8938","ev":1},"DHRx":{"m":"Xseo8tgCZfkHxWS9xbFYeKFyMSbWEvZGFV1Gh53GtCV","d":8,"p":211.735,"c":"USD","b":1.004355087901191,"l":1.0058105996481104,"e":1782433800,"g":"0.4","n":"0.28","w":"0.12","wu":"8936","ev":1},"NOCx":{"m":"Xs1eyZcwrzzYW3hDjfpm7PiJrC9RyFszsHpqfTeUTCE","d":8,"p":523.0206,"c":"USD","b":1.0,"l":1.003169162527,"e":1787963400,"g":"2.47","n":"1.729","w":"0.741","wu":"8823","ev":1},"CEGx":{"m":"Xssu2cDLdZXZYrq17frTVrb3meumRCAzEf7pXyxoWVN","d":8,"p":269.165,"c":"USD","b":1.001084610913,"l":1.002158923675915,"e":1787013000,"g":"0.8530","n":"0.59710","w":"0.25590","wu":"8717","ev":2},"DELLx":{"m":"Xsu7Tc5J2fVUE4H5vYAiSr34cvLJeCsYPMjAYnayQn6","d":8,"p":588.19,"c":"USD","b":1.002159224442,"l":1.0033165309725203,"e":1784593800,"g":"0.63","n":"0.441","w":"0.189","wu":"8716","ev":1},"TRGPx":{"m":"XsmhtZrbnheSvztwRW82ZqZqMjaRnAQqyWERFh1A4Kr","d":8,"p":285.32,"c":"USD","b":1.0,"l":1.003260788552,"e":1785457800,"g":"1.25","n":"0.875","w":"0.375","wu":"8714","ev":1},"MCHPx":{"m":"Xs9GioXYhWaR1Pt7HLiNRgkHynWdPPWcdZWdUCHkZNj","d":8,"p":70.625,"c":"USD","b":1.0,"l":1.004186382755,"e":1787358600,"g":"0.455","n":"0.3185","w":"0.1365","wu":"8712","ev":1},"CDWx":{"m":"XsMmhKdFMiFdNFBcznYHx2zAU1SLtMnUL2G6bRzPpaY","d":8,"p":150.29,"c":"USD","b":1.0,"l":1.003213114754,"e":1787617800,"g":"0.63","n":"0.441","w":"0.189","wu":"8638","ev":1},"ALLx":{"m":"Xs1kbMkmahb44LPLLdjscSYZ4c2HUu4WNfgk8P7ndQf","d":8,"p":252.925,"c":"USD","b":1.0,"l":1.002901220355,"e":1787963400,"g":"1.08","n":"0.756","w":"0.324","wu":"8599","ev":1},"GENx":{"m":"Xso2H7vbDS6HVokLUecSG5GvWAZXjH7PEHAH9rAYXUP","d":8,"p":30.68,"c":"USD","b":1.0,"l":1.003072331461,"e":1786753800,"g":"0.125","n":"0.0875","w":"0.0375","wu":"8554","ev":1},"MMMx":{"m":"XsTEo8W2L8JprN57bmJgatDT84z57ReJYizr5f32BfP","d":8,"p":165.08,"c":"USD","b":1.0,"l":1.003050961109,"e":1787358600,"g":"0.78","n":"0.546","w":"0.234","wu":"8529","ev":1},"EQIXx":{"m":"XsBo6pg8N9kk7YnL69NnBBSZBWDkF1gHWjTAXpYuAVo","d":8,"p":1026.59,"c":"USD","b":1.0,"l":1.00332875614,"e":1787099400,"g":"5.16","n":"3.612","w":"1.548","wu":"8395","ev":1},"TXNx":{"m":"XsU4fHhJEFcrwNh4RYuHmWdaoCfsrWKEm4UEs3zTJwH","d":8,"p":259.51,"c":"USD","b":1.0,"l":1.003565791362,"e":1785457800,"g":"1.42","n":"0.994","w":"0.426","wu":"8383","ev":1},"Cx":{"m":"XsM1FstDXh1pA4uNXzvJdAop9SRJnnRdWt2o8A2mLpN","d":8,"p":133.68,"c":"USD","b":1.0,"l":1.003540958852,"e":1785544200,"g":"0.67","n":"0.469","w":"0.201","wu":"8327","ev":1},"LNGx":{"m":"XsYLZdcMYST418xZhTV6KaHqr8BWqaKS3J45ywqigF9","d":8,"p":269.25,"c":"USD","b":1.0,"l":1.001516748653,"e":1786149000,"g":"0.555","n":"0.3885","w":"0.1665","wu":"8326","ev":1},"QCOMx":{"m":"XsUUG8bjFN2KvzLTpzavvEKdAjMAeLTZiTeAQJ9uhvB","d":8,"p":190.11,"c":"USD","b":1.0,"l":1.003789126853,"e":1788395400,"g":"0.92","n":"0.644","w":"0.276","wu":"8275","ev":1},"RGAx":{"m":"XsFvsyP8i3Qpat1BK78Yjq3PsTNhD3SV5FHryJrWbHs","d":8,"p":247.97,"c":"USD","b":1.0,"l":1.002777552838,"e":1787013000,"g":"0.98","n":"0.686","w":"0.294","wu":"8258","ev":1},"HIGx":{"m":"XsLw8Pw975zbR4QPQkAorVYM6qQq21jSztyDoskVz5x","d":8,"p":133.91,"c":"USD","b":1.0,"l":1.003057213568,"e":1788222600,"g":"0.6","n":"0.42","w":"0.18","wu":"8247","ev":1},"SSNCx":{"m":"Xsq4wQVyggsJXzrjQK51M8bxK3duFaRegcX5Vxdbfcx","d":8,"p":80.12,"c":"USD","b":1.0,"l":1.002531035314,"e":1788222600,"g":"0.3","n":"0.21","w":"0.09","wu":"8234","ev":1},"APOx":{"m":"XsosRSUc3n5pod3YNNyQ7go6811xWYd3YME2uEQohEx","d":8,"p":127.76,"c":"USD","b":1.0,"l":1.002941725812,"e":1787099400,"g":"0.5625","n":"0.39375","w":"0.16875","wu":"8206","ev":1},"FERGx":{"m":"XsfdW27Z6gk5otDjYw5R2ad7PP1dKoR1Qx2ayurRBGc","d":8,"p":214.825,"c":"USD","b":1.0,"l":1.002601904444,"e":1787272200,"g":"0.89","n":"0.623","w":"0.267","wu":"8158","ev":1},"BKRx":{"m":"XsBE7iAzaJEBpSwG5JZ7zQTWNgTaerweBy7nJCachaJ","d":8,"p":56.735,"c":"USD","b":1.0,"l":1.002565737052,"e":1786062600,"g":"0.23","n":"0.161","w":"0.069","wu":"8151","ev":1},"MPCx":{"m":"XsyqGLaBLmGCZstuUrvo7iWhJkZgg4KEBtcxVFBsYSg","d":8,"p":421.8,"c":"USD","b":1.0,"l":1.00191147156,"e":1787099400,"g":"1","n":"0.7","w":"0.3","wu":"8134","ev":1},"ELVx":{"m":"XsJbC4TFupSLpxNwsfq9o1BB5tdTT7eZ3YNerVvE49H","d":8,"p":415.405,"c":"USD","b":1.0,"l":1.0030335097,"e":1789000200,"g":"1.72","n":"1.204","w":"0.516","wu":"8069","ev":1},"ELx":{"m":"XsTisPuTVM8VVHagEyeGR7CBt6TUD93AEhptETHWMsd","d":8,"p":94.22,"c":"USD","b":1.0,"l":1.002369668246,"e":1787963400,"g":"0.35","n":"0.245","w":"0.105","wu":"8018","ev":1},"NSCx":{"m":"Xs4UsCDQKKJqHjidgoZBHUW9emLD4njpLPsYesp4ZpZ","d":8,"p":317.86,"c":"USD","b":1.0,"l":1.002759446359,"e":1786062600,"g":"1.35","n":"0.945","w":"0.405","wu":"7998","ev":1},"LHXx":{"m":"XssE4tb3kc3f5V5cRL6dsuffP9wDm915W4bAsyNf62A","d":8,"p":248.795,"c":"USD","b":1.0,"l":1.00333791104,"e":1788481800,"g":"1.25","n":"0.875","w":"0.375","wu":"7893","ev":1},"SYFx":{"m":"XsWMBE3QzwuS7pJET8GUyaGzjNJG49RToPBYWdGHUTG","d":8,"p":75.25,"c":"USD","b":1.0,"l":1.003009610521,"e":1785889800,"g":"0.34","n":"0.238","w":"0.102","wu":"7797","ev":1},"WMx":{"m":"XscZ13Vr2dH9GV8vxVAgFsXz2YMoDCAz3QanuCcwsr5","d":8,"p":212.31,"c":"USD","b":1.0,"l":1.003080039112,"e":1789086600,"g":"0.945","n":"0.6615","w":"0.2835","wu":"7649","ev":1},"ROLx":{"m":"XsY112rrZJhJE1J1Z8BTSk135spPGHuGRCfnvr5pSdQ","d":8,"p":33.155,"c":"USD","b":1.0,"l":1.00338500265,"e":1786149000,"g":"0.1825","n":"0.12775","w":"0.05475","wu":"7606","ev":1},"LDOSx":{"m":"Xs5VFGqt7aQ3Dykyk7A4NFL9K2z3x2BAnEDzvokY9Us","d":8,"p":131.24,"c":"USD","b":1.0,"l":1.002266054355,"e":1789432200,"g":"0.43","n":"0.301","w":"0.129","wu":"7551","ev":1},"RTXx":{"m":"XsN53tgjZA4QU8iuedPNHxxCbDqKcJqbrT1f8jBXzdC","d":8,"p":192.605,"c":"USD","b":1.0,"l":1.002317670537,"e":1786667400,"g":"0.73","n":"0.511","w":"0.219","wu":"7420","ev":1},"WELLx":{"m":"XsuKHFvcZLWvhk8XcprK4tiAZRefQ4nfTyNs6b9BArz","d":8,"p":231.89,"c":"USD","b":1.0,"l":1.002632626875,"e":1786494600,"g":"0.85","n":"0.595","w":"0.255","wu":"7183","ev":1},"ICEx":{"m":"XsG6o69zE7mQCeFf6utyMx9Q89cJjGV4vTwi3wFHrkN","d":8,"p":153.97,"c":"USD","b":1.0,"l":1.002319949012,"e":1789518600,"g":"0.52","n":"0.364","w":"0.156","wu":"7137","ev":1},"EMRx":{"m":"Xskqq9tKh2gc1PBJHf2q6jMgBpt3AojT3HVkWhjoY5h","d":8,"p":147.865,"c":"USD","b":1.0,"l":1.002365872968,"e":1786667400,"g":"0.555","n":"0.3885","w":"0.1665","wu":"7122","ev":1},"NDAQx":{"m":"XsLSwcujLXXgCPZWPZKRsksbZrWupPMNKmg6A71g2Ba","d":8,"p":91.295,"c":"USD","b":1.0,"l":1.0023584393,"e":1789086600,"g":"0.31","n":"0.217","w":"0.093","wu":"7068","ev":1},"TRVx":{"m":"Xsxd1sqLaPsmmmYTZHr2GnNufXXiH5rZcahP99TyeDr","d":8,"p":377.945,"c":"USD","b":1.0,"l":1.002385171051,"e":1789000200,"g":"1.25","n":"0.875","w":"0.375","wu":"7065","ev":1},"FDXx":{"m":"XsEmsxmtT12GBiqtvTxoNaipTBNEdUs6oq7pwHFHTb7","d":8,"p":306.21,"c":"USD","b":1.0,"l":1.00273726722,"e":1789173000,"g":"1.22","n":"0.854","w":"0.366","wu":"7007","ev":1},"MASx":{"m":"XsNZFvmZv6zEeAxgF5L72Nt6A2K8Uo6u7aRDLm7Smvc","d":8,"p":68.375,"c":"USD","b":1.0,"l":1.00305635148,"e":1787358600,"g":"0.32","n":"0.224","w":"0.096","wu":"6974","ev":1},"COFx":{"m":"Xstd4ems8vhfGwTngpXCzgnSvJ4oD7E5gExUue2KEZX","d":8,"p":204.53,"c":"USD","b":1.0,"l":1.002463270872,"e":1786753800,"g":"0.8","n":"0.56","w":"0.24","wu":"6957","ev":1},"AMPx":{"m":"XsqWwT9y8ajA8LXQEy7msQmM6ExkP8Va3XYcr7oVhXg","d":8,"p":547.59,"c":"USD","b":1.0,"l":1.002180126044,"e":1785544200,"g":"1.7","n":"1.19","w":"0.51","wu":"6757","ev":1},"XYLx":{"m":"XsqFzD9CqfpnmTiFH631bcvQcDReVTMFZMSjk5aXQZL","d":8,"p":108.115,"c":"USD","b":1.0,"l":1.002653852936,"e":1787790600,"g":"0.43","n":"0.301","w":"0.129","wu":"6698","ev":1},"MSCIx":{"m":"Xs4BPW5YU7RsXMmCt6CyDphWH3YLtyaXDXEzZDmj33G","d":8,"p":550.11,"c":"USD","b":1.0,"l":1.002494610945,"e":1786667400,"g":"2.05","n":"1.435","w":"0.615","wu":"6653","ev":1},"MRVLx":{"m":"XsuxRGDzbLjnJ72v74b7p9VY6N66uYgTCyfwwRjVCJA","d":8,"p":242.845,"c":"USD","b":1.0014921357356839,"l":1.0016650410248724,"e":1783643400,"g":"0.12","n":"0.084","w":"0.036","wu":"6493","ev":2},"EFXx":{"m":"Xs3dfAaDSQMVrDcEVbxypK4UeXhCbDBK2AgAWCHwqmq","d":8,"p":161.9,"c":"USD","b":1.0,"l":1.002016979676,"e":1787963400,"g":"0.56","n":"0.392","w":"0.168","wu":"6369","ev":1},"SFx":{"m":"XsHfvLEUbto797whYCNiqoEGWSpWaRYoZWXJEBGgmsm","d":8,"p":75.715,"c":"USD","b":1.0,"l":1.002946273830156,"e":1788220800,"g":"0.34","n":"0.238","w":"0.102","wu":"6363","ev":1},"LUVx":{"m":"XseRUafvQDXZSddDFpsXQPBNggurszyztkh4TEnvEuM","d":8,"p":40.69,"c":"USD","b":1.0,"l":1.003263403263,"e":1788395400,"g":"0.18","n":"0.126","w":"0.054","wu":"6322","ev":1},"GPNx":{"m":"XsKbuY5Wyzz7Zzz6uxi69hHdxhrE53d746Sb1jBZyD1","d":8,"p":86.55,"c":"USD","b":1.0,"l":1.001976284585,"e":1789086600,"g":"0.25","n":"0.175","w":"0.075","wu":"6307","ev":1},"SCHWx":{"m":"XsK5U9qwT9ErPXnpgDzV9voTGASZbZnNTYTGVxCqPii","d":8,"p":104.62,"c":"USD","b":1.0,"l":1.002035253498,"e":1786667400,"g":"0.32","n":"0.224","w":"0.096","wu":"6306","ev":1},"BITXx":{"m":"XsraCsjDB8cYn672MZSxCzZBhrodEPXD7pWd5EiRUhm","d":8,"p":16.69,"c":"USD","b":1.0017958445103723,"l":1.0022919985525838,"e":1787617800,"g":"0.0318","n":"0.02226","w":"0.00954","wu":"6257","ev":2},"CHRWx":{"m":"Xsm5zBfHeiGWjraGLwT8DwJhYGjUfhESs7QANcYVp8E","d":8,"p":153.9,"c":"USD","b":1.0,"l":1.003006442377,"e":1788481800,"g":"0.63","n":"0.441","w":"0.189","wu":"6226","ev":1},"RSx":{"m":"XskVwPpXzyc9Fc4vqvHJ5v4ojMDWyjzcdPYTK8vFrUy","d":8,"p":401.29,"c":"USD","b":1.0,"l":1.002058097142,"e":1786667400,"g":"1.25","n":"0.875","w":"0.375","wu":"6002","ev":1},"AIZx":{"m":"Xs7U7QD6amUpjuEZ1VM3rx5TSrKtJ3r7xU1aRcTHhw8","d":8,"p":285.78,"c":"USD","b":1.0,"l":1.002156485209,"e":1787963400,"g":"0.88","n":"0.616","w":"0.264","wu":"5932","ev":1},"EVRx":{"m":"XsmTgboNTsssYV1VZrS4u1YMkcNWTKVMzUjghkXa3RF","d":8,"p":264.62,"c":"USD","b":1.0,"l":1.002132685198,"e":1787877000,"g":"0.89","n":"0.623","w":"0.267","wu":"5931","ev":1},"AJGx":{"m":"XsYka4UhXnzoqmdPCfqX8EZBQcN2MkrG4gJt4SxGvsN","d":8,"p":243.025,"c":"USD","b":1.0,"l":1.001865316533,"e":1788568200,"g":"0.7","n":"0.49","w":"0.21","wu":"5858","ev":1},"RMDx":{"m":"XsjsQvjH8BEXCjrgNiVhmhFiYPcNRXGj262fDupfV1A","d":8,"p":226.705,"c":"USD","b":1.0,"l":1.002003034901,"e":1787185800,"g":"0.66","n":"0.462","w":"0.198","wu":"5801","ev":1},"EQTx":{"m":"XsvS1ZY358vAjNJ7s3fz13s64ZqYF36rgUDR8yVJkuA","d":8,"p":50.26,"c":"USD","b":1.0,"l":1.002188743604,"e":1785889800,"g":"0.165","n":"0.1155","w":"0.0495","wu":"5782","ev":1},"CHDx":{"m":"Xs712gQLCYkFSYJwdu3pE5itNfyKwsXQ1HEGZF8Esc5","d":8,"p":95.715,"c":"USD","b":1.0,"l":1.002124457165,"e":1786667400,"g":"0.3075","n":"0.21525","w":"0.09225","wu":"5741","ev":1},"ALBx":{"m":"XsGea4488p7ydWQTQMYxtvCXDJiAJwgt4HsoKiKrGa3","d":8,"p":115.51,"c":"USD","b":1.0,"l":1.002350339858,"e":1789086600,"g":"0.41","n":"0.287","w":"0.123","wu":"5739","ev":1},"VRSNx":{"m":"Xsy4NX4cCf4YjN6iwypnQ8crXtNkyA2K3jypAX5NfQ6","d":8,"p":301.74,"c":"USD","b":1.0,"l":1.00204885452,"e":1787099400,"g":"0.81","n":"0.567","w":"0.243","wu":"5737","ev":1},"NRGx":{"m":"XsZ9qtReiaokaUfW3bEUx2AU4Zmcjk9Y95nEtFMqEXn","d":8,"p":107.97,"c":"USD","b":1.0,"l":1.002475984809,"e":1785544200,"g":"0.475","n":"0.3325","w":"0.1425","wu":"5705","ev":1},"BALLx":{"m":"Xsy9RdWC26fp8c84BB2SD4eE74vG1478YKjxAwjRRQY","d":8,"p":61.035,"c":"USD","b":1.0,"l":1.002223280927,"e":1788222600,"g":"0.2","n":"0.14","w":"0.06","wu":"5693","ev":1},"CSLx":{"m":"XsATdqpeobhFEM71r5MgZe4E5BcHuWk6jSnYnHLYTwS","d":8,"p":321.5251,"c":"USD","b":1.0,"l":1.002455382198,"e":1787099400,"g":"1.25","n":"0.875","w":"0.375","wu":"5678","ev":1},"TXRHx":{"m":"XsWFY8Ems96uFPnZJ1NwXsqeH6bczLQDDvvvab14crQ","d":8,"p":167.3,"c":"USD","b":1.0,"l":1.0026840490797546,"e":1788222600,"g":"0.75","n":"0.525","w":"0.225","wu":"5647","ev":1},"TPRx":{"m":"Xs2zWfkYjSCCW4fdC1L36rz77YzTcQtji7ewjWPvuWW","d":8,"p":118.96,"c":"USD","b":1.0,"l":1.002640701468,"e":1788481800,"g":"0.4625","n":"0.32375","w":"0.13875","wu":"5609","ev":1},"CMIx":{"m":"XsqZ16VmoeszDniTfGTnwPBMv7j7uSDArddziagHWit","d":8,"p":525.63,"c":"USD","b":1.0,"l":1.002595913964,"e":1787272200,"g":"2.2","n":"1.54","w":"0.66","wu":"5592","ev":1},"NDSNx":{"m":"Xsgfrh1tHEuCADVTuQDZiG5LRcVYeEU1wKT3YKuucbA","d":8,"p":313.12,"c":"USD","b":1.0,"l":1.0020959419,"e":1789000200,"g":"0.94","n":"0.658","w":"0.282","wu":"5586","ev":1},"CTASx":{"m":"XszBTLtg8oMmEWsZHbJJwViiB6unNh2ei1e6miArqps","d":8,"p":197.49,"c":"USD","b":1.0,"l":1.001813652217,"e":1786667400,"g":"0.52","n":"0.364","w":"0.156","wu":"5575","ev":1},"TJXx":{"m":"XsPWZN3FYcrvpEnxrQqogbVZtxpRX9tFomymKw2dWJS","d":8,"p":124.785,"c":"USD","b":1.0,"l":1.002201690584,"e":1786581000,"g":"0.48","n":"0.336","w":"0.144","wu":"5533","ev":1},"CSXx":{"m":"XskJzVZDKvqm999PGat2ifznPVmmDXn4Zi1LZ7Y5CVr","d":8,"p":47.935,"c":"USD","b":1.0,"l":1.001911076443,"e":1787963400,"g":"0.14","n":"0.098","w":"0.042","wu":"5469","ev":1},"MSIx":{"m":"Xsa1gZ38panjmJwh6cr9QQ1YpRBEzVfxrykWSsiWvJe","d":8,"p":460.69,"c":"USD","b":1.0,"l":1.001805431215,"e":1789518600,"g":"1.21","n":"0.847","w":"0.363","wu":"5455","ev":1},"PCARx":{"m":"Xs1rnpzumX77Zz3nVrRGbDYzTM4PM7vgvS4BLTG6ckQ","d":8,"p":118.81,"c":"USD","b":1.0,"l":1.001848638044,"e":1786494600,"g":"0.35","n":"0.245","w":"0.105","wu":"5351","ev":1},"HPEx":{"m":"Xszp97B7zgeyNUFkymHdxXp3Y5KTZ1rzd2bAL9TW34t","d":8,"p":61.56,"c":"USD","b":1.0,"l":1.001759880028,"e":1789605000,"g":"0.1425","n":"0.09975","w":"0.04275","wu":"5243","ev":1},"Jx":{"m":"Xs2ry2jjmvy67pYFweVbdeoPPRdUjnbBEubtXguWbXK","d":8,"p":144.39,"c":"USD","b":1.0,"l":1.001703393268,"e":1787272200,"g":"0.36","n":"0.252","w":"0.108","wu":"5175","ev":1},"VRSKx":{"m":"XsBDavbmVc22RNAgsHwUDEeC8f8VVCKLCcxFbfFUEzW","d":8,"p":176.8,"c":"USD","b":1.0,"l":1.001871357536,"e":1789432200,"g":"0.5","n":"0.35","w":"0.15","wu":"5036","ev":1},"SGIx":{"m":"XsU3RZd5ufTcCJneLjDhTrU47ma9ypnhXyvJACRZrTv","d":8,"p":65.71,"c":"USD","b":1.0,"l":1.001802484096,"e":1787185800,"g":"0.17","n":"0.119","w":"0.051","wu":"5024","ev":1},"ROKx":{"m":"XsnR8Rtrd8yFDGP3g2HwLdGiw58UcXjggXzgkL3pNYz","d":8,"p":416.44,"c":"USD","b":1.0,"l":1.002149676213,"e":1786753800,"g":"1.38","n":"0.966","w":"0.414","wu":"5023","ev":1},"HUBBx":{"m":"XsCz2AUyFUuadE9zxfs7ywkbMvaQNeVTeNBK15L43Qc","d":8,"p":441.14,"c":"USD","b":1.0,"l":1.002162467911,"e":1787963400,"g":"1.42","n":"0.994","w":"0.426","wu":"4797","ev":1},"ADIx":{"m":"Xs3CytsvJshAYy1TQjq2o2yVWCyEGinNpvkB6f3Qs31","d":8,"p":363.58,"c":"USD","b":1.0,"l":1.002126249517,"e":1788222600,"g":"1.1","n":"0.77","w":"0.33","wu":"4774","ev":1},"ECLx":{"m":"XsPPAW5wuUa1ALN1NstEkUAajbwycXTRxtWoLfFriy4","d":8,"p":274.21,"c":"USD","b":1.0,"l":1.001854742115,"e":1789432200,"g":"0.73","n":"0.511","w":"0.219","wu":"4758","ev":1},"DHIx":{"m":"XsiNAvTHpvygKjMqb8Hz5Nqeo8NTAsWzT6DYLH287FA","d":8,"p":141.005,"c":"USD","b":1.0,"l":1.002079894355,"e":1785976200,"g":"0.45","n":"0.315","w":"0.135","wu":"4747","ev":1},"KNXx":{"m":"XsUyRqfxY2XtFvP99Lkn2DDWtxNNAY6w5CVDu1F68G1","d":8,"p":67.145,"c":"USD","b":1.0,"l":1.00201236165,"e":1788481800,"g":"0.2","n":"0.14","w":"0.06","wu":"4714","ev":1},"NEMx":{"m":"XssuE11NLek5vAeHNS2Jm8PFvT4PE7dtnpZwasWTGDT","d":8,"p":124.58,"c":"USD","b":1.0,"l":1.001454138702,"e":1788395400,"g":"0.26","n":"0.182","w":"0.078","wu":"4680","ev":1},"BROx":{"m":"Xs9hw3a4acJr629NUzDbEC376rv3AhfmwvXm9BNnD9G","d":8,"p":65.66,"c":"USD","b":1.0,"l":1.001616741321,"e":1786494600,"g":"0.165","n":"0.1155","w":"0.0495","wu":"4657","ev":1},"BWAx":{"m":"Xs34rXKEs63rPs3qWZeAubRmSVJNG5hSy6Ubt7Qag2F","d":8,"p":64.16,"c":"USD","b":1.0,"l":1.001854738155,"e":1788222600,"g":"0.17","n":"0.119","w":"0.051","wu":"4629","ev":1},"DOVx":{"m":"XsXG3ytqNM8wMwxbZnbZjY3wFua4nU58ZR6Lwr5wSDp","d":8,"p":189.26,"c":"USD","b":1.0,"l":1.001849708073,"e":1787963400,"g":"0.525","n":"0.3675","w":"0.1575","wu":"4364","ev":1},"SHWx":{"m":"XsfgitU15HiJX9UJN2fhcpbfRr5P8XJXvC1nuJs3jAr","d":8,"p":322.265,"c":"USD","b":1.0,"l":1.001614251535,"e":1787272200,"g":"0.8","n":"0.56","w":"0.24","wu":"4348","ev":1},"ETNx":{"m":"Xs8S5L4HkJpeBWF1J4oyUX6rVwGHmG7GZ7PiChPt7nY","d":8,"p":411.31,"c":"USD","b":1.0038078991013277,"l":1.0038078991013277,"e":1786062600,"g":"1.650","n":"1.36125","w":"0.28875","wu":"4348","ev":2},"LRCXx":{"m":"XsSN912SN4Whn2xn59vWZHt1uLbw9WnoNGp5MigmHFf","d":8,"p":268.3512,"c":"USD","b":1.0,"l":1.000492770889,"e":1781656200,"g":"0.59","n":"0.413","w":"0.177","wu":"4250","ev":2},"MLIx":{"m":"XsikuTgNGjzibezDk9u22QGW8zQaGWyK61vN4gQE4Dc","d":8,"p":60.345,"c":"USD","b":1.0,"l":1.001945679797,"e":1788481800,"g":"0.175","n":"0.1225","w":"0.0525","wu":"4240","ev":1},"CTVAx":{"m":"XsJXYLby91CWhGhTXds9oxjoc8EdsLy2iuxmq55U1Y3","d":8,"p":82.585,"c":"USD","b":1.0,"l":1.001488833747,"e":1788222600,"g":"0.18","n":"0.126","w":"0.054","wu":"4139","ev":1},"GMx":{"m":"XsSFgHPgZgYNSuz1ttNHNp8zUBBMZGngFcMMfKPK6JQ","d":8,"p":87.328,"c":"USD","b":1.0,"l":1.001444622793,"e":1788481800,"g":"0.18","n":"0.126","w":"0.054","wu":"4114","ev":1},"MCOx":{"m":"XseTVygt2sUPQsfYbYVMXzV1AeMRE6Usj9DEWwStMe3","d":8,"p":465.365,"c":"USD","b":1.0,"l":1.001476188526,"e":1786667400,"g":"1.03","n":"0.721","w":"0.309","wu":"4077","ev":1},"ARMKx":{"m":"XsVhUJLbtEhVSPHFcyjZYYXJqmK8j8kfD553wZ8of6W","d":8,"p":57.73,"c":"USD","b":1.0,"l":1.001388429752,"e":1787099400,"g":"0.12","n":"0.084","w":"0.036","wu":"3868","ev":1},"KKRx":{"m":"XsTd1xJRAwAddguKdxYPGoS3qhctGsJb1ue4Rm6URFa","d":8,"p":99.015,"c":"USD","b":1.0,"l":1.001327691859,"e":1786149000,"g":"0.195","n":"0.1365","w":"0.0585","wu":"3835","ev":1},"GWWx":{"m":"XsSuZjygy7yrbyZJNzBj78ysrKDFMv11HrPPwBUE2Dn","d":8,"p":1257.62,"c":"USD","b":1.0,"l":1.001364330163,"e":1786149000,"g":"2.49","n":"1.743","w":"0.747","wu":"3803","ev":1},"MUx":{"m":"XsQLZycSZ7QnBBdBXQaTbQdiUcbRqjNJgyBGAMzhHav","d":8,"p":975.45,"c":"USD","b":1.0002939365097,"l":1.0004015986353854,"e":1783295700,"g":"0.30","n":"0.210","w":"0.090","wu":"3799","ev":2},"CORx":{"m":"Xsst4VThLi3nvYTsNCVwJi1z23LfXrdyKmhArkrSn1n","d":8,"p":312.57,"c":"USD","b":1.0,"l":1.001354795007,"e":1786667400,"g":"0.6","n":"0.42","w":"0.18","wu":"3790","ev":1},"AAx":{"m":"Xs2XDRGh6AhivmYgaVa8woDGKGccR1WnnGnw9vqSWD9","d":8,"p":47.005,"c":"USD","b":1.0,"l":1.001355800891,"e":1786408200,"g":"0.1","n":"0.07","w":"0.03","wu":"3697","ev":1},"PHx":{"m":"XskVc7XiWmSqvzbjhA2LqGHQhvBdBNfatfeTpNru6KP","d":8,"p":924.48,"c":"USD","b":1.0,"l":1.001407006894,"e":1787963400,"g":"2","n":"1.4","w":"0.6","wu":"3679","ev":1},"HCAx":{"m":"XsJ5MSaKx3Y6bKEfmrRmovGEdRM53KWqEEHuaNUsQpD","d":8,"p":433.04,"c":"USD","b":1.0,"l":1.001288282762,"e":1789518600,"g":"0.78","n":"0.546","w":"0.234","wu":"3658","ev":1},"VUGx":{"m":"XsNVBwVGqtDqmA2Waoiux5mfykH8nepLK74z3ZoQWK2","d":8,"p":88.35,"c":"USD","b":6.0,"l":6.004667790486,"e":1782433800,"g":"0.0923","n":"0.06461","w":"0.02769","wu":"3575","ev":1},"FDSx":{"m":"XsMQfkLnhK1ERGibdgGDHFaSHB8ETDtMiC5TtVZKMAv","d":8,"p":280.785,"c":"USD","b":1.0,"l":1.002628001812415,"e":1787963400,"g":"1.16","n":"0.812","w":"0.348","wu":"3572","ev":1},"ITTx":{"m":"Xsva3qbt1TDUgQPnU3vVDasaPoUHXPU9FjYXzEUYY8G","d":8,"p":203.105,"c":"USD","b":1.0,"l":1.001322370675,"e":1788568200,"g":"0.386","n":"0.2702","w":"0.1158","wu":"3548","ev":1},"GLWx":{"m":"Xsg3UgvjxpUgV3WZx9Wt9deLx7qvKYp6ZLY6xMY2Dfq","d":8,"p":148.84,"c":"USD","b":1.0,"l":1.001315612834,"e":1787963400,"g":"0.28","n":"0.196","w":"0.084","wu":"3532","ev":1},"MARx":{"m":"Xs85zRMSv4KTRqSNjZSFWgEXEyb3esxUBzhTj377DH8","d":8,"p":334.98,"c":"USD","b":1.0,"l":1.001419641617,"e":1787185800,"g":"0.73","n":"0.511","w":"0.219","wu":"3520","ev":1},"ROSTx":{"m":"XsPYJyoTnjc471VCHEERVBVrJ7xuQhDYWddPw6koNVV","d":8,"p":229.78,"c":"USD","b":1.0,"l":1.001350296935,"e":1788568200,"g":"0.445","n":"0.3115","w":"0.1335","wu":"3470","ev":1},"URIx":{"m":"XsLR9avpksMgLqB5Mw3jBNjzdvSDUKGw4onApxDGE6x","d":8,"p":1013.515,"c":"USD","b":1.0,"l":1.001205851748,"e":1786494600,"g":"1.97","n":"1.379","w":"0.591","wu":"3269","ev":1},"TRUx":{"m":"XsyvvjANUH1LpSQkRr3xgCyfxJLcNtpEVyFFNpJcDsb","d":8,"p":73.83,"c":"USD","b":1.0,"l":1.001047402442,"e":1787185800,"g":"0.125","n":"0.0875","w":"0.0375","wu":"3160","ev":1},"VMCx":{"m":"XsAtnoftgxL6kJErDeCL8m2e364mAYgEbSfSKxi4ctJ","d":8,"p":243.69,"c":"USD","b":1.0,"l":1.001298238105,"e":1786581000,"g":"0.52","n":"0.364","w":"0.156","wu":"3022","ev":1},"ULSx":{"m":"Xspg7dCVnegasgemg56htgBWpemdffjvY9joWyNvJww","d":8,"p":63.91,"c":"USD","b":1.0,"l":1.001015,"e":1787963400,"g":"0.145","n":"0.1015","w":"0.0435","wu":"2943","ev":1},"ODFLx":{"m":"XsuEQKUzuiMTMwFTm6MHBeTvknFU585gwu9u4CNKjQD","d":8,"p":175.05,"c":"USD","b":1.0,"l":1.001085503449,"e":1788309000,"g":"0.29","n":"0.203","w":"0.087","wu":"2943","ev":1},"CATx":{"m":"XsRvd1meWQ9kW1SrZPa1jokQqmBoPWWjd6wGTgdp5E6","d":8,"p":800.165,"c":"USD","b":1.0012961784886627,"l":1.0012961784886627,"e":1784505300,"g":"1.63","n":"1.141","w":"0.489","wu":"2940","ev":1},"AITx":{"m":"XsvJzDTuRrc3cWVwPXVcaXaFJFVtGcpDsfCA56z868Q","d":8,"p":317.985,"c":"USD","b":1.0,"l":1.000998266316,"e":1786667400,"g":"0.51","n":"0.357","w":"0.153","wu":"2866","ev":1},"JBHTx":{"m":"Xs5CSFf663gjowEA7ANX8ZhPe4AkLWMqLbriVu1JmUV","d":8,"p":238.12,"c":"USD","b":1.0,"l":1.001178671656,"e":1786062600,"g":"0.45","n":"0.315","w":"0.135","wu":"2864","ev":1},"REGNx":{"m":"XsWkTtvUXJgrvxvgGuHRRqk6iwDuviEQZw4uJFUUGgX","d":8,"p":779.41,"c":"USD","b":1.0,"l":1.000816448079,"e":1787013000,"g":"0.94","n":"0.658","w":"0.282","wu":"2774","ev":1},"KLACx":{"m":"Xsw2uU1i8tHjbgstUbtt3m6kg7BS7AgG5aj8z7ddmmN","d":8,"p":168.255,"c":"USD","b":10.00892302917,"l":10.01683308516363,"e":1786753800,"g":"0.23","n":"0.161","w":"0.069","wu":"2765","ev":1},"APHx":{"m":"XsvqNba1k4wF5ZEZ6Nrx8AXUDkKzAFuj4HaVDEemyYH","d":8,"p":78.07,"c":"USD","b":1.0,"l":2.0,"e":1788425100,"g":"0.125","n":"0.0875","w":"0.0375","wu":"2731","ev":1},"WCCx":{"m":"Xspj4rFiCCXJyymfNgkwBG9AXZbyp69HGyHwfz6WHTE","d":8,"p":338.99,"c":"USD","b":1.0,"l":1.00101744186,"e":1789086600,"g":"0.5","n":"0.35","w":"0.15","wu":"2636","ev":1},"TPLx":{"m":"XsNpiekiQLb87S2VqmaYjez6sNSrjoK78nCPAF8uaCF","d":8,"p":347.575,"c":"USD","b":1.0,"l":1.001121974675,"e":1788222600,"g":"0.6","n":"0.42","w":"0.18","wu":"2609","ev":1},"MLMx":{"m":"Xsvi61uutcLdAsa5NxJ2c9geLgzUFM3tMtpJ44eoegt","d":8,"p":493.655,"c":"USD","b":1.0,"l":1.001133603239,"e":1788222600,"g":"0.84","n":"0.588","w":"0.252","wu":"2605","ev":1},"UIx":{"m":"XsLzbFA47Tm3Bs7MnSJrGbi6RnfbtCGA6pD3NHSzp6P","d":8,"p":593.92,"c":"USD","b":1.0,"l":1.0011679319262534,"e":1787963400,"g":"1","n":"0.7","w":"0.3","wu":"2596","ev":1},"WTSx":{"m":"XsMcyEj7KpLQyVXQ4GpSVERstPHrHzVqDG36myTJzjQ","d":8,"p":352.36,"c":"USD","b":1.0,"l":1.0012057416267943,"e":1788222600,"g":"0.63","n":"0.441","w":"0.189","wu":"2557","ev":1},"AMEx":{"m":"XsVNxwvuQghf6TYBmCck75ddYD3KiWozujR8C67bPXC","d":8,"p":234.08,"c":"USD","b":1.0,"l":1.00101861759,"e":1789432200,"g":"0.34","n":"0.238","w":"0.102","wu":"2537","ev":1},"WRBx":{"m":"XsnARtma2bEi2x1JuKuznZa1QzQkLaedxHW6KeUCz8J","d":8,"p":70.31,"c":"USD","b":1.0,"l":1.0,"e":0,"g":"0.1","n":"0.07","w":"0.03","wu":"2532","ev":1},"BWXTx":{"m":"XsVpsBVdjW8SWAu4jAjqJ9qnGYzBmUzNDRcG6uiZ9xo","d":8,"p":147.5853,"c":"USD","b":1.0,"l":1.001101783841,"e":1787013000,"g":"0.27","n":"0.189","w":"0.081","wu":"2514","ev":1},"TWx":{"m":"Xs1vPiv1k4jph8JkwRfnCjog6pXKuYzVVpdRVSt3hWA","d":8,"p":102.605,"c":"USD","b":1.0,"l":1.000909935005,"e":1788222600,"g":"0.14","n":"0.098","w":"0.042","wu":"2427","ev":1},"AMATx":{"m":"XsQZdaWUAGC4R3fgD2N1fupKvJfJq6YM51ccnsLUWFA","d":8,"p":415.57,"c":"USD","b":1.000869157784,"l":1.0016175352702579,"e":1787185800,"g":"0.53","n":"0.371","w":"0.159","wu":"2389","ev":1},"MCKx":{"m":"XsnoiYFyBemVokJpx3ddt6mPB3v2HepSevRLXSfj3Y5","d":8,"p":878.33,"c":"USD","b":1.0,"l":1.000743234085,"e":1788222600,"g":"0.94","n":"0.658","w":"0.282","wu":"2215","ev":1},"ITAx":{"m":"XsXoAR52Q2NYFkYiNqhCq4FauvyA1tdRsrmEYNf9fuh","d":8,"p":214.1715,"c":"USD","b":1.0,"l":1.0004897814278,"e":1781481300,"g":"0.16358","n":"0.114506","w":"0.049074","wu":"2209","ev":1},"WMSx":{"m":"Xs6debZjNw2y4JX8ryFWUhZgXCSjfbWdWe9r72jNjU1","d":8,"p":126.635,"c":"USD","b":1.0,"l":1.001031459515214,"e":1788222600,"g":"0.2","n":"0.14","w":"0.06","wu":"2133","ev":1},"FTVx":{"m":"XsvL1QcWfqpUM7CQzcNsicatBTZK2dgJRTor3SHUXdD","d":8,"p":55.29,"c":"USD","b":1.0,"l":1.000851137745,"e":1788481800,"g":"0.07","n":"0.049","w":"0.021","wu":"2081","ev":1},"SOXXx":{"m":"XsEsHeiNZf88sABxu74TPuXbQThdaQGdzPVZUBicjtQ","d":8,"p":519.47,"c":"USD","b":1.0,"l":1.0003319215094,"e":1781481300,"g":"0.282726","n":"0.1979082","w":"0.0848178","wu":"2064","ev":1},"SATAx":{"m":"XsAxB3xLnt7xto5ChiSbVNHBoXcXzKuzS7FieiNYwtY","d":8,"p":99.99,"c":"USD","b":1.0458835365354957,"l":1.046423158477987,"e":1789605000,"g":"2.1116","n":"2.09534","w":"0.01626","wu":"2042","ev":41},"LPLAx":{"m":"Xsk7doh3Qsz51GJdGFUdXcW4PFSKgfj1KGMy6jjbk6J","d":8,"p":332.055,"c":"USD","b":1.0,"l":1.00056005974,"e":1786667400,"g":"0.3","n":"0.21","w":"0.09","wu":"2018","ev":1},"WABx":{"m":"XsGFoZFgiRxDk49QCAQUArX84V88t7Bz3fsExp7HLuX","d":8,"p":279.82,"c":"USD","b":1.0,"l":1.000721769499,"e":1787013000,"g":"0.31","n":"0.217","w":"0.093","wu":"1973","ev":1},"FCNCAx":{"m":"XsccgtwEgwSxTh553v8iVLxNUrbHJfdnaJUjxgZfr48","d":8,"p":2122.34,"c":"USD","b":1.0,"l":1.00066998774,"e":1787963400,"g":"2.1","n":"1.47","w":"0.63","wu":"1912","ev":1},"CRx":{"m":"XskkJXTNFU8cFstbYCAtxTa18tLkuRFe1AWHQhiBLy7","d":8,"p":198.96,"c":"USD","b":1.0,"l":1.0008623188405796,"e":1787963400,"g":"0.255","n":"0.1785","w":"0.0765","wu":"1800","ev":1},"IBKRx":{"m":"XsTS8D9tBV6oQRqkixzNCThctMwFzxScetp4BA9ByTK","d":8,"p":88.63,"c":"USD","b":1.0,"l":1.000629561106,"e":1788222600,"g":"0.0875","n":"0.06125","w":"0.02625","wu":"1776","ev":1},"SOLSx":{"m":"XszuTk3Rr5HXpV7Nrfpg7KAZJfDccPAYLKBsRbLYRx4","d":8,"p":58.885,"c":"USD","b":1.0,"l":1.000931346461,"e":1787790600,"g":"0.075","n":"0.0525","w":"0.0225","wu":"1691","ev":1},"CASYx":{"m":"XsDBYWqoxayY5cqFWs6jNJn4wv5vbP3RkTNqceEQRGW","d":8,"p":601.22,"c":"USD","b":1.0,"l":1.000524495677,"e":1785457800,"g":"0.65","n":"0.455","w":"0.195","wu":"1466","ev":1},"MKSIx":{"m":"XsVDmkYEQ3wwLkXKdkRmic3HroSbReejAcnY9eNmrRW","d":8,"p":241.6,"c":"USD","b":1.0,"l":1.000626992942,"e":1787617800,"g":"0.25","n":"0.175","w":"0.075","wu":"1411","ev":1},"WWDx":{"m":"Xs1xSyecLzT2u188qGFs1JTBXeE9RmBX1pc11o5X6U2","d":8,"p":319.12,"c":"USD","b":1.0,"l":1.000622308654,"e":1787185800,"g":"0.32","n":"0.224","w":"0.096","wu":"1364","ev":1},"WSTx":{"m":"XsptQPquxvzKZ7pZTXNhvtXRxFP8vvC6BmS6QL1PALe","d":8,"p":367.19,"c":"USD","b":1.0,"l":1.000456973294,"e":1785285000,"g":"0.22","n":"0.154","w":"0.066","wu":"1133","ev":1},"ENTGx":{"m":"XsD6kFBZCYumf4awQ9tgFFh8m2HGJBtTFdLYt7HcwRr","d":8,"p":134.61,"c":"USD","b":1.0,"l":1.000592417062,"e":1785285000,"g":"0.1","n":"0.07","w":"0.03","wu":"1112","ev":1},"Lx":{"m":"XsUn5iqqryPGjArLc1FWnzaquVsCjTPciXQGkRyWfho","d":8,"p":108.415,"c":"USD","b":1.0,"l":1.000389061805,"e":1787099400,"g":"0.0625","n":"0.04375","w":"0.01875","wu":"988","ev":1},"Qx":{"m":"XsqUtYxpP7o3b2yupu7WZ2bi9u68W7VHQTFNR36mz96","d":8,"p":117.315,"c":"USD","b":1.0,"l":1.000465657742,"e":1787963400,"g":"0.08","n":"0.056","w":"0.024","wu":"933","ev":1},"HWMx":{"m":"XsCX8NnXq3qx6zUxXxWwjV2yQnGc9C5y6UyXvE6RG7r","d":8,"p":225.1,"c":"USD","b":1.0,"l":1.000338257628,"e":1786062600,"g":"0.14","n":"0.098","w":"0.042","wu":"923","ev":1},"GEVx":{"m":"XswXzAsMV9kebQjCVtr1btvrQgQ7C4C9kKgH4QYAVzw","d":8,"p":940.76,"c":"USD","b":1.0,"l":1.0003574821,"e":1781569800,"g":"0.5","n":"0.35","w":"0.15","wu":"900","ev":1},"FIXx":{"m":"XsPTVwrSE3MMZF1bt15vxM7NuuRHdsBJ7mtGW4cttHX","d":8,"p":1592.245,"c":"USD","b":1.0,"l":1.000362314673,"e":1786581000,"g":"0.9","n":"0.63","w":"0.27","wu":"813","ev":1},"HLTx":{"m":"Xs66hB4NftAJmu73aeBc6RXQC4DX4LwU4xvnfsz581r","d":8,"p":305.7625,"c":"USD","b":1.0,"l":1.000318558296,"e":1787272200,"g":"0.15","n":"0.105","w":"0.045","wu":"790","ev":1},"Hx":{"m":"Xs5d6SH8HCeyBRkXNfoLWVnqgBT6tz8HnBoyJES3Fi4","d":8,"p":157.8,"c":"USD","b":1.0,"l":1.0005913161006927,"e":1787790600,"g":"0.15","n":"0.105","w":"0.045","wu":"770","ev":1},"TERx":{"m":"Xsbe4fwmjVQEWEPkzfyxqNdPUUK7X9dKfTJrZdDbNgx","d":8,"p":359.96,"c":"USD","b":1.000264273683,"l":1.0005331063386256,"e":1788481800,"g":"0.13","n":"0.091","w":"0.039","wu":"663","ev":1},"PWRx":{"m":"XsLR2VCGNzYVLfJGEwwNZsRYDZBGyBnoQH5rPGvwodA","d":8,"p":619.09,"c":"USD","b":1.000137470542,"l":1.0002444237463104,"e":1782865800,"g":"0.22","n":"0.154","w":"0.066","wu":"660","ev":2},"CRSx":{"m":"Xs8FjYWcxTREaUj5hv77f4M2UCreGfP7HegLvqzX56X","d":8,"p":397.9664,"c":"USD","b":1.0,"l":1.000284333239,"e":1787617800,"g":"0.2","n":"0.14","w":"0.06","wu":"603","ev":1},"WDCx":{"m":"XsmopJuh6C6uNFJa3KaVoYqEtrf3Y7M5LYwRLKLER3h","d":8,"p":422.74,"c":"USD","b":1.0,"l":1.000224618149,"e":1788568200,"g":"0.15","n":"0.105","w":"0.045","wu":"491","ev":1},"IRx":{"m":"XsWx5RzivC8d5XwnLiMcgQqqhXiDnrTDwFCDap1o6NW","d":8,"p":72.735,"c":"USD","b":1.0,"l":1.000165172251,"e":1786581000,"g":"0.02","n":"0.014","w":"0.006","wu":"465","ev":1},"JBLx":{"m":"XsnZQ49Abxr3RJgRSxYd4azhUg4MQVT3amiyaq84oA1","d":8,"p":298.9225,"c":"USD","b":1.0,"l":1.000151204234,"e":1786667400,"g":"0.08","n":"0.056","w":"0.024","wu":"398","ev":1},"TXTx":{"m":"XsjWGbe4McmJXNRd6hQYsS8dEsPKTfT38fxSebugRbn","d":8,"p":81.425,"c":"USD","b":1.0,"l":1.000176767677,"e":1789086600,"g":"0.02","n":"0.014","w":"0.006","wu":"392","ev":1},"VRTx":{"m":"XsLUiVEwYeoneKpgR1C2Q4DBUZhX4xDktSCfQqq8zmn","d":8,"p":242.22,"c":"USD","b":1.000144451415,"l":1.000314669728725,"e":1789173000,"g":"0.0625","n":"0.04375","w":"0.01875","wu":"375","ev":1},"COVELx":{"m":"XsSWT1Cw3vemPuy82ATtfT8R347jctHVri1m2NzfD2G","d":8,"p":null,"c":"USD","b":1.0,"l":1.018976897689769,"e":1789518600,"g":"0.02932","n":"0.02932","w":"0.00000","wu":"0","ev":1},"SNDSCx":{"m":"XsFRth3iT4KjYSzVvWpdeFhFjzdguCFiv3zMWJEodsF","d":8,"p":null,"c":"USD","b":1.0,"l":1.0390625,"e":1789518600,"g":"0.06374","n":"0.06374","w":"0.00000","wu":"0","ev":1},"RNRx":{"m":"Xs5m7mD1sRUu3ryXiYNDqCTd67hQVZRSro2zxxWqTtn","d":8,"p":329.19,"c":"USD","b":1.0,"l":1.0012400943681568,"e":1789432200,"g":"0.41","n":"0.41","w":"0.00","wu":"0","ev":1},"STRKx":{"m":"XsaQGz41BEQkS9xAB44uvUtuXcdLJAXEU1dogEzWMZ8","d":8,"p":69.7,"c":"USD","b":1.0561756999911942,"l":1.0840910085675701,"e":1789432200,"g":"2","n":"2","w":"0","wu":"0","ev":1},"CKHUTx":{"m":"XsjMBmvjeERTrf2odjQKQKFgBVWsiC5J9Mhe9eCNyfW","d":8,"p":null,"c":"USD","b":1.0,"l":1.0108278867102396,"e":1789343700,"g":"0.09506","n":"0.09506","w":"0.00000","wu":"0","ev":1},"CKAHx":{"m":"XsEV5rBKdRtbmVLXmCxTm6Dox3467drekVVwpupVLrP","d":8,"p":null,"c":"USD","b":1.0,"l":1.008563074352548,"e":1789343700,"g":"0.05228","n":"0.05228","w":"0.00000","wu":"0","ev":1},"CITICx":{"m":"XsdSGGAQyFiEuCVyV5ZQgB79pXXpr7vZPm3nhvHwKzK","d":8,"p":null,"c":"USD","b":1.0,"l":1.0176757902403497,"e":1789343700,"g":"0.03095","n":"0.03095","w":"0.00000","wu":"0","ev":1},"WHGROx":{"m":"XsQDsbd6nqERiTZY2TkBheUG53QsewgCa2eaCSS4PYe","d":8,"p":null,"c":"USD","b":1.0,"l":1.029261155816,"e":1789086600,"g":"0.0255064139078","n":"0.0255064139078","w":"0E-13","wu":"0","ev":1},"CRESMx":{"m":"XsKFSq4aTzj9L2g1rqbdcewZH3bZNE2WwWBZKcGNxsX","d":8,"p":null,"c":"USD","b":1.0,"l":1.02783530572,"e":1789000200,"g":"0.14397498","n":"0.14397498","w":"0E-8","wu":"0","ev":1},"CRESLx":{"m":"XsbsVbQ24JD4HKnrz4eLktPBgZEMX3cooqiFapFjUtB","d":8,"p":null,"c":"USD","b":1.0,"l":1.007684630739,"e":1789000200,"g":"0.029458123566564","n":"0.029458123566564","w":"0E-15","wu":"0","ev":1},"SINOTx":{"m":"XsgiiLos4YromwpmshTMTN6z3PSbD51HSn9k9xysujp","d":8,"p":null,"c":"USD","b":1.0,"l":1.026433691756,"e":1789000200,"g":"0.15047872644392","n":"0.15047872644392","w":"0E-14","wu":"0","ev":1},"EGx":{"m":"XsvYonMjAxFXYW6PKBz9jFEuvX6xAhm9BifzxgLzurb","d":8,"p":378.77,"c":"USD","b":1.0,"l":1.005407890111673,"e":1788913800,"g":"2","n":"2","w":"0","wu":"0","ev":1},"BAMx":{"m":"XsLdXScusw7mCSATbp7bWKfyBR1RVWEEayKgRcmJ8dZ","d":8,"p":45.36,"c":"USD","b":1.0,"l":1.0072309094397545,"e":1787963400,"g":"0.376875","n":"0.376875","w":"0.000000","wu":"0","ev":1},"RBAx":{"m":"XsTCwtofQgx1SLYkouHvVg22beYhn1dmj1vtC3TUp6M","d":8,"p":84.22,"c":"USD","b":1.0,"l":1.002943975258713,"e":1787617800,"g":"0.2475","n":"0.2475","w":"0.0000","wu":"0","ev":1},"ASMLx":{"m":"XshuHQ6o6SVpUNawvnnTMxsZ4tacZsNgVCLorv7TkFq","d":8,"p":1620.305,"c":"USD","b":1.001759964773,"l":1.0028663344146624,"e":1785198600,"g":"4.528639","n":"4.528639","w":"0.000000","wu":"0","ev":2},"ACNx":{"m":"Xs5UJzmCRQ8DWZjskExdSQDnbE6iLkRu2jjrRAB1JSU","d":8,"p":189.41,"c":"USD","b":1.0191415587808974,"l":1.0282231285426122,"e":1783557000,"g":"2.4450","n":"2.4450","w":"0.0000","wu":"0","ev":2},"MDTx":{"m":"XsDgw22qRLTv5Uwuzn6T63cW69exG41T6gwQhEK22u2","d":8,"p":92.72,"c":"USD","b":1.022582161772571,"l":1.0294400153167536,"e":1782433800,"g":"0.54","n":"0.54","w":"0.00","wu":"0","ev":1}}}</script>
 
 <script>
 /* eslint-disable */
@@ -717,8 +1236,13 @@ POST api.devnet.solana.com
      `no key` property the page states in three places, which is not a trade worth making. */
   var RETRY_DELAYS = [400, 1200, 3000];
 
-  function rpcOnce(method, params) {
-    return fetch(RPC, {
+  /* One transport, two endpoints. The devnet half of this page asks the program; the mainnet half
+     reads a real xStock's mint account. Both are plain `fetch` to a public RPC with no key, so the
+     only thing that differs is the URL, and the URL is a parameter here rather than a second copy
+     of this function. The retry rule is the same on both, because a public endpoint throttles
+     either chain for the same reasons. */
+  function rpcOnce(url, method, params) {
+    return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: method, params: params })
@@ -733,7 +1257,7 @@ POST api.devnet.solana.com
       return r.json();
     }, function () {
       /* fetch rejects when the connection drops or DNS fails. No status, and worth another try. */
-      var e = new Error(method + ": the connection to " + RPC.replace(/^https?:\/\//, "") + " failed");
+      var e = new Error(method + ": the connection to " + url.replace(/^https?:\/\//, "") + " failed");
       e.retryable = true;
       throw e;
     }).then(function (j) {
@@ -748,19 +1272,23 @@ POST api.devnet.solana.com
     });
   }
 
-  function rpc(method, params) {
+  function rpcAt(url, method, params, note) {
     var attempt = 0;
     function go() {
-      return rpcOnce(method, params).catch(function (e) {
+      return rpcOnce(url, method, params).catch(function (e) {
         if (!e.retryable || attempt >= RETRY_DELAYS.length) throw e;
         var wait = RETRY_DELAYS[attempt++];
         /* Say so on the chip. A retry the reader cannot see is indistinguishable from a hang. */
-        mark("reading", "asking " + RPC.replace(/^https?:\/\//, "") + " \u00b7 retry "
+        note("asking " + url.replace(/^https?:\/\//, "") + " \u00b7 retry "
           + attempt + " of " + RETRY_DELAYS.length + " in " + (wait / 1000) + "s");
         return new Promise(function (res) { setTimeout(res, wait); }).then(go);
       });
     }
     return go();
+  }
+
+  function rpc(method, params) {
+    return rpcAt(RPC, method, params, function (text) { mark("reading", text); });
   }
 
   function simulate(accounts, data) {
@@ -1119,6 +1647,236 @@ POST api.devnet.solana.com
       + " Read from the program's own accounts, not from an index.");
   }
 
+  /* ------------------------------------------------------------------ the holder view */
+  /*
+     The mainnet half. A real xStock, read live from the mint account over plain RPC with no key,
+     with the dividend figures baked from the issuer's own feed by `scripts/fetch.py`.
+
+     What this half is not, and the reason it carries a paragraph of prose of its own on the page:
+     the program's answer. The program is deployed to devnet and has never been asked about a
+     mainnet mint, so there is no `TokenRecord` behind any of this and no `settlement_window` call
+     to make. The verdict is the program's rule from `read.rs settlement_window`, applied here to
+     the mint's own fields. Calling it "the program's own reason" would be the wrong claim in the
+     one place a judge can check it in a single request.
+  */
+
+  var HOLDER = JSON.parse(document.getElementById("holder-state").textContent);
+  var MAINNET = HOLDER.rpc;
+  var holderView = null;
+  var holderSymbol = null;
+
+  function decScaled(s, places) {
+    var parts = String(s).split(".");
+    var whole = parts[0] || "0";
+    var frac = (parts[1] || "").slice(0, places).padEnd(places, "0");
+    return BigInt(whole) * (10n ** BigInt(places)) + BigInt(frac || "0");
+  }
+
+  /* What was withheld on a holding, from the per-share figure. Integer arithmetic on a scaled
+     integer: the per-share figure is a decimal string with eight places, so it becomes a scaled
+     integer once and the division happens last. This is `build_desk.held_withheld` written again
+     for the browser, and the two have to agree, because the build bakes the number and this
+     replaces it the moment the reader edits the amount. */
+  function withheldOn(raw, decimals, perUnit) {
+    if (perUnit === null || perUnit === undefined) return null;
+    return (raw * decScaled(perUnit, 8)) / (10n ** BigInt(decimals));
+  }
+
+  /* `read.rs settlement_window`, in the browser.
+     The program's rule is three clauses. `since` is `now` minus the mint's own timestamp when the
+     mint carries one and nothing is staged; failing that it is `now` minus the timestamp in the
+     program's `TokenRecord`; failing that it is -1. `until` is the staged timestamp minus `now`,
+     or -1. Either one inside 900 seconds is a hold.
+     The middle clause cannot fire here. There is no `TokenRecord` for a mainnet mint because the
+     program is not deployed on mainnet, so `since` reads -1 whenever a value is staged, and that
+     is the one place this half is weaker than the program. The page says so under the verdict. */
+  function holderWindow(effectiveTs, now) {
+    var effectiveAt = effectiveTs <= now ? effectiveTs : 0;
+    var stagedAt = effectiveTs > now ? effectiveTs : 0;
+    var since = (stagedAt === 0 && effectiveAt > 0) ? now - effectiveAt : -1;
+    var until = stagedAt > 0 ? stagedAt - now : -1;
+    return {
+      since: since,
+      until: until,
+      inside: (since >= 0 && since <= PAUSE) || (until >= 0 && until <= PAUSE),
+      answered: since >= 0 || until >= 0
+    };
+  }
+
+  function readHolderMint(symbol) {
+    var t = HOLDER.tokens[symbol];
+    if (!t) return Promise.reject(new Error("this build carries no xStock called " + symbol));
+    return rpcAt(MAINNET, "getAccountInfo", [t.m, { encoding: "jsonParsed" }], holderNote)
+      .then(function (res) {
+        var info = res.value && res.value.data && res.value.data.parsed
+          ? res.value.data.parsed.info : null;
+        if (!info) throw new Error("the mint account did not parse as a token mint");
+        var ext = (info.extensions || []).filter(function (e) {
+          return e.extension === "scaledUiAmountConfig";
+        })[0];
+        var st = ext ? ext.state : null;
+        if (!st) throw new Error("this mint carries no scaledUiAmountConfig extension");
+        return {
+          symbol: symbol,
+          token: t,
+          decimals: info.decimals === undefined ? t.d : Number(info.decimals),
+          multiplier: Number(st.multiplier),
+          newMultiplier: Number(st.newMultiplier),
+          effectiveTs: Number(st.newMultiplierEffectiveTimestamp),
+          now: Math.floor(Date.now() / 1000)
+        };
+      });
+  }
+
+  function holderNote(text) {
+    setText("holder-when", text);
+  }
+
+  function holderMark(live, when) {
+    var dot = el("holder-dot");
+    if (dot) dot.className = "dot" + (live ? " on" : "");
+    setText("holder-status", live ? "Live from mainnet" : "Recorded");
+    setText("holder-when", when);
+  }
+
+  /* The dividend side, which does not move with the mint read: it comes from the issuer's own feed
+     through `fetch.py`, a twelve minute pass over 927 mints that a browser cannot do. */
+  function renderHolderToken(t) {
+    var rate = t.g && t.w
+      ? (Number(t.w) / Number(t.g) * 100).toFixed(0) + "%"
+      : "n/a";
+    setText("holder-rate", rate);
+    setText("holder-events", t.ev === null || t.ev === undefined ? "n/a" : String(t.ev));
+    setText("holder-gross", t.g || "n/a");
+    setText("holder-net", t.n || "n/a");
+    setText("holder-withheld-unit", t.w || "n/a");
+    setText("holder-withheld-usd", t.wu ? "$" + Number(t.wu).toLocaleString("en-US",
+      { maximumFractionDigits: 0 }) : "n/a");
+    setText("holder-price", t.p === null || t.p === undefined ? "n/a"
+      : Number(t.p).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    setText("holder-currency", t.c || "USD");
+    setText("holder-decimals", String(t.d));
+    setText("holder-mint", t.m);
+    /* The default amount is one share, and it is rewritten when the token changes, because a raw
+       amount that means one share at eight decimals means a hundred shares at six. */
+    var rawInput = el("holder-raw");
+    if (rawInput) rawInput.value = (10n ** BigInt(t.d)).toString();
+    setText("holder-field", t.b === null || t.b === undefined ? "n/a" : String(t.b));
+    setText("holder-live", t.l === null || t.l === undefined ? "n/a" : String(t.l));
+    setText("holder-effective", t.e ? fmtTime(t.e) : "no dated activation");
+    setText("holder-agree", t.b !== t.l
+      ? "These two disagree, which is the trap."
+      : "These two agree, so the obvious read happens to be correct here.");
+    renderHolderAmounts(t, t.b, t.l);
+    /* The baked window, from the build's own clock. Replaced by the live read below. */
+    var w = holderWindow(t.e ? t.e : 0, Math.floor(Date.now() / 1000));
+    drawHolderVerdict(w, t.e ? t.e : 0, true);
+  }
+
+  /* What the reader's own amount is worth, and what was withheld from it. Read from the input
+     rather than stored, so editing the amount cannot leave a stale figure beside it. */
+  function renderHolderAmounts(t, fieldValue, liveValue) {
+    var rawInput = el("holder-raw");
+    var raw;
+    try {
+      raw = BigInt(String(rawInput.value).replace(/[^0-9]/g, "") || "0");
+    } catch (e) {
+      setText("holder-wallet", "not a number");
+      setText("holder-own", "not a number");
+      setText("holder-withheld-mine", "not a number");
+      return;
+    }
+    if (fieldValue === null || fieldValue === undefined || liveValue === null || liveValue === undefined) {
+      setText("holder-wallet", "n/a");
+      setText("holder-own", "n/a");
+    } else {
+      setText("holder-wallet", units(naiveScaled(raw, fieldValue), t.d));
+      setText("holder-own", units(naiveScaled(raw, liveValue), t.d));
+    }
+    var mine = withheldOn(raw, t.d, t.w);
+    setText("holder-withheld-mine", mine === null ? "n/a" : units(mine, 8));
+  }
+
+  function drawHolderVerdict(w, effectiveTs, baked) {
+    var verdict = el("holder-verdict");
+    verdict.className = "tag " + (!w.answered ? "hold" : w.inside ? "hold" : "settle");
+    verdict.textContent = !w.answered ? "No answer" : w.inside ? "Hold" : "Settle";
+
+    /* Rendered as a duration rather than as raw seconds. The devnet desk below shows the seconds,
+       because there the numbers come back from the program's own return data and a reader is
+       checking them against it. Here there is no return data to check against, and a cell in a
+       three-column grid that reads "3,235,982s ago" wraps to three lines and tells a reader
+       nothing. */
+    setText("holder-delta", (w.since < 0 ? "no activation yet" : fmtDuration(w.since) + " ago")
+      + " \u00b7 "
+      + (w.until < 0 ? "nothing staged" : "in " + fmtDuration(w.until)));
+
+    var why;
+    if (!w.answered) {
+      why = "This build carries no dated activation for this mint, so neither of the program's two "
+        + "numbers can be worked out from it. The live read below replaces this.";
+    } else if (w.inside) {
+      why = w.until >= 0
+        ? "The issuer has staged an activation that takes effect in " + fmtDuration(w.until)
+          + ", which is inside the " + (PAUSE / 60) + " minute window the program holds for."
+        : "The activation was " + fmtDuration(w.since) + " ago, which is inside the "
+          + (PAUSE / 60) + " minute window the program holds for.";
+    } else {
+      var ageText = fmtDuration(w.since), closedText = fmtDuration(w.since - PAUSE);
+      why = closedText === ageText
+        ? "The activation was " + ageText + " ago, which is outside the " + (PAUSE / 60)
+          + " minute window the program holds for, so this trade is clear."
+        : "The activation was " + ageText + " ago. The window closed " + closedText
+          + " ago, so this trade is clear.";
+    }
+    if (baked) {
+      why += " This is the build's own reading, from its fetch on " + HOLDER.asOf.slice(0, 10)
+        + ".";
+    }
+    setText("holder-verdict-why", why);
+  }
+
+  /* One symbol change does four things: the dividend figures, the two multipliers, the amount, and
+     the verdict. All four come off the same token record so they cannot describe different tokens,
+     which is the failure the two-halves-of-one-page shape invites. */
+  function selectHolder(symbol) {
+    var t = HOLDER.tokens[symbol];
+    if (!t) {
+      /* An unknown ticker leaves the section alone rather than blanking it, and the input is put
+         back to the symbol that is actually on screen. Leaving the typed text there would show a
+         ticker beside another ticker's numbers, which is the one way this section could mislead a
+         reader who mistyped rather than asked for something that does not exist. The status chip is
+         not downgraded either: the read that produced what is on screen did succeed. */
+      setText("holder-when", "this build carries no xStock called " + symbol
+        + ", so nothing changed" + (holderSymbol ? ", and the section still shows " + holderSymbol : ""));
+      if (holderSymbol) el("holder-symbol").value = holderSymbol;
+      return;
+    }
+    holderSymbol = symbol;
+    el("holder-symbol").value = symbol;
+    renderHolderToken(t);
+    holderMark(false, "build from " + HOLDER.asOf.replace("T", " ").replace(/\..*$/, " UTC")
+      + "; reading mainnet");
+    readHolderMint(symbol).then(function (v) {
+      holderView = v;
+      var live = v.effectiveTs <= v.now ? v.newMultiplier : v.multiplier;
+      setText("holder-field", String(v.multiplier));
+      setText("holder-live", String(live));
+      setText("holder-effective", v.effectiveTs > v.now
+        ? "no dated activation yet" : fmtTime(v.effectiveTs));
+      setText("holder-agree", v.multiplier !== v.newMultiplier
+        ? "These two disagree, which is the trap."
+        : "These two agree, so the obvious read happens to be correct here.");
+      renderHolderAmounts(t, v.multiplier, live);
+      drawHolderVerdict(holderWindow(v.effectiveTs, v.now), v.effectiveTs, false);
+      holderMark(true, "read from the mint at " + MAINNET.replace(/^https?:\/\//, "")
+        + " just now, and the mint's own timestamp is "
+        + (v.effectiveTs > v.now ? "in the future, so a value is staged" : "in the past"));
+    }).catch(function (e) {
+      holderMark(false, "live read failed: " + e.message + ". Showing the build's own values.");
+    });
+  }
+
   /* ------------------------------------------------------------------ live read */
 
   function readLive() {
@@ -1262,6 +2020,25 @@ POST api.devnet.solana.com
     renderMint(b.getAttribute("data-mint"));
   });
 
+  /* The holder view's own wiring. `change` covers a pick from the datalist, `keydown` covers a
+     ticker typed and confirmed with Enter, and the button is there because a reader who has typed
+     a ticker should not have to guess that it needs a keypress to take effect. */
+  var holderInput = el("holder-symbol");
+  holderInput.addEventListener("change", function () { selectHolder(holderInput.value.trim()); });
+  holderInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); selectHolder(holderInput.value.trim()); }
+  });
+  el("holder-read").addEventListener("click", function () { selectHolder(holderInput.value.trim()); });
+  el("holder-raw").addEventListener("input", function () {
+    var t = HOLDER.tokens[holderInput.value.trim()];
+    if (!t) return;
+    var fieldValue = holderView ? holderView.multiplier : t.b;
+    var liveValue = holderView
+      ? (holderView.effectiveTs <= holderView.now ? holderView.newMultiplier : holderView.multiplier)
+      : t.l;
+    renderHolderAmounts(t, fieldValue, liveValue);
+  });
+
   el("recheck").addEventListener("click", refresh);
 
   el("ask").addEventListener("click", function () {
@@ -1295,7 +2072,11 @@ POST api.devnet.solana.com
     }).then(function () { btn.disabled = false; });
   });
 
-  /* The recorded state is already rendered into the markup, so this only replaces it. */
+  /* The recorded state is already rendered into the markup, so both of these only replace it. Two
+     reads on load, against two different chains, and the page says which half is which: the
+     holder view is mainnet and applies the program's rule in the browser, the desk below is devnet
+     and asks the program itself. */
+  selectHolder(HOLDER.default);
   refresh();
 })();
 </script>

@@ -14,6 +14,7 @@ import datetime
 import json
 import pathlib
 import sys
+from decimal import Decimal
 
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parent
@@ -21,6 +22,32 @@ DATA = REPO / "desk-data.json"
 TEMPLATE = HERE / "desk_template.html"
 OUT = REPO / "desk.html"
 WINDOW = HERE / "desk-window.json"
+
+# The holder view reads a different chain from the rest of this page, and that difference is the
+# whole reason it needs its own paragraph of prose on the page rather than a line in a table.
+# `desk-data.json` is a capture of devnet, where this entry's program is deployed, and everything
+# the desk asks the program about is a `DEMOx` mint the demo created. `data.json` is the build
+# behind the README and the evidence page: 927 real mainnet xStock mints, read over plain RPC with
+# no key, with the issuer's own feed behind the dividend figures. The program cannot be asked about
+# any of them, because it is not deployed on mainnet. So the holder view applies the program's own
+# rule in the browser and says that is what it is doing.
+DATA_MAIN = REPO / "data.json"
+
+# Two mainnet endpoints, and the reason there are two is worth stating because it looks like an
+# inconsistency until it is measured. `fetch.py` reads the 927 mint accounts from
+# `api.mainnet-beta.solana.com`, which is fine from a server and refuses every request that carries
+# a browser `Origin`: measured on 21 September 2026, a `getHealth` to it returns `403 Access
+# forbidden` with `access-control-allow-origin: *` set, which is the shape of a filter rather than
+# of a CORS failure. A page cannot use it. `solana-rpc.publicnode.com` answers the same call with
+# `200` and the same `jsonParsed` mint, so the page uses that one and this is the only number on
+# the page that comes from a different host than the build behind it.
+MAINNET_RPC = "https://solana-rpc.publicnode.com"
+
+# The mint the holder view opens on. Chosen rather than taken from the first row: it is the token
+# the README's named user holds, so the page a reader lands on is the same story the README tells.
+# Asserted below to carry a withholding rate, a dividend and two disagreeing multipliers, so a
+# build where it stops carrying one fails here rather than publishing an empty demonstration.
+HOLDER_DEFAULT = "XOMx"
 
 # The program's own error variants, in declaration order, so the code is 6000 + index.
 ERROR_NAMES = [
@@ -79,6 +106,56 @@ def duration(secs):
     if a < 86400:
         return f"{a / 3600:.1f} hours"
     return f"{a / 86400:.1f} days"
+
+
+def units(raw, decimals):
+    """`raw` base units in the units a wallet displays. The page's own `units`, in Python."""
+    raw = int(raw)
+    scale = 10 ** decimals
+    whole, frac = divmod(raw, scale)
+    text = str(frac).rjust(decimals, "0").rstrip("0")
+    return f"{whole}.{text}" if text else str(whole)
+
+
+def naive_scaled(raw, multiplier):
+    """`raw` scaled by a multiplier, at the same six decimals the page's own script uses.
+
+    One rounding rule for both, deliberately. The page's `naiveScaled` rounds the multiplier to
+    six decimals before multiplying, so a build that used full precision here would bake one
+    number and have the live script replace it with a slightly different one, which is the
+    two-surfaces-disagree defect this entry has shipped before.
+    """
+    micro = int(round(float(multiplier) * 1e6))
+    return int(raw) * micro // 1000000
+
+
+def held_withheld(raw, decimals, withheld_per_unit):
+    """What was withheld on a holding of `raw` units, from the per-share figure.
+
+    Integer arithmetic on a scaled integer, not a float. The per-share figure arrives as a decimal
+    string with eight places, so it is turned into a scaled integer once. The result is scaled by
+    the same eight places and is displayed with `units(..., 8)`.
+
+    The first version of this divided by 1e8 twice and returned 0 for every holding of one share,
+    which is the figure the section exists to show. It was caught by reading the built page rather
+    than by any check: the number is the page's own, it moves with the reader's amount, and nothing
+    in this repository compares it with anything. That is the gap this entry is about, in this
+    entry's own build, so it is written down rather than quietly fixed.
+    """
+    if withheld_per_unit is None:
+        return None
+    scaled = int(Decimal(str(withheld_per_unit)) * Decimal(10 ** 8))
+    return int(raw) * scaled // (10 ** decimals)
+
+
+def _usd_short(value):
+    """A dollar figure with no cents, for a total across a whole float.
+
+    `published._usd` is the README's rule and it rounds the same way. Cents on a figure this size
+    are noise, and printing them would suggest a precision the feed's per-symbol rounding does not
+    have.
+    """
+    return "${:,.0f}".format(Decimal(str(value)))
 
 
 def main():
@@ -184,6 +261,76 @@ def main():
     for binding in data["pyth"]["bindings"]:
         if binding["mint"] not in mints:
             problems.append(f"a Pyth binding names {binding['mint']}, which is not registered")
+
+    # ---------------------------------------------------------------- the holder view
+    #
+    # The second half of this page, and the half the review asked for: a real mainnet xStock, the
+    # two multipliers read live from mainnet over plain RPC, the dividend and what was withheld,
+    # and a hold or settle verdict on the reader's own stock.
+    #
+    # What it is not, and what the page says in as many words: the program's answer. The program is
+    # deployed to devnet and has never been asked about a mainnet mint. The verdict here is the
+    # program's own rule, applied in the browser to the mint's own two fields. That distinction is
+    # the reason this block exists in a build file at all rather than being left to the page's
+    # script: the page's script cannot be checked, and a claim about which of the two chains a
+    # number came from is a claim like any other.
+
+    main = json.loads(DATA_MAIN.read_text())
+    built_at = datetime.datetime.fromisoformat(main["built_utc"].replace("Z", "+00:00")).timestamp()
+
+    holder_tokens = {}
+    for token in main["tokens"]:
+        symbol = token.get("symbol")
+        if not symbol or not token.get("mint"):
+            continue
+        holder_tokens[symbol] = {
+            "m": token["mint"],
+            "d": token["decimals"],
+            "p": token.get("price"),
+            "c": token.get("currency"),
+            "b": token.get("base_multiplier"),
+            "l": token.get("live_multiplier"),
+            "e": token.get("effective_at"),
+            "g": token.get("gross_per_unit"),
+            "n": token.get("net_per_unit"),
+            "w": token.get("withheld_per_unit"),
+            "wu": token.get("withheld_usd"),
+            "ev": token.get("events"),
+        }
+
+    default_holder = holder_tokens.get(HOLDER_DEFAULT)
+    if default_holder is None:
+        problems.append(
+            f"the holder view opens on {HOLDER_DEFAULT} and this build does not carry it"
+        )
+    else:
+        hd = default_holder
+        if not hd["ev"]:
+            problems.append(
+                f"the holder view opens on {HOLDER_DEFAULT}, which has no dividend in this build, "
+                f"so the section would show an empty frame"
+            )
+        if not hd["w"] or not hd["g"]:
+            problems.append(
+                f"the holder view opens on {HOLDER_DEFAULT}, which carries no per-share withheld "
+                f"figure, so the number the whole entry rests on would be missing"
+            )
+        if hd["b"] == hd["l"]:
+            problems.append(
+                f"the holder view opens on {HOLDER_DEFAULT}, where the two multipliers agree, so "
+                f"the trap the page exists to show would not be on the page"
+            )
+        if hd["e"]:
+            # The baked verdict is the program's rule applied at the build's own clock, and the
+            # rule is `read.rs settlement_window`'s: `since` from the mint's timestamp when there
+            # is one, `until` from a staged activation. The build carries no staged timestamp, so
+            # `until` is unknown here and the page says so rather than implying a zero.
+            baked_since = int(built_at) - int(hd["e"])
+            if baked_since < 0:
+                problems.append(
+                    f"the holder view opens on {HOLDER_DEFAULT} whose activation is dated in the "
+                    f"future, which the build's own fetch should not produce"
+                )
 
     if problems:
         print("refusing to write the desk:")
@@ -408,9 +555,125 @@ def main():
     # than of the data.
     state_json = state_json.replace("<", "\\u003c")
 
+    # ---------------------------------------------------------------- the holder view's numbers
+    #
+    # Everything the section says before it reaches the chain. The page's script replaces the two
+    # multipliers and the verdict from a live mainnet read, and leaves the dividend figures alone:
+    # those come from the issuer's feed through `fetch.py`, which is a twelve minute pass over 927
+    # mints and not something a browser can do.
+
+    hd = holder_tokens[HOLDER_DEFAULT]
+    hdecimals = hd["d"]
+    hraw = 10 ** hdecimals
+    h_wallet = naive_scaled(hraw, hd["b"])
+    h_own = naive_scaled(hraw, hd["l"])
+    h_mine = held_withheld(hraw, hdecimals, hd["w"])
+    h_rate = (Decimal(hd["w"]) / Decimal(hd["g"]) * 100) if hd["g"] else None
+
+    # The program's rule, at the build's own clock. `since` is known when the mint carried a
+    # timestamp; `until` is not, because the fetch keeps the effective timestamp of the value in
+    # force and discards the staged one. `-1` is the program's own "nothing to report", and the
+    # page prints it as such rather than as a zero.
+    if hd["e"]:
+        h_since = int(built_at) - int(hd["e"])
+    else:
+        h_since = -1
+    h_until = -1
+    h_inside = (0 <= h_since <= pause) or (0 <= h_until <= pause)
+    h_answered = h_since >= 0 or h_until >= 0
+    h_verdict = "No answer" if not h_answered else ("Hold" if h_inside else "Settle")
+    h_verdict_class = "hold" if (not h_answered or h_inside) else "settle"
+    if not h_answered:
+        h_why = (
+            "This build carries no dated activation for this mint, so neither of the program's "
+            "two numbers can be worked out from it. Open the page with JavaScript on and it reads "
+            "the mint from mainnet directly."
+        )
+    elif h_inside:
+        h_why = (
+            f"The activation was {duration(h_since)} ago, which is inside the {pause // 60} minute "
+            f"window the program holds for."
+        )
+    else:
+        # When the activation is long past, the age and the time since the window closed round to
+        # the same string and the sentence read "33.7 days ago. The window closed 33.7 days ago",
+        # which looks like a bug even though both halves are true. Compare the rendered strings
+        # rather than pick a threshold, and keep this identical to the page's own script: the build
+        # bakes this sentence and the live read replaces it, so the two have to say the same thing.
+        age_text = duration(h_since)
+        closed_text = duration(h_since - pause)
+        h_why = (
+            f"The activation was {age_text} ago, which is outside the {pause // 60} minute window "
+            f"the program holds for, so this trade is clear."
+            if closed_text == age_text
+            else f"The activation was {age_text} ago. The window closed {closed_text} ago, so "
+            f"this trade is clear."
+        )
+    # A duration rather than raw seconds, and the page's own script renders it the same way. The
+    # devnet desk below keeps the seconds because those numbers arrive in the program's return data
+    # and a reader is checking them against it; here there is nothing to check against and a
+    # seven-figure seconds count in a three-column cell wraps and says less than "37.5 days".
+    h_delta = (
+        ("no activation yet" if h_since < 0 else f"{duration(h_since)} ago")
+        + " \u00b7 "
+        + ("nothing staged" if h_until < 0 else f"in {duration(h_until)}")
+    )
+    h_effective = iso(hd["e"]) if hd["e"] else "no dated activation"
+    h_agree = (
+        "These two disagree, which is the trap."
+        if hd["b"] != hd["l"]
+        else "These two agree, so the obvious read happens to be correct here."
+    )
+
+    holder_json = json.dumps(
+        {
+            "rpc": MAINNET_RPC,
+            "asOf": main["built_utc"],
+            "default": HOLDER_DEFAULT,
+            "tokens": holder_tokens,
+        },
+        separators=(",", ":"),
+    ).replace("<", "\\u003c")
+
     # ---------------------------------------------------------------- fill
 
     values = {
+        "MAINNET_RPC": MAINNET_RPC,
+        "HOLDER_JSON": holder_json,
+        "HOLDER_DEFAULT": HOLDER_DEFAULT,
+        "HOLDER_ASOF": human_utc(main["built_utc"]),
+        "HOLDER_MINT": hd["m"],
+        "HOLDER_DECIMALS": hdecimals,
+        "HOLDER_FIELD": hd["b"],
+        "HOLDER_LIVE": hd["l"],
+        "HOLDER_EFFECTIVE": h_effective,
+        "HOLDER_AGREE": h_agree,
+        "HOLDER_RAW": f"{hraw:,}",
+        "HOLDER_PRICE": f"{hd['p']:,.2f}" if hd["p"] is not None else "n/a",
+        "HOLDER_CURRENCY": hd["c"] or "USD",
+        "HOLDER_WALLET": units(h_wallet, hdecimals),
+        "HOLDER_OWN": units(h_own, hdecimals),
+        "HOLDER_EVENTS": hd["ev"],
+        "HOLDER_GROSS": hd["g"] or "n/a",
+        "HOLDER_NET": hd["n"] or "n/a",
+        "HOLDER_WITHHELD_UNIT": hd["w"] or "n/a",
+        "HOLDER_WITHHELD_USD": _usd_short(hd["wu"]) if hd["wu"] else "n/a",
+        "HOLDER_WITHHELD_MINE": units(h_mine, 8) if h_mine is not None else "n/a",
+        "HOLDER_RATE": f"{h_rate.quantize(Decimal('1'))}%" if h_rate is not None else "n/a",
+        "HOLDER_VERDICT": h_verdict,
+        "HOLDER_VERDICT_CLASS": h_verdict_class,
+        "HOLDER_VERDICT_WHY": h_why,
+        "HOLDER_DELTA": h_delta,
+        "HOLDER_SINCE": h_since,
+        "HOLDER_UNTIL": h_until,
+        "HOLDER_COUNT": f"{len(holder_tokens):,}",
+        "HOLDER_OPTIONS": "\n".join(
+            f'            <option value="{esc(symbol)}"></option>'
+            for symbol in sorted(holder_tokens)
+        ),
+    }
+    values.update({
+
         "PROGRAM_ID": data["programId"],
         "PROGRAM_ID_SHORT": data["programId"][:8] + "\u2026",
         "RPC": data["rpc"],
@@ -463,7 +726,7 @@ def main():
         "PYTH_ROWS": "\n".join(price_rows),
         "WINDOW_NOTE": window_note,
         "STATE_JSON": state_json,
-    }
+    })
 
     html = template
     for key, value in values.items():
