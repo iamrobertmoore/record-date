@@ -951,31 +951,42 @@ def _spoken_bucket_days(label):
 
 
 # (the beat's start time as its heading prints it, what the figure is, build -> the spoken words)
+#
+# **Two rows may name the same beat, and two do.** The 21 September 2026 rewrite cut the video from
+# 630 words to 431 and dropped the standalone withholding beat, folding its money figures into the
+# opening beat, which already carried the rate and the size of the rated field. The figures did not
+# move house, they moved beat, and the row that carried them moved with them. Splitting them into two
+# rows keyed on one beat rather than one row carrying six phrases is what keeps each row's description
+# answerable: a row called "the money over the issuer's own window" that also demanded the field size
+# would name neither of them accurately, and the `what` string is the only thing a failure prints.
+#
+# **The field size left this table's money row for the mechanism beat**, because that is where the
+# script now says it. `three hundred and seventy` and `nine hundred and twenty-seven` are checked
+# against the beat that speaks them and nowhere else, so a rewrite that moves the sentence without
+# moving the row fails rather than passing on a stale pointer.
 SPOKEN = (
     ("0:00", "the top withholding rate and the size of the rated field",
      lambda d: (_spoken_percent(d["withholding"]["top_rate_share"]),
                 _cardinal(d["withholding"]["rated_symbols"]) + " stocks",
                 _spoken_percent(d["withholding"]["top_rate"]),
                 _spoken_millions(d["money"]["annualised_withheld_usd"]))),
-    ("0:10", "the mints whose live value differs from the field named multiplier",
+    ("0:00", "the money over the issuer's own window",
+     lambda d: (_spoken_months(d["actions"]["months"]),
+                _spoken_millions(d["money"]["withheld_usd"]),
+                _spoken_millions(d["money"]["annualised_withheld_usd"]))),
+    ("1:00", "the mints whose live value differs from the field named multiplier",
      lambda d: (_cardinal(d["mints"]["live_differs_from_base"]),
                 _cardinal(d["mints"]["total"]))),
-    ("0:33", "the read rule checked on every mint",
+    ("1:20", "the read rule checked on every mint",
      lambda d: (_cardinal(d["read_rule"]["agreed"]) + " agreed",
                 "none disagreed" if not d["read_rule"]["disagreed"]
                 else _cardinal(d["read_rule"]["disagreed"]) + " disagreed")),
-    ("0:59", "when the activations land",
+    ("1:40", "when the activations land",
      lambda d: (_spoken_time_utc(d["activation_timing"]["top_times"][0][0]),
                 _cardinal(d["activation_timing"]["n"]) + " activations",
                 _cardinal(d["activation_timing"]["outside_calendar"]),
                 _cardinal(d["activation_timing"]["on_a_non_trading_day"]))),
-    ("1:23", "the money, the window length and the field size",
-     lambda d: (_spoken_months(d["actions"]["months"]),
-                _spoken_millions(d["money"]["withheld_usd"]),
-                _spoken_millions(d["money"]["annualised_withheld_usd"]),
-                _cardinal(d["mints"]["live_differs_from_base"]),
-                _cardinal(d["mints"]["total"]))),
-    ("1:43", "the age gradient, fresh against the oldest bucket",
+    ("2:00", "the age gradient, fresh against the oldest bucket",
      lambda d: (_spoken_percent(d["reconciliation"]["buckets"][0]["median"]) + " fresh",
                 _spoken_percent(d["reconciliation"]["buckets"][-1]["median"]),
                 _spoken_bucket_days(d["reconciliation"]["buckets"][-1]["label"]))),
@@ -989,10 +1000,10 @@ SPOKEN = (
 ON_SCREEN = (
     ("0:00", "the card in the hero, which the opening beat holds the camera on",
      lambda d: (pct(d["withholding"]["top_rate_share"]) + "%",)),
-    ("0:10", "the two-value card's multiplier pair, left value then right",
+    ("1:00", "the two-value card's multiplier pair, left value then right",
      lambda d: (multiplier(worked_example(d)["base_multiplier"]),
                 multiplier(worked_example(d)["live_multiplier"]))),
-    ("0:33", "the agreed count the paragraph under the card ends on",
+    ("1:20", "the agreed count the paragraph under the card ends on",
      lambda d: ("%d agreed" % d["read_rule"]["agreed"],
                 "%d disagreed" % d["read_rule"]["disagreed"])),
 )
@@ -1064,18 +1075,25 @@ AFTER = (
 # the on-screen directions, which is how a declared gap becomes a real one. Extended on 20 September
 # 2026 for the same reason, when the upload notes' four derived figures moved out of this list and
 # into `AFTER`: what remains here is what the section carries that is not a build figure at all.
+# Rewritten again on 21 September 2026 when the terminal demo left the video and the desk replaced it:
+# the first entry named the demo's own figures, and the demo is no longer spoken, so the entry was
+# rewritten rather than kept. A declared gap that names a surface the script no longer has is worse
+# than a missing one, because it reads as coverage of something that is not there.
 SCRIPT_NOT_CHECKED = (
-    "the demo's own figures (`one point zero zero four two`, `six seconds`, `four minutes old`), "
-    "which come from the run the recording performs and not from data.json",
+    "the desk's own live figures, which come from the page's reads at recording time and not from "
+    "`data.json`: the withheld figure on the reader's holding, the seconds counter on the devnet "
+    "verdict, and the verdict itself, which is `HOLD` only because a mint was activated minutes "
+    "before the camera rolled",
     "`fifteen minutes`, which is a quotation of the issuer's own documentation rather than a figure "
     "this build computes; EVIDENCE.md carries the page it was read from",
     "the on-screen directions that name a region rather than a figure (the timing block, the meter "
     "and its four figures), because there is no derived string to compare with a pointer",
     "the beat timings and the word counts, which are counted by `VIDEO-SCRIPT.md`'s own header and "
     "recounted by hand rather than derived from the build",
-    "the upload notes' references that are not build figures: the desk's status chip label, which is "
-    "a literal in `desk_template.html` rather than a value this build derives, the camera timings in "
-    "the watch-back list, and the documentation dates quoted from the issuer and the programme",
+    "the upload notes' references that are not build figures: the desk's two status chip labels, "
+    "which are literals in `desk_template.html` rather than values this build derives, the camera "
+    "timings in the watch-back list, and the documentation dates quoted from the issuer and the "
+    "programme",
 )
 
 # Kept under the old name because the response document and the commit that introduced it both refer

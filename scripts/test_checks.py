@@ -831,35 +831,29 @@ def main():
                 "**On screen:** Window 1, the evidence page, top. Hero headline and the `%s` card."
                 % card,
                 "> Ninety-four percent of the four hundred stocks the issuer rates lose thirty",
-                "> percent of every dividend before it is reinvested. Eleven point six million a year.",
+                "> percent of every dividend before it is reinvested. Across six and a half months,",
+                "> two point six million dollars withheld, about eleven point six million a year.",
                 "",
-                "### 0:10 The two candidates",
+                "### 1:00 The two candidates",
                 "**On screen:** Window 1, scroll to section 02 and stop on the two-value card. The",
                 "left value is %s" % pair,
                 "> The dividend is not paid in cash. On %s of nine hundred and" % mint,
                 "> twenty-seven mints, it is not the multiplier.",
                 "",
-                "### 0:33 The rule",
+                "### 1:20 The rule",
                 "**On screen:** Window 1, the paragraph below the card, ending on `927 agreed,"
                 " 0 disagreed`.",
                 "> I compared the two on every mint rather than a sample. Nine hundred and",
                 "> twenty-seven agreed, none disagreed.",
                 "",
-                "### 0:59 When they land",
+                "### 1:40 When they land",
                 "**On screen:** Window 1, the timing block: the modal times and the two",
                 "outside-the-session lines.",
                 "> The modal move is half past midnight UTC. Of six hundred and forty",
                 "> activations, six hundred and thirty-one land outside the exchange's own",
                 "> session, and fifty-seven land on a day the market does not trade at all.",
                 "",
-                "### 1:23 The money",
-                "**On screen:** Window 1, scroll slowly to section 03. Stop on the meter and the",
-                "four figures. The red segment is the withheld part.",
-                "> Across six and a half months of the issuer's own feed, two point six million",
-                "> dollars withheld, about eleven point six million a year. On three hundred and",
-                "> seventy of the nine hundred and twenty-seven mints, the two fields disagree.",
-                "",
-                "### 1:43 The falsification test",
+                "### 2:00 The falsification test",
                 "**On screen:** Window 1, section 05, the two age medians side by side.",
                 "> It does: two percent fresh, five percent over sixty days.",
                 "",
@@ -893,12 +887,17 @@ def main():
         # The move that found the hole. This exact injection went into the real script and the build
         # did not refuse, because the check was asking whether the build's words were a substring of
         # the beat, and `three hundred and seventy` is a substring of `three hundred and seventy-one`.
-        # One complaint, not two: beat 1:23 carries the same count and this file moved only 0:10.
+        #
+        # One complaint, and it is the only one. Until 21 September 2026 the money beat repeated the
+        # mint count, so this injection produced one complaint only because the count was spoken
+        # twice and both copies moved together. The rewrite folded the money into the opening beat
+        # and left the count to the mechanism beat, so the count is now spoken once and this control
+        # is a statement about a single surface rather than about two that happen to agree.
         off = published.spoken_figures(spoken_sample,
                                        script_text(mint="three hundred and seventy-one"))
         case("negative control: a count moved by one in the script is reported", len(off), 1)
         case("  ... and it names the beat and the figure the build holds", off[0] if off else None,
-             "the video script's beat 0:10 should say 'three hundred and seventy' for the mints "
+             "the video script's beat 1:00 should say 'three hundred and seventy' for the mints "
              "whose live value differs from the field named multiplier, and does not")
 
         # The two forms, side by side on the same input. This reaches into a private helper
@@ -914,9 +913,9 @@ def main():
         # A beat the check cannot find is a figure nobody hears checked. The heading is the key, so
         # renaming it has to be reported rather than silently dropping the beat.
         off = published.spoken_figures(spoken_sample,
-                                       script_text().replace("### 0:33 ", "### 0:34 "))
+                                       script_text().replace("### 1:20 ", "### 1:21 "))
         case("negative control: a renamed beat leaves its figure unchecked, and says so",
-             off, ["the video script has no beat starting at 0:33, so the read rule checked on "
+             off, ["the video script has no beat starting at 1:20, so the read rule checked on "
                    "every mint is unchecked"])
 
         # The modal time is the one figure the module can hold no spoken form for, because it is the
@@ -953,9 +952,9 @@ def main():
         # substring case above, which is why both are kept rather than only the dangerous one.
         case("negative control: the old marker-only parser cannot see the pair, so a check over it "
              "would refuse a correct script",
-             published._phrase_present("1.01", screen_text_old(script_text())["0:10"]), False)
+             published._phrase_present("1.01", screen_text_old(script_text())["1:00"]), False)
         case("  ... and the block parser reads the continuation line, which is why it replaced it",
-             "1.01" in published._screen_text(script_text())["0:10"], True)
+             "1.01" in published._screen_text(script_text())["1:00"], True)
 
         off = published.screen_figures(spoken_sample, script_text(wrap=False))
         case("negative control: a beat whose on-screen line lost its pair is reported", len(off), 2)
