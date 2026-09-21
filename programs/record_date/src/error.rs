@@ -53,4 +53,6 @@ pub enum RecordDateError {
     PriceAgeCeilingExceeded,
     #[msg("the account ends in a partial extension header")]
     TruncatedExtensionHeader,
+    #[msg("the Pyth price update is not fully verified")]
+    PythPriceNotVerified,
 }

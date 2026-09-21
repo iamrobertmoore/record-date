@@ -1,8 +1,10 @@
 {
+  "_note": "A real devnet capture, kept because the window is only open for fifteen minutes after an activation and cannot be shown on demand. It was taken under the single-number return. `deltaSeconds` is the name that capture wrote; `sinceSeconds` is the same measured value under the two-number return, and the arithmetic that produced it is unchanged by the widening, so both are recorded rather than one being restated in the other's vocabulary. `untilSeconds` is absent because nothing was staged at that moment, which is what the program now reports as -1.",
   "capturedAt": "2026-09-17T14:10:34.650Z",
   "mint": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq",
   "effectiveAt": 1789654231,
   "deltaSeconds": 2,
+  "sinceSeconds": 2,
   "insideWindow": true,
   "entitlementHex": "40b20206000000000000000000000000",
   "pendingHex": "01",

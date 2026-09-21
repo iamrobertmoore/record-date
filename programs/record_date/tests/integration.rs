@@ -295,6 +295,40 @@ fn read_receipt(svm: &LiteSVM, mint: &Pubkey, sequence: u64) -> Receipt {
     Receipt::try_deserialize(&mut &account.data[..]).expect("receipt deserialises")
 }
 
+/// The two numbers `settlement_window` returns: seconds since the last activation, then seconds
+/// until the next, each `-1` when there is nothing to report.
+fn read_window(svm: &mut LiteSVM, payer: &Keypair, mint: &Pubkey) -> (i64, i64) {
+    let meta = send_ok(svm, payer, ix_read(mint, RecordDateInstruction::Window));
+    let data = meta.return_data.data;
+    assert_eq!(data.len(), 16, "settlement_window returns two i64s");
+    let mut since = [0u8; 8];
+    let mut until = [0u8; 8];
+    since.copy_from_slice(&data[..8]);
+    until.copy_from_slice(&data[8..]);
+    (i64::from_le_bytes(since), i64::from_le_bytes(until))
+}
+
+/// The Anchor constraint code, for a refusal raised by an account constraint rather than by a
+/// `require!` in a handler.
+fn expect_anchor_constraint(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    ix: Instruction,
+    error: anchor_lang::error::ErrorCode,
+) {
+    let failed = send(svm, payer, ix).expect_err("expected this instruction to fail");
+    let want = error as u32;
+    assert_eq!(
+        anchor_code(&failed),
+        Some(want),
+        "expected {:?} (code {}), got {:?}\n{}",
+        error,
+        want,
+        failed.err,
+        failed.meta.pretty_logs()
+    );
+}
+
 /// Overwrite the mint's multiplier fields, as a new corporate action would.
 fn set_multiplier(svm: &mut LiteSVM, mint: &Pubkey, base: f64, new: f64, effective_at: i64) {
     let mut account = svm.get_account(mint).expect("mint exists");
@@ -611,31 +645,72 @@ fn activation_pending_answers_one_only_after_a_move() {
 }
 
 #[test]
-fn settlement_window_reports_seconds_since_the_activation() {
+fn settlement_window_reports_both_sides_of_the_issuers_window() {
     let (mut svm, payer, mint) = setup();
     send_ok(&mut svm, &payer, ix_init_registry(&payer.pubkey()));
     send_ok(&mut svm, &payer, ix_register_mint(&payer.pubkey(), &mint));
 
-    // The mint's activation is the one already in the fixture, six days before NOW.
-    let meta = send_ok(&mut svm, &payer, ix_read(&mint, RecordDateInstruction::Window));
-    let mut bytes = [0u8; 8];
-    bytes.copy_from_slice(&meta.return_data.data);
-    let delta = i64::from_le_bytes(bytes);
-    assert_eq!(delta, NOW - EFFECTIVE_TIMESTAMP);
+    // The mint's activation is the one already in the fixture, six days before NOW, and nothing is
+    // staged, so the earlier half is answerable from the mint and there is no next activation.
+    let (since, until) = read_window(&mut svm, &payer, &mint);
+    assert_eq!(since, NOW - EFFECTIVE_TIMESTAMP);
+    assert_eq!(until, -1, "nothing is staged, so there is no next activation");
     assert!(
-        delta.abs() > RECOMMENDED_PAUSE_SECS,
+        since > RECOMMENDED_PAUSE_SECS,
         "six days is well outside the recommended pause"
     );
 
-    // Now put an activation inside the pause and check the sign flips.
+    // An activation inside the pause, already past: the after half is open.
     let just_after = NOW - (RECOMMENDED_PAUSE_SECS - 60);
     set_multiplier(&mut svm, &mint, LIVE_MULTIPLIER, LIVE_MULTIPLIER * 1.004, just_after);
-    let meta = send_ok(&mut svm, &payer, ix_read(&mint, RecordDateInstruction::Window));
-    let mut bytes = [0u8; 8];
-    bytes.copy_from_slice(&meta.return_data.data);
-    let delta = i64::from_le_bytes(bytes);
-    assert_eq!(delta, RECOMMENDED_PAUSE_SECS - 60);
-    assert!(delta.abs() <= RECOMMENDED_PAUSE_SECS);
+    let (since, until) = read_window(&mut svm, &payer, &mint);
+    assert_eq!(since, RECOMMENDED_PAUSE_SECS - 60);
+    assert!(since <= RECOMMENDED_PAUSE_SECS, "the pause is open");
+    assert_eq!(until, -1);
+}
+
+/// The half the mint cannot answer, and the reason the record is read here at all.
+///
+/// The issuer stages the next value about four hours before it takes effect, and the staging
+/// overwrites the timestamp of the value now in force, so during that window the mint says nothing
+/// about when the live multiplier took effect. The old single-number form reported that as
+/// "seconds since 1970", which read as 56 years outside the window while a real activation was ten
+/// minutes away.
+#[test]
+fn settlement_window_reports_the_staged_activation_the_mint_has_overwritten() {
+    let (mut svm, payer, mint) = setup();
+    send_ok(&mut svm, &payer, ix_init_registry(&payer.pubkey()));
+    send_ok(&mut svm, &payer, ix_register_mint(&payer.pubkey(), &mint));
+
+    // Put the record where a crank would have left it: the value in force took effect six days
+    // ago, which is the fixture's own activation.
+    set_multiplier(
+        &mut svm,
+        &mint,
+        LIVE_MULTIPLIER,
+        LIVE_MULTIPLIER * 1.004,
+        NOW - 6 * 86_400,
+    );
+    send_ok(&mut svm, &payer, ix_record_activation(&payer.pubkey(), &mint));
+    let (since, _) = read_window(&mut svm, &payer, &mint);
+    assert_eq!(since, 6 * 86_400, "the mint still answers this one itself");
+
+    // Then stage the next, as the issuer did to SATAx 4h 09m 43s ahead of its effective time.
+    set_multiplier(
+        &mut svm,
+        &mint,
+        LIVE_MULTIPLIER * 1.004,
+        LIVE_MULTIPLIER * 1.008,
+        NOW + 600,
+    );
+
+    let (since, until) = read_window(&mut svm, &payer, &mint);
+    assert_eq!(until, 600, "the staged activation is ten minutes away");
+    assert_eq!(
+        since,
+        6 * 86_400,
+        "and the earlier half comes from the record, because the mint has overwritten it"
+    );
 }
 
 // ---------------------------------------------------------------- Pyth
@@ -727,6 +802,7 @@ fn ix_bind_pyth_feed(payer: &Pubkey, mint: &Pubkey, feed: [u8; 32], symbol: &str
         program_id: record_date::ID,
         accounts: vec![
             AccountMeta::new(*payer, true),
+            AccountMeta::new(registry_pda().0, false),
             AccountMeta::new_readonly(*mint, false),
             AccountMeta::new_readonly(token_record_pda(mint).0, false),
             AccountMeta::new(pyth_binding_pda(mint).0, false),
@@ -817,9 +893,11 @@ fn the_price_fixtures_are_the_real_accounts_they_claim_to_be() {
     assert_eq!(PYTH_MAINNET_BYTES.len(), 134);
     assert_eq!(PYTH_DEVNET_BYTES.len(), 134);
 
-    // The accounts are 134 bytes but the parsed fields stop at 133. The last byte's purpose has
-    // not been established, so it is tolerated rather than named. This asserts the tolerance is
-    // real and the parser does not require the account to end where its fields do.
+    // The accounts are 134 bytes but the parsed fields stop at 133. The last byte is
+    // `VerificationLevel`'s: the enum's larger variant is two bytes and the account is allocated
+    // for it, so a fully verified account leaves one byte of slack. This asserts the tolerance is
+    // real and the parser does not require the account to end where its fields do;
+    // `the_trailing_byte_is_the_larger_verification_variant` does the arithmetic.
     assert_eq!(pyth::PARSED_LEN, 133);
     assert!(PYTH_MAINNET_BYTES.len() > pyth::PARSED_LEN);
 
@@ -1378,5 +1456,245 @@ fn verify_against_pyth_refuses_a_mint_with_no_binding() {
         &mut svm,
         &payer,
         verify_ok(&mint, &price_update, MAINNET_PRICE_FP),
+    );
+}
+
+// ---------------------------------------------------------------- adversarial review 2
+//
+// ADVERSARIAL-2.md reported four defects and three tests that passed against the binary as it
+// stood, which is what made them findings. Each is reproduced here inverted: these assert the
+// refusal, so they fail if the fix is reverted. The names keep the review's own vocabulary so its
+// reproduction section can be diffed against this file.
+
+/// F1(i). The issuer stages the next value about four hours before it takes effect, and during that
+/// window the timestamp has moved while the multiplier has not. That is not an activation.
+#[test]
+fn a_staged_activation_is_not_pending_and_cannot_be_recorded() {
+    let (mut svm, payer, mint) = setup();
+    send_ok(&mut svm, &payer, ix_init_registry(&payer.pubkey()));
+    send_ok(&mut svm, &payer, ix_register_mint(&payer.pubkey(), &mint));
+
+    // What the issuer did to SATAx at 2026-09-16 20:20:17Z: stage the next value ~4h ahead.
+    set_multiplier(
+        &mut svm,
+        &mint,
+        LIVE_MULTIPLIER,
+        LIVE_MULTIPLIER * 1.0005,
+        NOW + 4 * 3600,
+    );
+
+    let meta = send_ok(&mut svm, &payer, ix_read(&mint, RecordDateInstruction::Pending));
+    assert_eq!(
+        meta.return_data.data,
+        vec![0],
+        "the multiplier has not moved, so nothing is pending"
+    );
+
+    let stranger = Keypair::new();
+    svm.airdrop(&stranger.pubkey(), LAMPORTS).unwrap();
+    expect_anchor_error(
+        &mut svm,
+        &stranger,
+        ix_record_activation(&stranger.pubkey(), &mint),
+        RecordDateError::NothingToRecord,
+    );
+
+    // The record is untouched and no receipt exists, so the phantom this used to write is gone.
+    let record = read_record(&svm, &mint);
+    assert_eq!(record.activations, 0, "no receipt was written");
+    assert_eq!(
+        record.live_effective_at, EFFECTIVE_TIMESTAMP,
+        "the timestamp of the value in force is still the fixture's"
+    );
+    assert!(
+        svm.get_account(&receipt_pda(&mint, 0).0).is_none(),
+        "and no receipt account was left behind"
+    );
+}
+
+/// The other half of F1(i): the same mint is a real activation once the staged value arrives.
+///
+/// Without this the fix would be indistinguishable from refusing to record anything, which is the
+/// failure mode a one-sided test cannot see.
+#[test]
+fn the_same_mint_records_once_the_staged_value_arrives() {
+    let (mut svm, payer, mint) = setup();
+    send_ok(&mut svm, &payer, ix_init_registry(&payer.pubkey()));
+    send_ok(&mut svm, &payer, ix_register_mint(&payer.pubkey(), &mint));
+
+    set_multiplier(
+        &mut svm,
+        &mint,
+        LIVE_MULTIPLIER,
+        LIVE_MULTIPLIER * 1.0005,
+        NOW + 4 * 3600,
+    );
+    let meta = send_ok(&mut svm, &payer, ix_read(&mint, RecordDateInstruction::Pending));
+    assert_eq!(meta.return_data.data, vec![0]);
+
+    // The clock reaches the staged timestamp, so `effective` starts returning the staged value.
+    set_clock(&mut svm, NOW + 4 * 3600 + 1);
+
+    let meta = send_ok(&mut svm, &payer, ix_read(&mint, RecordDateInstruction::Pending));
+    assert_eq!(meta.return_data.data, vec![1], "the multiplier has moved now");
+    send_ok(&mut svm, &payer, ix_record_activation(&payer.pubkey(), &mint));
+
+    let receipt = read_receipt(&svm, &mint, 0);
+    assert!(
+        !receipt.is_flat(),
+        "a receipt the guard let through always records a change, which is what makes is_flat \
+         unreachable rather than merely unused"
+    );
+    assert_eq!(
+        receipt.effective_at,
+        NOW + 4 * 3600,
+        "dated by the issuer's own timestamp, not by the epoch"
+    );
+    assert_eq!(read_record(&svm, &mint).live_effective_at, NOW + 4 * 3600);
+}
+
+/// F2, as the review wrote it. The review's version asserted the return data was `NOW`, which is
+/// "seconds since 1970" and is what a single number reports with an activation 300s ahead.
+/// Inverted, it asserts the two numbers a venue actually needs.
+#[test]
+fn the_window_is_not_blind_to_an_activation_five_minutes_ahead() {
+    let (mut svm, payer, mint) = setup();
+    send_ok(&mut svm, &payer, ix_init_registry(&payer.pubkey()));
+    send_ok(&mut svm, &payer, ix_register_mint(&payer.pubkey(), &mint));
+    set_multiplier(
+        &mut svm,
+        &mint,
+        LIVE_MULTIPLIER,
+        LIVE_MULTIPLIER * 1.004,
+        NOW + 300,
+    );
+
+    let (since, until) = read_window(&mut svm, &payer, &mint);
+    assert_eq!(until, 300, "the activation is five minutes ahead and is reported as such");
+    assert_ne!(since, NOW, "the earlier half is not seconds since 1970");
+    assert_eq!(
+        since,
+        NOW - EFFECTIVE_TIMESTAMP,
+        "it is real seconds, taken from the record the mint overwrote"
+    );
+    assert!(
+        until <= RECOMMENDED_PAUSE_SECS,
+        "so the pause is open on the before side, which the old form could not say"
+    );
+}
+
+/// F5. Neither registration nor binding is open to a stranger.
+#[test]
+fn a_stranger_cannot_rebind_the_pyth_feed_or_register_mints() {
+    let (mut svm, payer, mint, price_update) = setup_pyth();
+    let stranger = Keypair::new();
+    svm.airdrop(&stranger.pubkey(), LAMPORTS).unwrap();
+
+    let mut other = feed_id(AAPL_FEED_ID_HEX);
+    other[0] ^= 0xff;
+    expect_anchor_constraint(
+        &mut svm,
+        &stranger,
+        ix_bind_pyth_feed(&stranger.pubkey(), &mint, other, "EVIL"),
+        anchor_lang::error::ErrorCode::ConstraintHasOne,
+    );
+
+    // The binding is unchanged, so the feed-identity refusal is still doing its job.
+    assert_eq!(
+        read_binding(&svm, &mint).feed_id,
+        feed_id(AAPL_FEED_ID_HEX),
+        "the stranger's rebind did not land"
+    );
+    send_ok(
+        &mut svm,
+        &stranger,
+        verify_ok(&mint, &price_update, MAINNET_PRICE_FP),
+    );
+
+    // And a second mint cannot be registered by anyone but the registry authority.
+    let fake = Pubkey::new_unique();
+    svm.set_account(
+        fake,
+        Account {
+            lamports: 1_000_000_000,
+            data: MINT_BYTES.to_vec(),
+            owner: TOKEN_2022_PROGRAM_ID,
+            executable: false,
+            rent_epoch: 0,
+        },
+    )
+    .unwrap();
+    expect_anchor_constraint(
+        &mut svm,
+        &stranger,
+        ix_register_mint(&stranger.pubkey(), &fake),
+        anchor_lang::error::ErrorCode::ConstraintHasOne,
+    );
+
+    // The control: the authority can still do both, so the constraint is a rule and not a wall.
+    send_ok(
+        &mut svm,
+        &payer,
+        ix_bind_pyth_feed(&payer.pubkey(), &mint, other, "EVIL"),
+    );
+    assert_eq!(read_binding(&svm, &mint).feed_id, other);
+    send_ok(&mut svm, &payer, ix_register_mint(&payer.pubkey(), &fake));
+}
+
+/// F6. A partially verified account is refused by name, not by the accident that its shifted feed
+/// id fails to match.
+#[test]
+fn a_partially_verified_price_update_is_refused_by_name() {
+    let (mut svm, payer, mint, price_update) = setup_pyth();
+
+    // The control first: the account as captured verifies, so the refusal below is the tag.
+    send_ok(&mut svm, &payer, verify_ok(&mint, &price_update, MAINNET_PRICE_FP));
+
+    // `VerificationLevel::Partial` is the other Borsh variant. The honest encoding of a partial
+    // account also shifts every field one byte later; only the tag is changed here, which is the
+    // weaker of the two cases and the one that used to be refused by the feed-id comparison.
+    let mut account = svm.get_account(&price_update).expect("the price account exists");
+    account.data[40] = 0;
+    svm.set_account(price_update, account).expect("the price account is written");
+
+    expect_anchor_error(
+        &mut svm,
+        &payer,
+        verify_ok(&mint, &price_update, MAINNET_PRICE_FP),
+        RecordDateError::PythPriceNotVerified,
+    );
+}
+
+/// F6, the arithmetic behind the explanation rather than the claim. The byte at the end of a
+/// `PriceUpdateV2` is `VerificationLevel`'s, and this is why.
+#[test]
+fn the_trailing_byte_is_the_larger_verification_variant() {
+    // A `PriceUpdateV2` is a discriminator, a write authority, the verification level, the price
+    // message and the posted slot. The price message is feed_id, price, conf, exponent,
+    // publish_time, prev_publish_time, ema_price and ema_conf.
+    const DISCRIMINATOR: usize = 8;
+    const WRITE_AUTHORITY: usize = 32;
+    const PRICE_MESSAGE: usize = 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8;
+    const POSTED_SLOT: usize = 8;
+
+    // `Full` is a bare variant and occupies its tag alone; `Partial { num_signatures: u8 }` carries
+    // a byte after the tag and occupies two. The account is allocated for the larger variant.
+    let full = DISCRIMINATOR + WRITE_AUTHORITY + 1 + PRICE_MESSAGE + POSTED_SLOT;
+    let partial = DISCRIMINATOR + WRITE_AUTHORITY + 2 + PRICE_MESSAGE + POSTED_SLOT;
+
+    assert_eq!(full, pyth::PARSED_LEN, "the parsed fields are the Full layout");
+    assert_eq!(
+        partial,
+        PYTH_MAINNET_BYTES.len(),
+        "and the account is the Partial variant's size, which is why it is one byte longer"
+    );
+    assert_eq!(
+        PYTH_MAINNET_BYTES.len() - pyth::PARSED_LEN,
+        1,
+        "so a fully verified account has exactly one byte of slack at the end"
+    );
+    assert_eq!(
+        PYTH_MAINNET_BYTES[40], pyth::VERIFICATION_FULL,
+        "and the account Pyth actually publishes carries the Full tag"
     );
 }

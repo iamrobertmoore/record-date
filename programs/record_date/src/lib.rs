@@ -59,12 +59,20 @@ pub mod record_date {
         crate::instructions::read::handle_read_entitlement(ctx, raw_amount)
     }
 
-    /// Is there an activation this program has not recorded yet? Return data: 1 or 0.
+    /// Has the multiplier moved since this program last recorded it? Return data: 1 or 0.
+    ///
+    /// The multiplier alone, because that is what an activation is: a staged value moves the
+    /// timestamp about four hours before it moves the multiplier, and that is not an activation.
     pub fn activation_pending(ctx: Context<ReadMint>) -> Result<()> {
         crate::instructions::read::handle_activation_pending(ctx)
     }
 
-    /// Seconds since the last activation. Return data: little-endian i64.
+    /// Seconds since the last activation, then seconds until the next one. Return data: two
+    /// little-endian i64s, each `-1` when there is nothing to report.
+    ///
+    /// Two numbers because the issuer's pause window is two-sided. The earlier half is only
+    /// readable while a value is staged, and during that window the mint has overwritten the
+    /// timestamp of the value in force, so the record is the source for it.
     pub fn settlement_window(ctx: Context<ReadMint>) -> Result<()> {
         crate::instructions::read::handle_settlement_window(ctx)
     }
