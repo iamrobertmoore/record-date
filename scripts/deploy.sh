@@ -91,32 +91,9 @@ echo
 echo "deploying to $CLUSTER"
 anchor program deploy --provider.cluster "$CLUSTER"
 
+# The verification is a separate script so the claim can be re-checked without redeploying, which
+# matters because the README quotes its output and a reviewer has to be able to reproduce it. It
+# writes docs/deploy.txt from the chain: the three compared lines, and a header carrying the slot
+# and that slot's block time rather than the wall clock.
 echo
-echo "verifying what is actually on chain"
-solana program show "$ACTUAL" --url "$CLUSTER" | sed -n '1,6p'
-solana account "$ACTUAL" --url "$CLUSTER" --output json 2>/dev/null \
-  | python3 -c 'import json,sys; d=json.load(sys.stdin); print("executable:", d["account"]["executable"]); print("owner:", d["account"]["owner"])'
-
-# The tested binary and the deployed binary have to be the same bytes, or the tests were run
-# against something nobody is running. The comparison is not `==`, and that is the point:
-# `solana program dump` returns the whole programdata account, which is padded with trailing
-# zeros past the end of the ELF, so exact equality reports a difference that is not there. The
-# claim worth making is that the deployed ELF content is the built ELF content.
-echo
-echo "comparing the deployed ELF with the built one"
-solana program dump "$ACTUAL" /tmp/record_date-onchain.so --url "$CLUSTER" >/dev/null
-python3 - "$ROOT/target/deploy/record_date.so" /tmp/record_date-onchain.so <<'PY'
-import hashlib, pathlib, sys
-built = pathlib.Path(sys.argv[1]).read_bytes()
-chain = pathlib.Path(sys.argv[2]).read_bytes()
-if chain[: len(built)] != built:
-    raise SystemExit(
-        "REFUSING TO ACCEPT THIS DEPLOY: the deployed program is not the binary that was "
-        "tested. built %d bytes sha256 %s, deployed %d bytes sha256 %s"
-        % (len(built), hashlib.sha256(built).hexdigest()[:16],
-           len(chain), hashlib.sha256(chain).hexdigest()[:16])
-    )
-print("built            %d bytes, sha256 %s" % (len(built), hashlib.sha256(built).hexdigest()[:16]))
-print("deployed         %d bytes, %d of trailing padding" % (len(chain), len(chain) - len(built)))
-print("deployed ELF     identical to the tested binary")
-PY
+"$ROOT/scripts/verify_deploy.sh" "$CLUSTER"

@@ -1,0 +1,4 @@
+cluster devnet, slot 500283596, 2026-09-18T10:04:02Z
+built            326696 bytes, sha256 fa4a700e3c304880
+deployed         332952 bytes, 6256 of trailing padding
+deployed ELF     identical to the tested binary
