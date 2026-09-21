@@ -555,15 +555,18 @@ README_ALLOWED = {
     "money": {
         "$9,000": "Tomas's holding, the named user on the first screen. A person's position, not a "
                   "figure from the build.",
+        "$500": "the subscription price, stated as policy in the business section. A price this "
+                "entry chooses rather than a figure it measures, so no build can produce it and "
+                "the build would have no way to notice it changing.",
+        "$800": "the KeeperHub prize, quoted in the track record as a fact about a past event. "
+                "Nothing in this repository measures it.",
     },
     "percent": {
         "0%": "the bottom of a rate table, written as prose",
         "100%": "a whole, written as prose",
         "20%": "the divergence threshold the README states as its own rule",
-        "25%": "the absolute bound the price-selection check applies",
         "30%": "the withholding rate, which is `withholding.top_rate` but is quoted as policy",
         "5%": "a rounded statement of the age gradient, where the exact pair is also given",
-        "1,000%": "an illustration of how far out a pool artefact can be",
         "63%": "the Solana Foundation's own published figure, cited as theirs",
         "93.8%": "the share of the 640 activations landing on the four minutes after the close, "
                  "which the sentence states as `93.8% of the sample lands on those four minutes`. "
@@ -578,6 +581,11 @@ README_ALLOWED = {
                      "entries had produced, counted on 20 September 2026 over one dated tree "
                      "snapshot. Measured by the field sweep, not by this build, which is why no "
                      "figure in `data.json` stands behind it.",
+        "99 of 99": "the verification table's expected output for `scripts/test_checks.py`, which "
+                    "is the suite's own pass line rather than a figure from `data.json`. The suite "
+                    "is run by a reader and its count is 99 in the stat row, the verification "
+                    "table, the reproduce block and the track record; `data.json` is the output of "
+                    "`fetch.py` and has never carried it.",
     },
     "days": {
         "33.6": "the age of the committed devnet Pyth price account when it was captured, quoted in "
@@ -1002,7 +1010,7 @@ PREP = (
      lambda d: (pct(Decimal(d["money"]["withheld_usd"]) / Decimal(d["money"]["gross_usd"])) + "%",)),
     (None, "the first card",
      lambda d: (pct(d["withholding"]["top_rate_share"]) + "%",)),
-    (None, "the hero headline's mint count",
+    (None, "the hero lede's mint count",
      lambda d: ("%d of %d mints" % (d["mints"]["live_differs_from_base"], d["mints"]["total"]),)),
     (None, "the read-rule sentence",
      lambda d: ("%d agreed, %d disagreed"

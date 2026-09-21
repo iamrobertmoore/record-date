@@ -474,8 +474,14 @@ def main():
         # variant that dropped this line would report eight dead allowances instead of the one
         # figure the case is about. The three prose-only percentages are absent on purpose: they are
         # declared as documentation and are expected not to fire.
-        allowances = ("$9,000. 20% or 25% or 30% or 1,000% or 63% or 93.8%. "
-                      "27 of the 108 repositories. 33.6 days.")
+        # `25%` and `1,000%` were on this line until 21 September 2026, when the README rebuild
+        # dropped the two sentences they belonged to and the entries went with them. `$500`,
+        # `$800` and `99 of 99` arrived in the same rebuild, from the business paragraph, the track
+        # record and the verification table. The fixture has to move with the allow-list in both
+        # directions or the suite reports the fixture rather than the entry, which is what it did
+        # when the three new entries were added and this line was not.
+        allowances = ("$9,000. 20% or 30% or 63% or 93.8%. $500 a month. $800 USDC. "
+                      "99 of 99 as expected. 27 of the 108 repositories. 33.6 days.")
 
         def readme_fixture(*replace):
             """The README fixture, deploy block and allow-listed prose included."""
@@ -809,10 +815,11 @@ def main():
             return "\n".join([
                 "## Part 1 — Prep, 45 minutes before recording",
                 "",
-                "Open the evidence page URL. Confirm the hero chip reads `withheld 26.2% of dividend",
-                "income`, the first card reads `%s`, and the hero headline ends" % card,
-                "`on 370 of 927 mints the obvious field is the previous one`. Scroll to section 04",
-                "and confirm the sentence ends `927 agreed, 0 disagreed`.",
+                "Open the evidence page URL. Confirm the hero headline reads `Tokenized stocks pay",
+                "dividends invisibly, 30% short, and at hours no market is open.`, the lede under it",
+                "opens `370 of 927 mints`, the hero chip reads `withheld 26.2% of dividend income`,",
+                "the first card reads `%s`, and the sentence in section 04 ends" % card,
+                "`927 agreed, 0 disagreed`.",
                 "",
                 "## Part 2 — Exact screen layout",
                 "",
@@ -977,7 +984,7 @@ def main():
              published.prep_figures(spoken_sample, no_prep),
              ["the video script has no prep section, so the hero chip's withheld share is unchecked",
               "the video script has no prep section, so the first card is unchecked",
-              "the video script has no prep section, so the hero headline's mint count is unchecked",
+              "the video script has no prep section, so the hero lede's mint count is unchecked",
               "the video script has no prep section, so the read-rule sentence is unchecked"])
 
         # ------------------------------------------------- the upload notes
