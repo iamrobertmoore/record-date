@@ -175,6 +175,184 @@ footer code{font-size:12.5px;color:var(--ink)}
   .wrap{padding:0 20px}
   nav{display:none}
 }
+/* Record Date: paper, engraved rules, and figures that carry the argument. */
+:root{--paper:#f6f4ee;--wash:#efede5;--inset:#e8e5dc;--ink:#222a27;--body:#414943;
+ --muted:#606860;--faint:#687067;--line:#dedfd5;--rule:#c5c9bb;--brass:#806117;
+ --paid:#206747;--withheld:#a03925;--r:9px;--wrap:1160px;
+ --shadow:0 1px 2px #27312708,0 8px 20px -12px #27312726,0 26px 46px -30px #27312738;
+ --ease:cubic-bezier(.2,.75,.25,1)}
+html{scroll-padding-top:88px;scrollbar-gutter:stable}
+body{background-image:radial-gradient(ellipse at 85% 0%,#e4e7d780,transparent 600px)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+ background-image:radial-gradient(#353e2810 .6px,transparent .6px);background-size:4px 4px}
+::selection{background:#e3d5ad;color:#222a27}
+:where(a,button,input,[tabindex]):focus-visible{outline:2px solid var(--brass);outline-offset:4px}
+button,input{font:inherit}button{touch-action:manipulation}
+button,a{transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease}
+button:not(:disabled):active,.cta:active{transform:translateY(1px)}
+button:disabled{cursor:progress}
+.wrap{padding:0 32px}
+.top{background:#f6f4ee;border-bottom-color:var(--rule);backdrop-filter:none}
+.top .wrap{height:66px;gap:22px}
+.brand{font-family:var(--serif);font-weight:600;font-size:21px;letter-spacing:-.6px;gap:10px}
+.brand svg{width:26px;height:26px}
+.top nav{gap:17px;font-size:11.5px;line-height:1.3;align-items:center}
+.top nav a{padding:9px 0;position:relative}
+.top nav a:first-child{padding:9px 12px;border:1px solid var(--rule);border-radius:5px;color:var(--ink)}
+.top nav a:hover,.top nav a[aria-current]{color:var(--ink)}
+.top nav a[aria-current]::after{content:"";height:2px;background:var(--brass);position:absolute;bottom:1px;left:0;right:0}
+.chip{border-radius:5px;padding:7px 10px;font-size:10.5px;letter-spacing:.02em;background:#ffffff90}
+.eyebrow{font:600 10px/1.4 var(--mono);letter-spacing:.14em;color:var(--muted);margin-bottom:16px}
+.eyebrow .n{font-size:13px;letter-spacing:-.06em}
+.eyebrow::before{width:18px;height:1px;border-radius:0}
+h1{font-weight:400;letter-spacing:-.045em;text-wrap:pretty}
+h2{font-size:clamp(27px,3vw,36px);letter-spacing:-.03em;line-height:1.12;text-wrap:pretty}
+h3{font-weight:650}
+section{padding:64px 0;border-bottom-color:var(--rule)}
+section[id]{scroll-margin-top:88px}
+.head{margin-bottom:28px;max-width:56em}
+.head p{font-size:14.5px;line-height:1.75;color:var(--muted)}
+.small{font-size:13px;line-height:1.75;overflow-wrap:anywhere}
+.tiny{font-size:11px;line-height:1.55;color:var(--muted)}
+.note-box{padding:20px 24px;border-radius:0 7px 7px 0;border-left-width:3px;background:#edece2;font-size:13px;line-height:1.7}
+.num,.mono,.v,.stats b{font-variant-numeric:tabular-nums}
+.go,.ask button,.cta{min-height:44px;border-radius:6px;padding:13px 18px;letter-spacing:.01em}
+.go:hover,.ask button:hover,.cta:hover{box-shadow:0 6px 12px -7px #222a2755}
+.go.ghost,.ask button.ghost{border-color:var(--rule)}
+.go.ghost:hover,.ask button.ghost:hover{background:var(--wash)}
+input{background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:5px;padding:11px 12px;min-height:44px;min-width:0}
+input:hover{border-color:#939d8a}input:focus{border-color:var(--brass)}
+.console,.card,.stats,.proof,.buckets,.pair,.timing{box-shadow:var(--shadow);border-color:var(--rule)}
+.cell{min-width:0;padding:24px}
+.cell .k,.pair .k{color:var(--muted);font:600 10px/1.5 var(--mono);letter-spacing:.08em;margin-bottom:16px}
+.cell .v{font-family:var(--mono);font-size:25px;line-height:1.3;letter-spacing:-.055em;overflow-wrap:anywhere}
+.cell .note,.pair .note{font-size:12px;line-height:1.65;margin-top:14px;color:var(--muted)}
+.cell:has(.wrong){background:#fffcfa}.cell:has(.right){background:#f8fbf6}
+.console .bar{padding:16px 22px;gap:10px;background:#f7f7f0}
+.console .bar .label{font:650 10px/1.4 var(--mono);letter-spacing:.06em;color:var(--ink)}
+.console .bar .dot{background:var(--brass);box-shadow:0 0 0 4px #9a731816}
+.console .bar .dot.on{background:var(--paid);box-shadow:0 0 0 4px #20674714;animation:live-pulse 2.4s ease-in-out infinite}
+.console .bar:has(.dot:not(.on)){background:#f9f3e4}
+@keyframes live-pulse{50%{box-shadow:0 0 0 6px #20674704}}
+.verdict{padding:24px;gap:22px}.verdict .why{font-size:13px;line-height:1.7;flex:1;min-width:220px}
+.tag{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:5px;padding:11px 17px;font:650 12px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;border:1px solid}
+.tag.settle{color:var(--paid);background:#edf5eb;border-color:#c1d5bc}.tag.hold{color:var(--withheld);background:#fbefe9;border-color:#e4c8bc}
+.digit-change{background:#20674715;border-radius:3px;box-shadow:0 2px 0 currentColor;padding:2px 0}
+.wrong .digit-change{background:#a0392510}
+.diff-equal{color:var(--muted)}
+.read-sheen{position:relative}
+[data-reading="true"] .read-sheen::after{content:"";pointer-events:none;position:absolute;inset:-4px 0;border-radius:5px;
+ background:linear-gradient(100deg,transparent 15%,#e8e6dca8 48%,transparent 80%);background-size:220% 100%;animation:chain-read 1.25s ease-in-out infinite}
+@keyframes chain-read{from{background-position:150% 0}to{background-position:-80% 0}}
+[data-reading="true"] .dot{animation:live-pulse 1.2s ease-in-out infinite}
+.motion-number{font-variant-numeric:tabular-nums}
+.band{padding:28px 26px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(12.5% - 1px),#dadccf70 calc(12.5% - 1px),#dadccf70 12.5%),#f6f7ef}
+.band .axis{margin:22px 0 12px}.band .rule{height:2px;background:#b8bfae}
+.band .win{height:26px;top:9px;border-radius:3px;background:#a0392520}
+.band .mark{height:40px;top:2px;background:var(--ink);width:3px}
+.band .legend{font-size:11px;line-height:1.8}
+pre{font-size:12px;line-height:1.8;border-radius:0;background:#f0f1e8;color:var(--body)}
+pre .c{color:#606960}
+.scroll,.proof,.buckets{scrollbar-color:#b6bdac #f0f1e9;scrollbar-width:thin}
+th{color:var(--muted);font-size:9px;line-height:1.4;padding:15px 18px;background:#f3f4ed}
+td{padding:16px 18px;font-size:12px;line-height:1.65}
+tbody tr{transition:background .18s ease}tbody tr:hover{background:#f5f6ee}
+footer{background:#e9ede0;border-top:1px solid var(--rule);padding:40px 0 56px}
+footer .row{gap:25px}footer code{overflow-wrap:anywhere;font-size:11px}footer .row>span{min-width:0;max-width:100%}
+footer b{color:var(--muted)}
+@media(max-width:1100px){.top nav{gap:11px;font-size:10.5px}.brand{font-size:19px}.top .wrap{gap:16px}}
+@media(max-width:760px){
+ .wrap{padding:0 20px}.top .wrap{height:62px;gap:12px}.brand{font-size:19px}.brand svg{width:23px;height:23px}
+ .top nav{display:flex;margin-left:auto;gap:11px;font-size:10px;flex-wrap:nowrap}.top nav a:nth-child(n+3){display:none}
+ .top nav a:first-child{padding:8px 9px}.top nav a{white-space:nowrap}
+ section{padding:40px 0}.head{margin-bottom:23px}.head p{font-size:14px;line-height:1.7}
+ .cell{padding:22px}.cell .v{font-size:25px}.cell .note{font-size:12.5px}
+ .console .bar{padding:16px 20px}.console .bar .grow{width:100%;margin-left:0}
+ .verdict{padding:20px}.band{padding:24px 20px}.small{font-size:12.5px}
+ .card{padding:22px}.note-box{padding:18px 20px}.ask{padding:18px 20px}.ask label{width:100%}
+ footer .row{flex-direction:column}footer .txt{min-width:0}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+ .js .reveal{opacity:1;transform:none}
+}
+/* A short editorial opening leads straight into the instrument. */
+header.hero{padding:34px 0 30px;border-bottom:0}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.85fr);gap:22px 50px;align-items:center}
+.hero .stamp{grid-column:1/-1;margin:0;gap:8px}
+.hero h1{font-size:clamp(35px,3.8vw,47px);line-height:1.05;max-width:18em}
+.hero .lede{font-family:var(--sans);font-size:13px;line-height:1.8;max-width:none;border-left:1px solid var(--rule);padding-left:25px}
+#holder{padding-top:0;padding-bottom:52px;border-top:0}
+#holder>.wrap>.eyebrow{margin-bottom:12px}
+#holder>.wrap>.head{display:grid;grid-template-columns:1.5fr 1fr;gap:40px;max-width:none;margin-bottom:20px}
+#holder h2{font-size:24px;line-height:1.2;max-width:31em}
+#holder .head p{font-size:12px;margin:0;line-height:1.65}
+.holder-console{overflow:visible;position:relative;border-top:3px solid var(--brass);border-radius:8px;box-shadow:0 4px 0 -1px #eceee2,0 5px 0 -1px #c5c9bb,var(--shadow)}
+.holder-console>.bar{border-radius:6px 6px 0 0;padding:11px 24px;position:relative}
+.holder-console #holder-when{margin-left:auto;max-width:70%;text-align:right;font-size:10px}
+.search-row{display:flex;align-items:center;gap:18px;padding:17px 24px;background:#fff;border-bottom:1px solid var(--line)}
+.ticker-search{position:relative;flex:1;max-width:400px;min-width:0}
+.ticker-search>label{display:block;font:600 9px/1 var(--mono);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;color:var(--muted)}
+.search-field{position:relative}
+.search-field::before{content:"";position:absolute;left:15px;top:13px;width:12px;height:12px;border:1.6px solid var(--muted);border-radius:50%;pointer-events:none}
+.search-field::after{content:"";position:absolute;left:27px;top:26px;width:6px;height:1.6px;background:var(--muted);transform:rotate(45deg);pointer-events:none}
+#holder-symbol{width:100%!important;height:46px;padding-left:40px;background:#f8f9f3;font:600 16px/1 var(--mono);border-color:#bfc7b5}
+#holder-symbol:focus{background:#fff;border-color:var(--brass);outline-offset:2px}
+#holder-read{align-self:flex-end;height:46px;background:var(--ink);color:#fff;border-color:var(--ink)}
+.ticker-options{position:absolute;top:calc(100% + 7px);left:0;right:0;z-index:30;max-height:300px;overflow-y:auto;background:#fff;border:1px solid #afb9a3;border-radius:7px;box-shadow:0 12px 28px #222a2726;padding:5px;scrollbar-width:thin}
+.ticker-options[hidden]{display:none}
+.ticker-option{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:42px;padding:11px 12px;border-radius:4px;cursor:pointer;font:600 13px/1.3 var(--mono);color:var(--ink)}
+.ticker-option small{font:12px/1.4 var(--sans);color:var(--muted)}
+.ticker-option[aria-selected="true"]{background:#e9eddf;box-shadow:inset 2px 0 var(--brass)}
+.ticker-option:hover{background:#f0f3e9}
+.ticker-suggestions{display:flex;gap:5px;flex-wrap:wrap;align-self:flex-end;padding-bottom:4px;margin-left:auto}
+.ticker-suggestions[hidden]{display:none}
+.ticker-suggestions button{border:1px solid var(--line);border-radius:4px;color:var(--body);background:#fafbf5;padding:9px;font:500 10px/1 var(--mono);cursor:pointer;min-height:36px}
+.ticker-suggestions button:hover,.ticker-suggestions button[aria-pressed="true"]{background:#e9eddf;border-color:#aab797;color:var(--ink)}
+.multiplier-pair{position:relative;gap:0;background:var(--card)}
+.multiplier-pair .cell{padding:26px 28px 24px}
+.multiplier-pair .cell:first-child{background:linear-gradient(150deg,#fffaf5,#fbf2ed);border-right:1px solid #d9dace}
+.multiplier-pair .cell:last-child{background:linear-gradient(150deg,#f9fcf5,#eaf1e5)}
+.multiplier-pair .v{font:500 clamp(27px,2.72vw,35px)/1.4 var(--mono);letter-spacing:-.085em;white-space:nowrap;overflow-wrap:normal}
+.multiplier-pair .note{max-width:44em;font-size:11.5px;line-height:1.6;min-height:3.2em}
+.multiplier-pair::after{content:"→" / "";position:absolute;left:50%;top:79px;transform:translateX(-50%);width:29px;height:29px;display:grid;place-items:center;border:1px solid #c4cbb8;border-radius:50%;background:#fafbf5;color:var(--ink);font:17px/1 var(--sans)}
+#holder-agree{display:block;font-weight:600;color:var(--paid);margin-top:5px}
+.holding-pair .cell:first-child,.holding-pair .cell:nth-child(2){position:relative;padding-bottom:32px}
+.holding-pair .cell:first-child::after,.holding-pair .cell:nth-child(2)::after{content:"";position:absolute;bottom:17px;left:24px;height:3px;width:calc(100% - 48px);background:currentColor;transform-origin:left;transform:scaleX(var(--holding-ratio,1));transition:transform .35s var(--ease);color:var(--withheld)}
+.holding-pair .cell:nth-child(2)::after{color:var(--paid)}
+#holder-raw{font:15px/1.3 var(--mono);background:#f7f8f1}
+#holder-delta,#delta{font-size:20px;line-height:1.45;letter-spacing:-.04em}
+.holder-verdict .bar{padding:22px 24px;gap:20px;background:#f2f5ea;align-items:center}
+.holder-verdict .why{flex:1;min-width:220px;font-size:13px;line-height:1.7}
+/* The second half is a continuous inset work surface, with a brass spine. */
+.program-desk{margin:0 24px 36px;background:#e9ecdf;border:1px solid #c5cbb8;border-radius:12px;box-shadow:inset 0 2px 6px #333e2710;position:relative}
+.program-desk::before{content:"";position:absolute;left:14px;top:40px;bottom:40px;width:1px;background:linear-gradient(var(--brass),#b7c0a8 28%,#b7c0a8)}
+.program-desk section{background:none;border-color:#ccd2bf;padding:50px 0}
+.program-desk section:last-child{border-bottom:0}
+.program-desk .console{border-color:#c1c9b4}
+.program-desk .head{display:grid;grid-template-columns:1fr 1.1fr;gap:18px 50px;max-width:none}
+.program-desk .head h2{grid-row:1/4;font-size:34px}
+.program-desk .head p{margin:0;font-size:13px}
+.program-desk .picker{padding:18px 22px;gap:8px;background:#fff}
+.program-desk .picker button{padding:12px;min-height:42px}
+.program-desk pre{border-top:1px solid #d4d9c9}
+#mint .grid2 .v{font-size:36px}
+#price td{overflow-wrap:anywhere}#price td.mono{font-size:11px}
+@media(max-width:1050px){.ticker-suggestions{display:none}.hero .wrap{gap:18px 30px}.hero .lede{padding-left:20px}.multiplier-pair .v{font-size:27px}.multiplier-pair .cell{padding:24px}}
+@media(max-width:760px){
+ header.hero{padding:25px 0 23px}.hero .wrap{display:block}.hero .stamp{margin-bottom:21px;gap:6px}.hero .chip{font-size:9px;padding:6px 8px}
+ .hero h1{font-size:36px;line-height:1.04;letter-spacing:-.045em}.hero .lede{border-left:0;padding:0;margin-top:20px;font-size:13px;line-height:1.75}
+ #holder>.wrap>.head{display:block;margin-bottom:22px}#holder h2{font-size:25px}#holder .head p{font-size:12px;margin-top:12px}
+ #holder>.wrap>.eyebrow{margin-bottom:13px}.holder-console>.bar{padding:13px 18px;gap:9px}.holder-console #holder-when{margin:0;max-width:none;width:100%;text-align:left;font-size:10px}
+ .search-row{padding:18px;gap:10px;flex-wrap:wrap}.ticker-search{flex-basis:100%;max-width:none}#holder-read{flex:1;margin-top:2px}.ticker-suggestions{display:flex;margin:0;padding:0;gap:5px}.ticker-suggestions button{padding:8px 6px;font-size:9px;min-height:36px}
+ .multiplier-pair .cell{padding:23px 20px}.multiplier-pair .cell:first-child{border-right:0;border-bottom:1px solid var(--rule)}
+ .multiplier-pair .v{font-size:clamp(23px,6.55vw,36px);letter-spacing:-.065em}.multiplier-pair::after{display:none}.multiplier-pair .note{font-size:12px;min-height:0}
+ .holder-verdict .bar{padding:20px;gap:13px}.program-desk{margin:0 8px 24px;border-radius:10px}.program-desk::before{left:0;top:35px;bottom:35px}
+ .program-desk .wrap{padding:0 18px}.program-desk section{padding:35px 0}.program-desk .head{display:block}.program-desk .head h2{font-size:30px}.program-desk .head p{margin-top:15px;font-size:13px}
+ .program-desk .picker{padding:16px}.program-desk .picker button{font-size:10px;padding:10px}
+ #mint .grid2 .v{font-size:32px}
+}
+
 </style>
 </head>
 <body>
@@ -232,16 +410,20 @@ footer code{font-size:12.5px;color:var(--ink)}
         <a href="#mint">the devnet desk</a> asks the deployed program itself.</p>
     </div>
 
-    <div class="console">
+    <div class="console holder-console">
       <div class="bar">
         <span class="dot" id="holder-dot"></span>
         <span class="label" id="holder-status">Recorded</span>
         <span class="tiny" id="holder-when">build from 2026-09-17 16:44:53 UTC; this half re-reads mainnet
           when it loads</span>
-        <span class="grow">
-          <label class="tiny" for="holder-symbol" style="margin-right:6px">ticker</label>
-          <input id="holder-symbol" list="holder-symbols" value="XOMx"
-                 spellcheck="false" style="width:104px" aria-label="xStock ticker">
+      </div>
+      <div class="search-row">
+        <div class="ticker-search">
+          <label for="holder-symbol">ticker</label>
+          <div class="search-field">
+            <input id="holder-symbol" list="holder-symbols" value="XOMx"
+                   spellcheck="false" autocomplete="off" aria-label="xStock ticker">
+          </div>
           <datalist id="holder-symbols">            <option value="AAPLx"></option>
             <option value="AAx"></option>
             <option value="ABBVx"></option>
@@ -621,11 +803,13 @@ footer code{font-size:12.5px;color:var(--ink)}
             <option value="XYLx"></option>
             <option value="YLDEx"></option>
             <option value="YUMx"></option></datalist>
-          <button class="go ghost" id="holder-read" type="button">Re-read mainnet</button>
-        </span>
+          <div id="ticker-results" class="ticker-options" role="listbox" aria-label="xStock ticker" hidden></div>
+        </div>
+        <button class="go ghost" id="holder-read" type="button">Re-read mainnet</button>
+        <div class="ticker-suggestions" hidden></div>
       </div>
 
-      <div class="grid2">
+      <div class="grid2 multiplier-pair">
         <div class="cell">
           <p class="k">the field named multiplier</p>
           <p class="v wrong" id="holder-field">1.0130866005227463</p>
@@ -641,7 +825,7 @@ footer code{font-size:12.5px;color:var(--ink)}
         </div>
       </div>
 
-      <div class="grid3">
+      <div class="grid3 holding-pair">
         <div class="cell">
           <p class="k">what your wallet would show</p>
           <p class="v wrong" id="holder-wallet">1.013087</p>
@@ -708,7 +892,7 @@ footer code{font-size:12.5px;color:var(--ink)}
       </div>
     </div>
 
-    <div class="console" style="margin-top:16px">
+    <div class="console holder-verdict" style="margin-top:16px">
       <div class="bar">
         <span class="tag settle" id="holder-verdict">Settle</span>
         <span class="why" id="holder-verdict-why">The activation was 33.7 days ago, which is outside the 15 minute window the program holds for, so this trade is clear.</span>
@@ -720,6 +904,7 @@ footer code{font-size:12.5px;color:var(--ink)}
   </div>
 </section>
 
+<div class="program-desk">
 <section id="mint">
   <div class="wrap">
     <p class="eyebrow"><span class="n">02</span><span class="sep">/</span> the devnet desk</p>
@@ -1047,6 +1232,7 @@ POST api.devnet.solana.com
   </div>
 </section>
 
+</div>
 </main>
 
 <footer>
@@ -1096,6 +1282,232 @@ POST api.devnet.solana.com
     if (ANCHOR_ERRORS[code]) return ANCHOR_ERRORS[code];
     var i = code - ERROR_BASE;
     return i >= 0 && i < ERROR_NAMES.length ? ERROR_NAMES[i] : "error " + code;
+  }
+
+/* Presentation only. The resting text and bar widths remain the source of truth. */
+function createPresentation() {
+  var preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var pending = new Map();
+  var motions = new Set();
+  function reduced() { return preference.matches; }
+  function move(node, frames, duration) {
+    if (!node || reduced() || !node.animate) return;
+    var animation = node.animate(frames, {duration: duration || 340, easing: 'cubic-bezier(.2,.75,.25,1)'});
+    motions.add(animation);
+    animation.onfinish = animation.oncancel = function () { motions.delete(animation); };
+  }
+  function number(node, done) {
+    if (!node) return;
+    if (pending.has(node)) pending.get(node)();
+    var target = node.textContent.trim();
+    var match = /^(\$?)([\d,]+)(?:\.(\d+))?$/.exec(target);
+    if (!match || reduced()) { if (done) done(); return; }
+    var places = (match[3] || '').length;
+    var final = BigInt(match[2].replace(/,/g, '') + (match[3] || ''));
+    var frame, start;
+    var label = node.getAttribute('aria-label');
+    node.setAttribute('aria-label', target);
+    node.classList.add('motion-number');
+    function finish() {
+      cancelAnimationFrame(frame);
+      node.textContent = target;
+      if (label === null) node.removeAttribute('aria-label'); else node.setAttribute('aria-label', label);
+      pending.delete(node);
+      if (done) done();
+    }
+    pending.set(node, finish);
+    function tick(time) {
+      if (start === undefined) start = time;
+      var progress = Math.min((time - start) / 360, 1);
+      if (progress === 1 || reduced()) { finish(); return; }
+      var amount = final * BigInt(Math.round((1 - Math.pow(1 - progress, 3)) * 1000)) / 1000n;
+      var digits = amount.toString().padStart(places + 1, '0');
+      var whole = places ? digits.slice(0, -places) : digits;
+      if (match[2].indexOf(',') >= 0) whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      node.textContent = match[1] + whole + (places ? '.' + digits.slice(-places) : '');
+      frame = requestAnimationFrame(tick);
+    }
+    frame = requestAnimationFrame(tick);
+  }
+  function stop(node) { if (pending.has(node)) pending.get(node)(); }
+  function pair(left, right) {
+    if (!left || !right) return;
+    var a = left.textContent, b = right.textContent;
+    if (!/^\d+(\.\d+)?$/.test(a) || !/^\d+(\.\d+)?$/.test(b)) return;
+    var at = 0;
+    while (at < a.length && at < b.length && a[at] === b[at]) at++;
+    [left, right].forEach(function (node, index) {
+      var value = index ? b : a;
+      node.textContent = '';
+      var same = document.createElement('span');
+      same.className = 'diff-equal'; same.textContent = value.slice(0, at); node.appendChild(same);
+      if (at < value.length) {
+        var changed = document.createElement('span');
+        changed.className = 'digit-change'; changed.textContent = value.slice(at); node.appendChild(changed);
+      }
+    });
+  }
+  function reveal(node) {
+    move(node, [{opacity:.45,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}], 340);
+    node.querySelectorAll('.meter i,.lg-bar i,.dbar').forEach(function (bar) {
+      bar.style.transformOrigin = 'left';
+      move(bar, [{transform:'scaleX(0)'},{transform:'scaleX(1)'}], 550);
+    });
+    node.querySelectorAll('.stat-number').forEach(function (value) { number(value); });
+    var mark = node.querySelector('#now');
+    if (mark) move(mark, [{left:'50%'},{left:mark.style.left || '50%'}], 450);
+  }
+  function observe() {
+    if (!('IntersectionObserver' in window)) return;
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        reveal(entry.target); observer.unobserve(entry.target);
+      });
+    }, {threshold:.04,rootMargin:'0px 0px -28px 0px'});
+    document.querySelectorAll('main section > .wrap').forEach(function (node) { observer.observe(node); });
+    var nav = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        document.querySelectorAll('.top nav a[href^="#"]').forEach(function (link) {
+          if (link.getAttribute('href') === '#' + entry.target.id) link.setAttribute('aria-current','location');
+          else link.removeAttribute('aria-current');
+        });
+      });
+    }, {rootMargin:'-88px 0px -60% 0px',threshold:0});
+    document.querySelectorAll('main section[id]').forEach(function (node) { nav.observe(node); });
+  }
+  function stopAll() {
+    if (!reduced()) return;
+    Array.from(pending.values()).forEach(function (finish) { finish(); });
+    motions.forEach(function (animation) { animation.finish(); });
+  }
+  if (preference.addEventListener) preference.addEventListener('change', stopAll);
+  else if (preference.addListener) preference.addListener(stopAll);
+  return {number:number, pair:pair, move:move, stop:stop, observe:observe};
+}
+
+  /* UI hooks are deliberately separate from transport, wire format and account decoding. */
+  var presentation = createPresentation();
+  function uiWrite(node, value) {
+    presentation.stop(node);
+    node.textContent = value;
+  }
+  function uiBusy(id, busy) {
+    var scope = id === 'mint' ? document.querySelector('.program-desk') : el(id);
+    scope.dataset.reading = busy ? 'true' : 'false';
+    scope.querySelectorAll('.v').forEach(function (node) {
+      presentation.stop(node);
+      node.classList.add('read-sheen');
+      node.setAttribute('aria-busy', busy ? 'true' : 'false');
+    });
+  }
+  function uiPairs() {
+    presentation.pair(el('holder-field'), el('holder-live'));
+    presentation.pair(el('field-multiplier'), el('live-multiplier'));
+    var before = Number(el('holder-wallet').textContent), after = Number(el('holder-own').textContent);
+    var ratio = Number.isFinite(before) && Number.isFinite(after) && after > 0 ? Math.min(Math.max(before / after, 0), 1) : 1;
+    el('holder-wallet').closest('.cell').style.setProperty('--holding-ratio', String(ratio));
+  }
+  function uiLanded(id, animate) {
+    uiBusy(id, false);
+    var scope = el(id);
+    if (animate) {
+      var values = id === 'holder'
+        ? ['holder-field','holder-live','holder-wallet','holder-own','holder-withheld-mine']
+        : ['field-multiplier','live-multiplier','naive-units','program-units','gap-units'];
+      var remaining = values.length;
+      values.forEach(function (key) {
+        presentation.number(el(key), function () {
+          remaining--;
+          if (!remaining) uiPairs();
+        });
+      });
+      presentation.move(el(id === 'holder' ? 'holder-verdict' : 'verdict'),
+        [{opacity:.4,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}], 280);
+    } else uiPairs();
+    scope.querySelectorAll('.ticker-suggestions button').forEach(function (button) {
+      button.setAttribute('aria-pressed', button.dataset.symbol === holderSymbol ? 'true' : 'false');
+    });
+  }
+  function initHolderSearch() {
+    var input = el('holder-symbol'), box = el('ticker-results');
+    var names = Object.keys(HOLDER.tokens).sort();
+    var matches = [], active = -1;
+    input.removeAttribute('list');
+    input.setAttribute('role','combobox');
+    input.setAttribute('aria-autocomplete','list');
+    input.setAttribute('aria-controls','ticker-results');
+    input.setAttribute('aria-expanded','false');
+    function close() {
+      box.hidden = true; active = -1;
+      input.setAttribute('aria-expanded','false'); input.removeAttribute('aria-activedescendant');
+    }
+    function point(index) {
+      active = index;
+      box.querySelectorAll('[role="option"]').forEach(function (option, i) {
+        option.setAttribute('aria-selected', i === active ? 'true' : 'false');
+        if (i === active) {
+          input.setAttribute('aria-activedescendant', option.id);
+          option.scrollIntoView({block:'nearest'});
+        }
+      });
+    }
+    function choices() {
+      var q = input.value.trim().toLowerCase();
+      matches = names.filter(function (symbol) { return symbol.toLowerCase().indexOf(q) >= 0; });
+      matches.sort(function (a,b) {
+        return (b.toLowerCase().indexOf(q) === 0 ? 1 : 0) - (a.toLowerCase().indexOf(q) === 0 ? 1 : 0);
+      });
+      matches = matches.slice(0,10);
+      box.textContent = ''; active = -1;
+      input.removeAttribute('aria-activedescendant');
+      matches.forEach(function (symbol,i) {
+        var option = document.createElement('div');
+        option.id = 'ticker-option-' + i; option.className = 'ticker-option';
+        option.setAttribute('role','option'); option.setAttribute('aria-selected','false');
+        option.dataset.symbol = symbol;
+        var ticker = document.createElement('span'); ticker.textContent = symbol; option.appendChild(ticker);
+        var token = HOLDER.tokens[symbol];
+        if (token.name || token.companyName) {
+          var company = document.createElement('small'); company.textContent = token.name || token.companyName; option.appendChild(company);
+        }
+        box.appendChild(option);
+      });
+      box.hidden = matches.length === 0;
+      input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
+    }
+    function choose(symbol) { close(); selectHolder(symbol); }
+    input.addEventListener('input', choices);
+    input.addEventListener('focus', choices);
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault(); if (box.hidden) choices();
+        if (matches.length) point(active < 0 ? (event.key === 'ArrowDown' ? 0 : matches.length - 1)
+          : (active + (event.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        var typed = input.value.trim();
+        var exact = names.filter(function (name) { return name.toLowerCase() === typed.toLowerCase(); })[0];
+        choose(active >= 0 && !box.hidden ? matches[active] : exact || typed);
+      } else if (event.key === 'Escape') {
+        event.preventDefault(); close(); if (holderSymbol) input.value = holderSymbol;
+      } else if (event.key === 'Tab') close();
+    });
+    box.addEventListener('pointerdown', function (event) { event.preventDefault(); });
+    box.addEventListener('click', function (event) {
+      var option = event.target.closest('[data-symbol]'); if (option) choose(option.dataset.symbol);
+    });
+    document.addEventListener('pointerdown', function (event) { if (!input.closest('.ticker-search').contains(event.target)) close(); });
+    var suggestions = document.querySelector('.ticker-suggestions');
+    ['XOMx','AAPLx','NVDAx','SPYx','KOx'].forEach(function (symbol) {
+      if (!HOLDER.tokens[symbol]) return;
+      var button = document.createElement('button'); button.type = 'button'; button.textContent = symbol;
+      button.dataset.symbol = symbol; button.setAttribute('aria-pressed', symbol === HOLDER.default ? 'true' : 'false');
+      button.addEventListener('click', function () { input.value = symbol; choose(symbol); });
+      suggestions.appendChild(button);
+    });
+    suggestions.hidden = false;
   }
 
   /* ------------------------------------------------------------------ base58 */
@@ -1376,7 +1788,7 @@ POST api.devnet.solana.com
   }
   function fmtTime(ts) { return new Date(ts * 1000).toISOString().replace(".000Z", "Z"); }
   function el(id) { return document.getElementById(id); }
-  function setText(id, v) { var e = el(id); if (e) e.textContent = v; }
+  function setText(id, v) { var e = el(id); if (e) uiWrite(e, v); }
 
   /* A picker label is a symbol the program stores and an address that comes off the wire, and
      neither is escaped on the way in. A symbol that closed a tag would take the picker apart. */
@@ -1552,6 +1964,7 @@ POST api.devnet.solana.com
 
     drawAxis(since, until);
     renderTrail(c.receipts, rec);
+    uiPairs();
   }
 
   /* The axis places the reader on one timeline, so a staged activation has to be the same
@@ -1821,11 +2234,14 @@ POST api.devnet.solana.com
       return;
     }
     holderSymbol = symbol;
+    holderView = null;
     el("holder-symbol").value = symbol;
     renderHolderToken(t);
     holderMark(false, "build from " + HOLDER.asOf.replace("T", " ").replace(/\..*$/, " UTC")
       + "; reading mainnet");
+    uiBusy("holder", true);
     readHolderMint(symbol).then(function (v) {
+      if (holderSymbol !== symbol) return;
       holderView = v;
       var live = v.effectiveTs <= v.now ? v.newMultiplier : v.multiplier;
       setText("holder-field", String(v.multiplier));
@@ -1840,8 +2256,11 @@ POST api.devnet.solana.com
       holderMark(true, "read from the mint at " + MAINNET.replace(/^https?:\/\//, "")
         + " just now, and the mint's own timestamp is "
         + (v.effectiveTs > v.now ? "in the future, so a value is staged" : "in the past"));
+      uiLanded("holder", true);
     }).catch(function (e) {
+      if (holderSymbol !== symbol) return;
       holderMark(false, "live read failed: " + e.message + ". Showing the build's own values.");
+      uiLanded("holder", false);
     });
   }
 
@@ -1961,6 +2380,7 @@ POST api.devnet.solana.com
   function refresh() {
     var btn = el("recheck");
     btn.disabled = true;
+    uiBusy("mint", true);
     mark("reading", "asking " + RPC.replace(/^https?:\/\//, ""));
     readLive().then(function (out) {
       live = out;
@@ -1976,7 +2396,7 @@ POST api.devnet.solana.com
         + STATE.capturedAt.replace("T", " ").replace(/\..*$/, " UTC") + ".");
       live = null;
       renderMint(selected);
-    }).then(function () { btn.disabled = false; });
+    }).then(function () { btn.disabled = false; uiLanded("mint", !!live); });
   }
 
   /* ------------------------------------------------------------------ wiring */
@@ -1988,14 +2408,9 @@ POST api.devnet.solana.com
     renderMint(b.getAttribute("data-mint"));
   });
 
-  /* The holder view's own wiring. `change` covers a pick from the datalist, `keydown` covers a
-     ticker typed and confirmed with Enter, and the button is there because a reader who has typed
-     a ticker should not have to guess that it needs a keypress to take effect. */
+  /* Search changes only the selected symbol; chain reads still use selectHolder. */
   var holderInput = el("holder-symbol");
-  holderInput.addEventListener("change", function () { selectHolder(holderInput.value.trim()); });
-  holderInput.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") { e.preventDefault(); selectHolder(holderInput.value.trim()); }
-  });
+  initHolderSearch();
   el("holder-read").addEventListener("click", function () { selectHolder(holderInput.value.trim()); });
   el("holder-raw").addEventListener("input", function () {
     var t = HOLDER.tokens[holderInput.value.trim()];
@@ -2044,6 +2459,8 @@ POST api.devnet.solana.com
      reads on load, against two different chains, and the page says which half is which: the
      holder view is mainnet and applies the program's rule in the browser, the desk below is devnet
      and asks the program itself. */
+  presentation.observe();
+  uiPairs();
   selectHolder(HOLDER.default);
   refresh();
 })();
