@@ -34,10 +34,14 @@ from documentation:
     109     8  ema_price        (i64)
     117     8  ema_conf         (u64)
     125     8  posted_slot      (u64)
-    133     1  trailing byte, purpose not established
+    133     1  slack: the account is sized for VerificationLevel::Partial
 
-The trailing byte is recorded as unexplained rather than assigned a meaning it
-has not been shown to have. The parser reads 133 bytes and tolerates the extra.
+The account is 134 bytes and the parsed fields occupy 133. The trailing byte is
+not an unparsed field. `VerificationLevel` is a Borsh enum at offset 40 whose
+`Partial` variant carries an extra `num_signatures` byte, so the account is
+allocated for the larger variant and a fully verified one has a byte to spare.
+That is also why every offset after `feed_id` shifts by one on a partial
+account. The parser reads 133 bytes and requires the `Full` variant.
 """
 
 import argparse

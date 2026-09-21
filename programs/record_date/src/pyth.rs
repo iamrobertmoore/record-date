@@ -14,9 +14,14 @@
 //!
 //! Two details that a parser written from a summary would get wrong:
 //!
-//! * The account is **134 bytes and the fields occupy 133**. There is one trailing byte after
-//!   `posted_slot` whose purpose has not been established. It is tolerated and not named, rather
-//!   than assigned a meaning it has not been shown to have.
+//! * The account is **134 bytes and the fields occupy 133**, and the trailing byte belongs to
+//!   `VerificationLevel`. It is a Borsh enum with two variants: `Partial { num_signatures: u8 }`,
+//!   which occupies two bytes, and `Full`, which occupies one. The account is allocated for the
+//!   larger variant, so a fully verified account leaves one byte of slack at the end and a
+//!   partially verified one fills it. That is what the byte is, and it is also why the offsets
+//!   below describe a fully verified account only: on a partial one every field from `feed_id`
+//!   onward sits one byte later. The parser requires `Full` rather than reading a layout that
+//!   would be wrong, which turns a silent misread into a named refusal.
 //! * `exponent` is a signed field and is **negative** for equity feeds, so the human price is
 //!   `price * 10^exponent` and the fixed-point conversion is a multiply or a divide depending on
 //!   its sign. Treating it as unsigned turns $334.25 into a number with thirty digits.
@@ -52,7 +57,20 @@ const EMA_PRICE_OFFSET: usize = 109;
 const EMA_CONF_OFFSET: usize = 117;
 const POSTED_SLOT_OFFSET: usize = 125;
 
-/// The last byte the parsed fields reach. Accounts are 134 bytes; the byte at 133 is unexplained.
+/// `VerificationLevel::Full`, the Borsh variant tag, and the only value the offsets above describe.
+///
+/// `Partial` is the other variant and it is one byte longer, so on a partially verified account
+/// every offset from `FEED_ID_OFFSET` onward is wrong by one. Requiring this is not a policy about
+/// how much verification is enough; it is the precondition for reading the account at all.
+pub const VERIFICATION_FULL: u8 = 1;
+
+/// The last byte the parsed fields reach, so the parsed region is `0..133`.
+///
+/// Accounts are 134 bytes, and byte 133 is the one byte of slack a fully verified account leaves.
+/// It is not an unparsed field: the account is allocated for `VerificationLevel::Partial`, which
+/// carries a `num_signatures` byte the `Full` variant does not, so `Full` has a byte to spare at
+/// the end. See the module doc. Naming it here because "unexplained" was this comment's own word
+/// for a byte whose explanation was two paragraphs above it.
 pub const PARSED_LEN: usize = 133;
 
 /// The longest age a caller may declare acceptable: one day.
@@ -90,7 +108,8 @@ pub const BPS_DENOMINATOR: u128 = 10_000;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PriceUpdateV2 {
     pub write_authority: [u8; 32],
-    /// 0 = Partial, 1 = Full. Recorded, not enforced: what matters is the price and its age.
+    /// `VerificationLevel`: 0 for `Partial`, 1 for `Full`. Enforced by `read`, not merely
+    /// recorded, because the offsets in this struct are the `Full` layout.
     pub verification_level: u8,
     pub feed_id: [u8; 32],
     pub price: i64,
@@ -132,10 +151,11 @@ impl PriceUpdateV2 {
 
 /// Parse a `PriceUpdateV2` account, or say why it is not one.
 ///
-/// Length is checked before the discriminator and both before any field is read. A caller can
-/// pass an account that merely has the right bytes at the right offset: a `memcmp` filter on a
-/// cluster returns candidates that are not this type at all, which is how a devnet query for
-/// BTC/USD hit an account too short to parse.
+/// Length is checked before the discriminator, both before any field is read, and the
+/// verification level before the fields whose offsets it decides. A caller can pass an account
+/// that merely has the right bytes at the right offset: a `memcmp` filter on a cluster returns
+/// candidates that are not this type at all, which is how a devnet query for BTC/USD hit an
+/// account too short to parse.
 pub fn read(data: &[u8]) -> Result<PriceUpdateV2> {
     require!(
         data.len() >= PARSED_LEN,
@@ -144,6 +164,18 @@ pub fn read(data: &[u8]) -> Result<PriceUpdateV2> {
     require!(
         data[..DISCRIMINATOR.len()] == DISCRIMINATOR,
         RecordDateError::NotAPriceUpdate
+    );
+
+    // This is the precondition for the offsets below, not a judgement about how much verification
+    // is enough. `Partial` carries a `num_signatures: u8` after its tag, so on a partially verified
+    // account `feed_id` starts at 42 rather than 41 and every field after it is one byte out. The
+    // previous parser read the tag and then the payload as the first byte of the feed id, so a
+    // partial account was refused by the feed-id comparison: the right outcome for the wrong
+    // reason, and only because the shifted bytes happened not to match. Naming the rule is what
+    // makes the refusal the one it claims to be, and it is the check Pyth's own client makes.
+    require!(
+        data[VERIFICATION_LEVEL_OFFSET] == VERIFICATION_FULL,
+        RecordDateError::PythPriceNotVerified
     );
 
     let mut write_authority = [0u8; 32];

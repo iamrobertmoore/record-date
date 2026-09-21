@@ -56,10 +56,22 @@ pub fn handle_record_activation(ctx: Context<RecordActivation>) -> Result<()> {
         RecordDateError::NotRegistered
     );
 
-    // The multiplier is the state. If it has not moved, and the activation timestamp has not
-    // moved, there is nothing to record. `activation_pending` answers this without paying.
+    // The multiplier is the state, and only the multiplier. The issuer stages the next value
+    // about four hours before it takes effect, and during that window `effective` still returns
+    // the value in force while `effective_at` returns 0, so the timestamp has moved and the
+    // multiplier has not. Comparing the timestamp as well treated that as an activation: a
+    // receipt was written recording no change, dated at the Unix epoch, and `Registry.activations`
+    // counted it. On mainnet that happens before every dividend, so "how often has this stock
+    // moved" would have read double.
+    //
+    // Deciding on the multiplier alone is also what makes a flat receipt impossible rather than
+    // merely unlikely: `new_fp` below is `live_fp` and `previous_fp` is
+    // `record.live_multiplier_fp`, so `Receipt::is_flat` cannot be true of anything written past
+    // this line. That is why there is no separate check on it here; a second check that cannot
+    // fail is worse than none, and `a_receipt_never_records_a_flat_change` asserts the invariant
+    // where it can be seen.
     require!(
-        live_fp != record.live_multiplier_fp || live_at != record.live_effective_at,
+        live_fp != record.live_multiplier_fp,
         RecordDateError::NothingToRecord
     );
 

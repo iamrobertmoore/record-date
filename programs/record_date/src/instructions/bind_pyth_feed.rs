@@ -1,12 +1,24 @@
-use crate::constants::{PYTH_BINDING_SEED, SYMBOL_MAX, TOKEN_RECORD_SEED};
+use crate::constants::{PYTH_BINDING_SEED, REGISTRY_SEED, SYMBOL_MAX, TOKEN_RECORD_SEED};
 use crate::error::RecordDateError;
-use crate::state::{PythBinding, TokenRecord};
+use crate::state::{PythBinding, Registry, TokenRecord};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct BindPythFeed<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
+
+    /// The registry, and `has_one = authority` with it.
+    ///
+    /// This account is here for one reason, and it is not bookkeeping. The binding exists so that
+    /// a caller cannot choose which feed the check is against: `PythBinding` is what makes
+    /// `verify_against_pyth` ask "is there a fresh price for *this* stock" rather than "is there a
+    /// fresh price anywhere". With the bind open to any signer, the caller chooses the feed again,
+    /// in the same transaction if they like, and the refusal the binding exists to provide can be
+    /// undone by whoever wants to undo it. The authority is the thing that closes that, so the
+    /// check is on the bind rather than on the verify.
+    #[account(mut, seeds = [REGISTRY_SEED], bump = registry.bump, has_one = authority)]
+    pub registry: Account<'info, Registry>,
 
     /// CHECK: the mint this binding is for. Only its key is read; that the mint exists and is a
     /// Token-2022 mint was established by `register_mint`, which the record below proves ran.
@@ -18,7 +30,9 @@ pub struct BindPythFeed<'info> {
     pub token_record: Account<'info, TokenRecord>,
 
     /// `init_if_needed` rather than `init` so that re-running a demo does not fail on the second
-    /// run. Rebinding overwrites, which is what makes a corrected feed id fixable.
+    /// run. Rebinding overwrites, which is what makes a corrected feed id fixable, and it is
+    /// authority-only for the reason given on the registry account above: a rebind that anyone
+    /// can perform is a feed choice that anyone can make.
     #[account(
         init_if_needed,
         payer = authority,

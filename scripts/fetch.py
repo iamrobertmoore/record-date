@@ -710,6 +710,29 @@ def quote_of(payload):
     return None, None, None
 
 
+def price_record(payload, usd, source, alt, currency):
+    """One mint's quote, in the one shape the rest of the fetch reads.
+
+    This dict's keys are a contract rather than an implementation detail, and the reason is that
+    every caller reads it with `.get`. A key left out does not raise: it arrives as `None` on every
+    token, and nothing fails. That is how `liquidity` came to be `null` for all 379 tokens of the
+    17 September build while the endpoint was answering with a value for 47 of them, and it is why
+    the key set is asserted in `test_checks.py` rather than left to the docstring.
+
+    Pulled out of `fetch_prices` so that assertion can be made without a network call. The
+    conversion stays in the caller, because only the reference field needs it and the caller is the
+    one that knows the symbol.
+    """
+    return {
+        "usd": usd,
+        "local": payload.get("stockData", {}).get("price") if source == "stockData.price" else None,
+        "source": source,
+        "alt": alt,
+        "currency": currency,
+        "liquidity": payload.get("liquidity"),
+    }
+
+
 def fetch_prices(addresses, currency_of, fx):
     """Quotes for as many mints as the price API will give us, in one pass, with retries.
 
@@ -720,9 +743,16 @@ def fetch_prices(addresses, currency_of, fx):
     or has genuinely failed four times, and the caller is told how many mints it ended up with.
 
     The payload is normalised here rather than at each call site, so that the one place that
-    knows Jupiter's field names is this one. The conversion to dollars also happens here, for the
-    same reason: `usd` leaves this function in dollars whichever field it came from, and `local`
-    keeps the raw value so the page can show what the venue actually published.
+    knows Jupiter's field names is this one. Every key this function returns, and the Jupiter
+    field behind it: `usd` (`stockData.price`, converted, else `usdPrice`), `local` (the
+    unconverted `stockData.price`), `source` (which of the two was used), `alt` (the pool quote
+    when the reference was preferred, so the disagreement can be counted), `currency` (the
+    listing's, from the caller's map) and `liquidity` (`liquidity`, the pool's depth in dollars).
+    That list is the contract, and `test_checks.py` asserts the key set, because a field left out
+    of this dict is not a missing field: every call site reads it with `.get` and gets `None`.
+    The conversion to dollars also happens here, for the same reason: `usd` leaves this function
+    in dollars whichever field it came from, and `local` keeps the raw value so the page can show
+    what the venue actually published.
     """
     out = {}
     failed = []
@@ -745,13 +775,7 @@ def fetch_prices(addresses, currency_of, fx):
                         usd = to_usd(usd, currency, fx)
                         if currency not in (None, "USD"):
                             converted[currency] = converted.get(currency, 0) + 1
-                    out[mint] = {
-                        "usd": usd,
-                        "local": payload.get("stockData", {}).get("price") if source == "stockData.price" else None,
-                        "source": source,
-                        "alt": alt,
-                        "currency": currency,
-                    }
+                    out[mint] = price_record(payload, usd, source, alt, currency)
                     sources[source] += 1
                     # Both fields present and they disagree by more than 20%. On a healthy pool
                     # they agree to about a percent. Anything past 20% means one of them is not a
@@ -1079,6 +1103,24 @@ def main():
     # ------------------------------------------------------------- the read rule
     live_differs = sum(1 for p in mints.values() if p["live"] != p["base"])
     with_event = sum(1 for p in mints.values() if p["live"] != 1.0 or p["base"] != 1.0)
+
+    # How old the most recent activation is, over every mint that has one rather than over the
+    # priced tokens. `read_mint` reports `effective_at` as 0 unless the dated value has taken
+    # effect, so a non-zero one is exactly "this mint has an activation behind it". The README
+    # quotes a figure of the same name over a narrower population: 370 of the 379 tokens it prices,
+    # median 26.7 days, which is one of the three contributions its first screen claims.
+    #
+    # That README figure is not this one, and this one is checked against nothing. An earlier
+    # version of this comment said the value below was computed "so `published.figures` can check
+    # the README against it rather than trusting it", which was false twice over: `published` never
+    # read this field, and the key is absent from the committed `data.json` entirely, so no build in
+    # this tree has ever carried it. The check that now exists is `published.median_activation_age`,
+    # which derives the figure from `tokens` over the population the README's sentence names. This
+    # computation is left in place because a later fetch will write it again and it is a true
+    # reading of the whole mint set; it is named here so the two cannot be taken for one another.
+    dated_ages = sorted((now - p["effective_at"]) / 86400.0
+                        for p in mints.values() if p["effective_at"])
+    median_activation_age_days = dated_ages[len(dated_ages) // 2] if dated_ages else None
 
     # How many corporate actions a mint has actually had applied, read off the mint itself.
     # A mint starts at 1.0. The first activation leaves `multiplier` at 1.0 and puts the new value
@@ -1602,8 +1644,13 @@ def main():
     # The chosen field also has to clear a loose absolute bound, not merely beat the other field
     # by four. Relative-only is what lets a field that is 100% out pass against one that is 1,000%
     # out. The bound is 25% because the residual here is the stock's own movement since the
-    # activation, which the age gradient above measures at 1.8% within ten days and 5.3% beyond
+    # activation, which the age gradient above measures at 2.1% within ten days and 4.8% beyond
     # sixty. A field that is a real price clears 25% comfortably; a pool artefact does not.
+    #
+    # The two figures are quoted from this build rather than from memory. They read 1.8% and 5.3%
+    # here for a while, which was neither the pair this build produces nor a pair any earlier build
+    # produced: a comment is a hand-written copy of a number that moves, which is the defect this
+    # entry is about, so it is corrected against `data.json` and not against a note.
     divergent = [
         r for r in recon
         if r["alt_price"] and r["chosen_price"]
@@ -1826,6 +1873,7 @@ def main():
             "live_differs_from_base": live_differs,
             "no_event": len(mints) - with_event,
             "activations": activations,
+            "median_activation_age_days": median_activation_age_days,
         },
         "layout": layout,
         "actions": {
@@ -1880,6 +1928,14 @@ def main():
             "stale_n": len(stale),
             "buckets": buckets,
             "illustrated": illustrated,
+            # The subset the two-field claim is about, and the two medians it rests on. These
+            # existed only inside the check's own message, which is prose: the README quoted
+            # 0.7% against a build whose check said 0.9%, and nothing could notice because the
+            # figure was not a field. A number a hand-written surface quotes has to be in the
+            # build or the gate has nothing to compare against.
+            "divergent_n": len(divergent),
+            "divergent_chosen_median": chosen_error,
+            "divergent_alt_median": alt_error,
             # Which of the two published figures the chain actually reinvests. Asserted above
             # rather than described here, because it is the economic claim the entry rests on.
             "net_over_market": median(rated_net),

@@ -9,7 +9,10 @@ pub struct RegisterMint<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(mut, seeds = [REGISTRY_SEED], bump = registry.bump)]
+    /// `has_one = authority` is the whole access rule for registration. Without it any signer
+    /// could register any Token-2022 account, which makes the registry a public list of whatever
+    /// anyone happened to pass rather than the set of mints this deployment was pointed at.
+    #[account(mut, seeds = [REGISTRY_SEED], bump = registry.bump, has_one = authority)]
     pub registry: Account<'info, Registry>,
 
     /// CHECK: must be owned by the Token-2022 program, and must parse as a mint. Both are

@@ -113,6 +113,26 @@ impl ScaledUiAmount {
         }
     }
 
+    /// When a staged activation takes effect, or 0 if none is staged.
+    ///
+    /// The other half of `effective_at`, and the two are exclusive: between them they cover both
+    /// fields, so exactly one is non-zero whenever the mint carries a dated activation at all.
+    ///
+    /// This is not a hypothetical state. The issuer stages the next value about four hours ahead
+    /// of the timestamp it will take effect at: SATAx at 2026-09-16 20:20:17Z was given
+    /// `1.046423158477987` effective `2026-09-17T00:30:00Z`, so for 4h 09m 43s the mint carried a
+    /// timestamp that had not arrived. During that window `effective_at` returns 0, because the
+    /// issuer has just overwritten the timestamp of the value now in force with the one that is
+    /// still ahead. The value in force is real and its timestamp is gone, which is the case this
+    /// program's `Receipt` exists to keep.
+    pub fn staged_at(&self, now: i64) -> i64 {
+        if self.new_multiplier_effective_timestamp > now {
+            self.new_multiplier_effective_timestamp
+        } else {
+            0
+        }
+    }
+
     /// The multiplier in force at `now`, as 1e18 fixed point.
     ///
     /// The mint stores an f64. Converted once, here, and never touched as a float again:
