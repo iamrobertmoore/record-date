@@ -324,17 +324,21 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
     <h1>The dividend is a number in the mint account, and on 370 of 927 mints the obvious field is the previous one.</h1>
 
     <p class="lede">A tokenized US stock pays its dividend by quietly raising a multiplier stored in
-      the token's Token-2022 mint account. The balance does not move. Most wallets, exchanges,
-      aggregators and DeFi protocols do not apply the multiplier, and the field named
-      <b>multiplier</b> is the wrong one. <b>377 of the 400
+      the token's Token-2022 mint account. The balance does not move, so a reader has to apply the
+      multiplier, and the field named <b>multiplier</b> is the wrong one: it holds the value from
+      before the most recent corporate action. <b>377 of the 400
       tokenized stocks that publish a withholding rate lose 30% of the dividend before
       it is reinvested</b>, and about <b>$11.6m a year</b> is withheld before
       the reinvestment, on a surface no holder is shown.</p>
     <p class="lede">Four projects are named in section 01, and one of them already ships a guard a
       venue can act on. What none of them has is the count. The issuer's own docs
-      ask venues to pause around every activation and nothing enforces it, so
-      <b>57 of the 640 activations land on a day the market
-      does not trade at all</b>, and this is a program that can say so.</p>
+      ask venues to pause around every activation and nothing enforces it. Counting the
+      activations the issuer publishes against the exchange's own calendar,
+      <b>57 of the 640 land on a day the market
+      does not trade at all</b>, and 631 land outside the session the
+      exchange itself defines. That count is made from the issuer's feed and the exchange's
+      calendar; what the program adds is an on-chain record of each activation a crank writes, so
+      the same count can be made again from the chain rather than from a document.</p>
 
     <p style="margin-top:28px"><a class="cta" href="desk.html">Open the settlement desk
       <span class="arw">&rarr;</span></a>
@@ -398,7 +402,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           activation timestamp and refuses execution inside a transition window.
           <b>An earlier version of this page said that timestamp was not there. That was false.</b>
           What is not there is the count and the history: 640 activations timed against the
-          exchange's own calendar, and a record of every activation rather than only the latest.
+          exchange's own calendar, and an ordered record of the moves a crank writes down rather
+          than only the latest.
           The other finding below is the currency the reference price is quoted in.</p>
       </div>
     </div>
@@ -505,7 +510,7 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
 
     <p class="small" style="margin-top:18px">This is the part of the story that is not a bug in
       anyone's code. The issuer schedules activation for 00:30 UTC the day after the ex-date,
-      which is four and a half hours after the US close and ten hours before the next open. So
+      which is four and a half hours after the US close and thirteen hours before the next open. So
       the multiplier changes when there is no continuous price to settle against and no closing
       auction to absorb it, and the fifteen minute pause is what stands in for both. A venue that
       does not pause is not making a mistake about a number. It is settling against a position
@@ -695,8 +700,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
     <div class="head">
       <h2>Entitlement, as an account you can read in one call.</h2>
       <p>A dividend on Solana is a change to the meaning of a balance. This program reads the mint
-        directly, resolves the multiplier correctly, and writes every activation as a permanent,
-        ordered receipt that any protocol can read without an API.</p>
+        directly, resolves the multiplier correctly, and writes each activation a crank brings it
+        as a permanent, ordered receipt that any protocol can read without an API.</p>
     </div>
 
     <pre><span class="c">// the whole trap, in one comparison</span>
@@ -854,9 +859,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
           was Friday at <span class="num">16:00:19</span> ET, the exact minute of the close, and
           another entry in this event reports that nothing is published for US equities between
           Friday <span class="num">20:00</span> ET and Sunday <span class="num">20:00</span> ET.
-          Every activation observed here lands at <span class="num">20:30</span> ET, so a
-          five-minute rule would refuse every Friday-night corporate action. That is why the value
-          is an argument and not a constant.</p>
+          407 of the 640 activations land at 20:30 ET and 177 at 19:55 ET, so a five-minute rule would refuse every Friday-night corporate
+          action. That is why the value is an argument and not a constant.</p>
       </div>
       <div>
         <h3>This is one issuer</h3>
@@ -913,7 +917,8 @@ footer .links a{border-bottom:1px solid var(--rule);padding-bottom:2px}
     <div class="txt">
       <p><b>Record Date.</b> An xStock's dividend is reinvested by raising a multiplier in the
         Token-2022 mint account. This reads that multiplier, resolves it correctly, and records
-        every activation on chain so that the entitlement is checkable rather than assumed.</p>
+        each activation on chain as a crank writes it, so the entitlement is checkable rather than
+        assumed.</p>
       <div class="links">
         <a href="#claim">The claim</a>
         <a href="#proof">The proof</a>
