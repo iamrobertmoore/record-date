@@ -38,6 +38,7 @@ import datetime
 import importlib.util
 import json
 import os
+import re
 import sys
 import tempfile
 import zoneinfo
@@ -186,6 +187,42 @@ def to_places_old(value, places):
         frac = frac[:places].rstrip("0")
         return whole + ("." + frac if frac else "")
     return text
+
+
+def spoken_present_old(words, text):
+    """The first form of `published._phrase_present`: plain substring containment.
+
+    Kept here so the difference between the two is auditable rather than asserted, the same way this
+    file keeps `to_places_old` and `divergent_old`. It is the form that was in the tree, and it is
+    wrong in the direction that matters: `three hundred and seventy` is a substring of `three
+    hundred and seventy-one`, so a count moved by one kept the check green.
+    """
+    return words.lower() in text.lower()
+
+
+def screen_text_old(script):
+    """The first form of `published._screen_text`: the `**On screen:**` marker's own line only.
+
+    Also kept so the difference is auditable. It is not a substring bug like the one above, it is a
+    continuation bug, and it fails in the opposite direction: the mechanism beat's multiplier pair sits
+    on the line *after* its marker, so this parser cannot see it, and a check over it would refuse a
+    correct script. A false refusal rather than a silent pass, which is worth having both forms in view
+    for: the two failure modes are mirrors and only one of them is loud.
+
+    The direction is stated rather than assumed, and it was assumed wrong first. The docstring here
+    originally claimed this parser "would pass on a script that had lost it", which is the opposite of
+    what a presence check does with text it cannot see. Running it is what corrected the claim, which is
+    the same rule this entry applies to every figure in it.
+    """
+    screen, current = {}, None
+    for line in script.split("\n"):
+        heading = re.match(r"^### (\d+:\d+) ", line)
+        if heading:
+            current = heading.group(1)
+            screen[current] = ""
+        elif current and line.startswith("**On screen:**"):
+            screen[current] = line[len("**On screen:**"):].strip()
+    return screen
 
 
 def main():
@@ -363,7 +400,17 @@ def main():
             "actions": {"months": 6.6},
             "read_rule": {"agreed": 927, "disagreed": 0, "no_value": 0},
             "mints": {"total": 927, "live_differs_from_base": 370},
-            "activation_timing": {"n": 640, "on_a_non_trading_day": 57},
+            # The three figures on the README's first bold line. `figures` asks for them by name now,
+            # so a fixture without them reports the fixture rather than the entry. The rate is the
+            # feed's own top rate and the pair is the symbols it applies to, and those two are what
+            # make "lose 26.2%" a different figure rather than a typo: 26.2% is withheld over gross.
+            "withholding": {"top_rate": "0.3", "top_rate_symbols": 377, "rated_symbols": 400,
+                            "top_rate_share": 0.9425},
+            # `outside_calendar` is the count against the exchange's own calendar and `outside` is
+            # the UTC-window one sitting beside it. They differ by three, so a fixture carrying only
+            # the second would let the first be asked for and never found.
+            "activation_timing": {"n": 640, "on_a_non_trading_day": 57,
+                                  "outside_calendar": 631, "outside": 628},
             "reconciliation": {
                 "net_over_market": 1.0349, "gross_over_market": 1.4785,
                 "fresh_median": 0.0213, "stale_median": 0.0520,
@@ -377,8 +424,26 @@ def main():
                 "read_over_converted": 2.1254,
                 "fx_date": "2020-01-01",
             },
+            # The median activation age is derived from `built_utc` and each token's
+            # `effective_at`, so the fixture has to carry both. Without them
+            # `missing_activation_age` reports the fixture rather than the entry, which is the
+            # correct behaviour and the wrong fixture. One token dated ten days before the capture,
+            # so the figure is 10.0 days and the string the README is asked for reads "1 of the 1
+            # tokens priced here ... median age 10.0 days": visibly a fixture, which is the point of
+            # the round numbers above.
+            "built_utc": "2020-01-01T00:00:00Z",
             "tokens": [{"base_multiplier": 1.0268028384810615,
-                        "live_multiplier": 1.0344000941634355}],
+                        "live_multiplier": 1.0344000941634355,
+                        "effective_at": 1576972800}],
+            # The two price-divergence figures are derived from this list, so the fixture carries it
+            # or `missing_divergence` reports the fixture instead of the entry. Two rows, and the
+            # second is the one that matters: the pool quote is ten times the reference, while the
+            # first is only twice. A derivation that took `reference / pool` and never the other
+            # direction would answer 2 here and be wrong by a factor of five, which is why the
+            # assertion below is on the value rather than on the README fixture, since the README
+            # fixture is generated from `figures` and would agree with either.
+            "price_diverged": [{"mint": "X" * 32, "reference": 100.0, "pool": 50.0},
+                               {"mint": "Y" * 32, "reference": 10.0, "pool": 100.0}],
         }
         want = published.figures(sample)
 
@@ -391,9 +456,109 @@ def main():
         for name, path in published.SURFACES.items():
             write(path, "\n".join(want[name]))
 
+        # The deploy block is written by `scripts/deploy.sh` and quoted by the README, so the
+        # fixture has to carry both ends or the check reports the fixture rather than the entry.
+        # The first line names the cluster and the time and is not quoted; the three after it are.
+        deploy = ["cluster devnet, 2020-01-01T00:00:00Z",
+                  "built            1000 bytes, sha256 0123456789abcdef",
+                  "deployed         1100 bytes, 100 of trailing padding",
+                  "deployed ELF     identical to the tested binary"]
+        write(published.DEPLOY_BLOCK, "\n".join(deploy) + "\n")
+
+        # `stale` checks the allow-list in both directions now, so a fixture README carrying only
+        # the build's own figures reports every allowance as dead. The check is right and the
+        # fixture is too small, so the fixture carries the allow-listed prose as well, each figure in
+        # a form its scanner reaches: percentages bare, the pair as `27 of the 108` rather than
+        # `27 of 108`, and the duration as `33.6 days`. It lives inside `readme_fixture` rather than
+        # being appended once at the call site, because most cases below rewrite the README, and a
+        # variant that dropped this line would report eight dead allowances instead of the one
+        # figure the case is about. The three prose-only percentages are absent on purpose: they are
+        # declared as documentation and are expected not to fire.
+        allowances = ("$9,000. 20% or 25% or 30% or 1,000% or 63% or 93.8%. "
+                      "27 of the 108 repositories. 33.6 days.")
+
+        def readme_fixture(*replace):
+            """The README fixture, deploy block and allow-listed prose included."""
+            text = "\n".join(want["readme"] + deploy[1:]) + "\n" + allowances
+            for old, new in replace:
+                text = text.replace(old, new)
+            return text
+
+        write(published.SURFACES["readme"], readme_fixture())
+
         print()
         print("  the hand-written surfaces, against a build whose figures they carry")
         case("every figure matches, so nothing is reported", published.stale(sample, tmp), [])
+
+        # The two price-divergence figures, which no class in the absence rule reaches because the
+        # README prints them as bare integers. Asserted on the value, because the README fixture is
+        # generated from `figures` and would agree with a wrong derivation.
+        case("the widest divergence is the wider of the two directions, not reference over pool",
+             published.widest_divergence(sample), 10)
+        case("  ... and the count is the length of the list", len(sample["price_diverged"]), 2)
+
+        # The guard, which is the half that turns a dropped requirement into a complaint. A build
+        # with no `price_diverged` makes `figures` ask for neither figure, and this is what says so
+        # rather than letting the README's second contribution go unchecked in silence.
+        no_divergence = dict(sample)
+        no_divergence.pop("price_diverged")
+        case("negative control: a build that cannot produce the divergence figures is reported",
+             len(published.missing_divergence(no_divergence)), 1)
+        case("  ... and it asks for both figures", "both figures are unchecked"
+             in published.missing_divergence(no_divergence)[0], True)
+        case("  ... while a build that can produce them is not reported",
+             published.missing_divergence(sample), [])
+
+        # The allow-list, in the direction that was missing. An entry that neither admits a figure
+        # nor is declared as documentation is a claim about the README that nothing tests, which is
+        # how `74%` outlived its sentence and how `$1.8m` came to be explained as a different
+        # figure from the one it let through.
+        allow_readme = open(os.path.join(tmp, published.SURFACES["readme"])).read()
+        case("every allowance either fires or is declared, so nothing is reported",
+             published.unused_allowances(sample, allow_readme), [])
+
+        real_allow = dict(published.README_ALLOWED)
+        try:
+            published.README_ALLOWED["percent"] = dict(real_allow["percent"])
+            published.README_ALLOWED["percent"]["74%"] = "a rounded reading of something"
+            off = published.unused_allowances(sample, allow_readme)
+        finally:
+            published.README_ALLOWED.clear()
+            published.README_ALLOWED.update(real_allow)
+        case("negative control: an entry the README does not carry is reported", len(off), 1)
+        case("  ... and the complaint says the README does not carry it",
+             "'74%', which does not fire: the README does not carry it" in (off[0] if off else ""),
+             True)
+
+        # The other failure mode, which is the worse one: an entry that fires but explains a figure
+        # it is not about. It cannot be caught from the README alone, so what is checked instead is
+        # that every entry is *reachable*, and the explanations are read by a human. This case pins
+        # the reachability half: removing the entry that admits a figure has to produce a complaint
+        # naming that figure, or the entry was never doing anything.
+        try:
+            published.README_ALLOWED["percent"] = dict(real_allow["percent"])
+            del published.README_ALLOWED["percent"]["93.8%"]
+            off = published.underivable(sample, allow_readme)
+        finally:
+            published.README_ALLOWED.clear()
+            published.README_ALLOWED.update(real_allow)
+        case("negative control: dropping the entry that admits a figure is reported", len(off), 1)
+        case("  ... and it names the figure", "'93.8%'" in (off[0] if off else ""), True)
+
+        # A declaration about an entry that does not exist is a comment about nothing, and it would
+        # otherwise be a way to silence the check by typo.
+        real_doc = dict(published.README_ALLOWED_DOC_ONLY)
+        try:
+            published.README_ALLOWED_DOC_ONLY[("percent", "99%")] = "nothing"
+            off = published.unused_allowances(sample, allow_readme)
+        finally:
+            published.README_ALLOWED_DOC_ONLY.clear()
+            published.README_ALLOWED_DOC_ONLY.update(real_doc)
+        case("negative control: a declaration the allow-list does not carry is reported",
+             len(off), 1)
+        case("  ... and it says the declaration is about nothing",
+             "which the allow-list does not carry, so the declaration is about nothing"
+             in (off[0] if off else ""), True)
 
         # One figure moved by a tenth of a point, which is the size of move a second build on the
         # same day actually produces. If this passes, the check cannot catch its own drift.
@@ -416,12 +581,114 @@ def main():
              "docs/architecture.svg should say '999 of 927 mints differ here'" in off, True)
 
         # The README is a separate surface and has to be checked as one. Drop a single figure from
-        # it and leave both diagrams correct: only the README may be reported.
+        # it and leave both diagrams correct: only the README may be reported, and it is reported
+        # twice, because a figure the build no longer carries is both a figure that is missing and
+        # a figure that is there and wrong. The second complaint is the absence rule.
         write(published.SURFACES["readme"],
-              "\n".join(want["readme"]).replace("1.54% of the book", "1.53% of the book"))
+              readme_fixture(("1.54% of the book", "1.53% of the book")))
         off = published.stale(sample, tmp, surfaces=("readme",))
         case("a README figure that drifted is reported on its own", off,
-             ["README.md should say '1.54% of the book'"])
+             ["README.md should say '1.54% of the book'",
+              "README.md carries '1.53%', which data.json does not produce and the allow-list "
+              "does not explain"])
+
+        # The absence rule needs a control of its own, and this is the case that separates it from
+        # every check above. Presence is blind to a second, contradicting copy: the review of
+        # 17 September changed the second `1.035` in the README to `1.135` and the page built clean,
+        # because the first copy was still there and every check asked whether a figure was present
+        # rather than whether the README said one thing. The fixture carries `1.035` once, so the
+        # control *adds* a contradicting copy rather than replacing one, and leaves the first in
+        # place. If this passes, the rule is not testing what it claims to.
+        write(published.SURFACES["readme"], readme_fixture() + "\n1.135\n")
+        off = published.stale(sample, tmp, surfaces=("readme",))
+        case("negative control: a contradicting second copy is reported where the first is fine",
+             off,
+             ["README.md carries '1.135', which data.json does not produce and the allow-list "
+              "does not explain"])
+
+        # The median activation age is the one figure on the README's first screen carrying a single
+        # decimal, so none of the classes the absence rule scanned reached it. It has two checks
+        # now, and both fire here: the requirement reports the figure it wanted, and the duration
+        # class reports the figure it found, because a value the build does not derive is not one it
+        # can account for. That pair is the intended behaviour, and asserting only the first would
+        # have hidden the second.
+        write(published.SURFACES["readme"],
+              readme_fixture(("median age 10.0 days", "median age 29.9 days")))
+        case("a moved median activation age is reported, by the requirement and by the rule",
+             published.stale(sample, tmp, surfaces=("readme",)),
+             ["README.md should say 'median age 10.0 days'",
+              "README.md carries '29.9', which data.json does not produce and the allow-list does "
+              "not explain"])
+
+        # And the direction that would otherwise pass in silence. `figures` asks the README for the
+        # figure only when the build can derive it, so a build that lost `built_utc` would drop the
+        # requirement and every case in this file would still print `ok`. The README here is written
+        # without the duration, so that the absence rule, which has no derivation to explain one
+        # either, does not add a second complaint about the same absence: this case is about one
+        # check, so it isolates one. The allow-listed prose stays, for the same reason, since a
+        # README without it would add eight dead-allowance complaints and stop isolating anything.
+        without_age = [w for w in want["readme"]
+                       if not w.startswith("median age") and "tokens priced here" not in w]
+        write(published.SURFACES["readme"],
+              "\n".join(without_age + deploy[1:]) + "\n" + allowances)
+        off = published.stale({k: v for k, v in sample.items() if k != "built_utc"}, tmp,
+                              surfaces=("readme",))
+        case("negative control: a build that cannot derive the age says so, rather than passing",
+             off,
+             ["README.md quotes a median activation age and this build cannot produce one, so the "
+              "figure is unchecked; it needs `built_utc` and a `tokens` list carrying `effective_at`"])
+
+        # The duration class, the absence rule's fifth and the one that had been missing. A second
+        # copy is what it is for: the case above catches the figure moving, and this catches a
+        # contradicting copy standing beside a correct one, which is the failure the review of
+        # 17 September produced with `1.135` and which presence alone cannot see.
+        write(published.SURFACES["readme"],
+              readme_fixture(("median age 10.0 days",
+                              "median age 10.0 days, and the oldest is 41.2 days")))
+        off = published.stale(sample, tmp, surfaces=("readme",))
+        case("negative control: a second, contradicting duration is reported",
+             off,
+             ["README.md carries '41.2', which data.json does not produce and the allow-list does "
+              "not explain"])
+
+        # The README's first bold line, which is the headline claim of the whole entry and which no
+        # check reached until the review of 21 September falsified it. Each figure below is real and
+        # sits one key away from a different real figure in the same object: 26.2% is withheld over
+        # gross rather than the rate applied, 628 is the UTC-window count rather than the calendar
+        # one, and 370 of the 400 pairs a mint count with a withholding count. So none of the three
+        # mutations is a typo, and a build that shipped any of them would read as a correct sentence.
+        # One case per figure rather than one for the sentence, because each is a separate string
+        # and a single case would pass with two of the three pins missing.
+        write(published.SURFACES["readme"],
+              readme_fixture(("377 of the 400 tokenized stocks", "370 of the 400 tokenized stocks")))
+        case("negative control: the headline's rated pair moved is reported",
+             published.stale(sample, tmp, surfaces=("readme",)),
+             ["README.md should say '377 of the 400 tokenized stocks'"])
+
+        # The pair case above reports one complaint and not two, and that is the point of pinning it
+        # rather than extending the absence rule. `derivable` builds its `N of M` set as the full
+        # cross-product of every count in the build, so "370 of the 400" is admitted the moment 370
+        # and 400 are both real counts, which they are: 370 is the mint count and 400 the rated
+        # symbol count. The rule cannot tell the pair that means something from the pair that means
+        # nothing, and the comment on that loop already says so. The rate case below is the opposite
+        # and is worth reading beside this one: 26.2% is not a ratio any two counts in this fixture
+        # produce, so the percent class fires and the pin is the second complaint rather than the
+        # only one.
+
+        write(published.SURFACES["readme"],
+              readme_fixture(("lose 30% of every dividend", "lose 26.2% of every dividend")))
+        case("negative control: the headline's rate moved is reported",
+             published.stale(sample, tmp, surfaces=("readme",)),
+             ["README.md should say 'lose 30% of every dividend'",
+              "README.md carries '26.2%', which data.json does not produce and the allow-list "
+              "does not explain"])
+
+        write(published.SURFACES["readme"],
+              readme_fixture(("631 fall outside the US regular session",
+                              "628 fall outside the US regular session")))
+        case("negative control: the calendar count moved is reported",
+             published.stale(sample, tmp, surfaces=("readme",)),
+             ["README.md should say '631 fall outside the US regular session'"])
 
         # The rounding rule on the pence share, asserted at a boundary where the paths actually
         # differ rather than at one where they happen to agree. Measured: 0.02675 * 100 prints as
@@ -499,6 +766,293 @@ def main():
         case("trailing zeros are dropped, so a multiplier of one prints as one",
              [published.multiplier(v) for v in (1.0, "1.0000000000", 1)],
              ["1", "1", "1"])
+
+        # ------------------------------------------------------------- the video script
+        #
+        # The recording is the one artefact in this entry that cannot be rebuilt from the tree. The
+        # script's figures are typed, then read aloud, and nothing before this read the script at
+        # all: a figure that moved in the fetch between the script being written and the camera
+        # being turned on would be spoken on camera while the build contradicted it, and every other
+        # check in this workspace would still pass.
+        #
+        # This control drives the real `published.spoken_figures` over a script this file writes, so
+        # a figure can be moved here and seen to be reported. The beats are the real beats and the
+        # spoken lines are the real lines, including the line breaks, because the check joins a
+        # beat's blockquotes before matching and a fixture with no breaks would not exercise that.
+        spoken_sample = {
+            "withholding": {"top_rate_share": 0.9425, "rated_symbols": 400, "top_rate": "0.3",
+                            "top_rate_symbols": 377},
+            "money": {"annualised_withheld_usd": "11600000", "withheld_usd": "2620000",
+                      "gross_usd": "10000000"},
+            "actions": {"months": 6.6},
+            "mints": {"total": 927, "live_differs_from_base": 370},
+            "read_rule": {"agreed": 927, "disagreed": 0},
+            "activation_timing": {"n": 640, "outside_calendar": 631,
+                                  "on_a_non_trading_day": 57, "top_times": [["00:30", 407]]},
+            "reconciliation": {"buckets": [{"label": "0-2 days", "n": 41, "median": 0.0198},
+                                           {"label": "over 60 days", "n": 9, "median": 0.0482}]},
+            # The pair the page's two-value card shows, which the mechanism beat's on-screen
+            # direction quotes. Deliberately round, so the fixture is visibly a fixture: the real
+            # pair is 1.0268028385 and 1.0344000942 and a failure could be mistaken for the build.
+            "tokens": [{"symbol": "PEPx", "base_multiplier": 1.01, "live_multiplier": 1.02}],
+        }
+
+        def script_text(mint="three hundred and seventy", card="94.2%", wrap=True):
+            """The script fixture: the real beats, with the figures this file moves made knobs.
+
+            `wrap` puts the mechanism beat's pair on the line after its `**On screen:**` marker, which
+            is how the real script has it. It is a knob so the continuation handling can be shown to
+            matter rather than asserted to: see `screen_text_old` below.
+            """
+            pair = ("`1.01`, the right is `1.02`, with \"effective\" between them."
+                    if wrap else "the two values.")
+            return "\n".join([
+                "## Part 1 — Prep, 45 minutes before recording",
+                "",
+                "Open the evidence page URL. Confirm the hero chip reads `withheld 26.2% of dividend",
+                "income`, the first card reads `%s`, and the hero headline ends" % card,
+                "`on 370 of 927 mints the obvious field is the previous one`. Scroll to section 04",
+                "and confirm the sentence ends `927 agreed, 0 disagreed`.",
+                "",
+                "## Part 2 — Exact screen layout",
+                "",
+                "Two windows, side by side.",
+                "",
+                "## Part 3 — Beat by beat",
+                "",
+                "### 0:00 The rate the issuer charges",
+                "**On screen:** Window 1, the evidence page, top. Hero headline and the `%s` card."
+                % card,
+                "> Ninety-four percent of the four hundred stocks the issuer rates lose thirty",
+                "> percent of every dividend before it is reinvested. Eleven point six million a year.",
+                "",
+                "### 0:10 The two candidates",
+                "**On screen:** Window 1, scroll to section 02 and stop on the two-value card. The",
+                "left value is %s" % pair,
+                "> The dividend is not paid in cash. On %s of nine hundred and" % mint,
+                "> twenty-seven mints, it is not the multiplier.",
+                "",
+                "### 0:33 The rule",
+                "**On screen:** Window 1, the paragraph below the card, ending on `927 agreed,"
+                " 0 disagreed`.",
+                "> I compared the two on every mint rather than a sample. Nine hundred and",
+                "> twenty-seven agreed, none disagreed.",
+                "",
+                "### 0:59 When they land",
+                "**On screen:** Window 1, the timing block: the modal times and the two",
+                "outside-the-session lines.",
+                "> The modal move is half past midnight UTC. Of six hundred and forty",
+                "> activations, six hundred and thirty-one land outside the exchange's own",
+                "> session, and fifty-seven land on a day the market does not trade at all.",
+                "",
+                "### 1:23 The money",
+                "**On screen:** Window 1, scroll slowly to section 03. Stop on the meter and the",
+                "four figures. The red segment is the withheld part.",
+                "> Across six and a half months of the issuer's own feed, two point six million",
+                "> dollars withheld, about eleven point six million a year. On three hundred and",
+                "> seventy of the nine hundred and twenty-seven mints, the two fields disagree.",
+                "",
+                "### 1:43 The falsification test",
+                "**On screen:** Window 1, section 05, the two age medians side by side.",
+                "> It does: two percent fresh, five percent over sixty days.",
+                "",
+                "**(Total spoken: 100 words)**",
+                "",
+                "## Part 4 — After",
+                "",
+                "**Watch it back in full before uploading.** Check three things: the `%s` figure is"
+                % card,
+                "legible at 0:05, the word \"multiplier\" is on screen when it is spoken, and the",
+                "desk's status chip reads `Live from devnet` on camera, not `Recorded`.",
+                "",
+                "**Title:** `Record Date: on 370 of 927 mints the obvious field is the previous"
+                " one`",
+                "",
+                "**Description:**",
+                "",
+                "> 377 of the 400 tokenized stocks lose 30% of every dividend. About $11.6m a year.",
+                "> On 370 of 927 mints the field named `multiplier` is not the multiplier.",
+                "",
+                "**Tags:** `solana`, `token-2022`",
+                "",
+                "**Last thing.** Re-run the fetch on submission day.",
+            ])
+
+        print()
+        print("  the video script's spoken figures, against a build they carry")
+        case("every spoken figure matches, so nothing is reported",
+             published.spoken_figures(spoken_sample, script_text()), [])
+
+        # The move that found the hole. This exact injection went into the real script and the build
+        # did not refuse, because the check was asking whether the build's words were a substring of
+        # the beat, and `three hundred and seventy` is a substring of `three hundred and seventy-one`.
+        # One complaint, not two: beat 1:23 carries the same count and this file moved only 0:10.
+        off = published.spoken_figures(spoken_sample,
+                                       script_text(mint="three hundred and seventy-one"))
+        case("negative control: a count moved by one in the script is reported", len(off), 1)
+        case("  ... and it names the beat and the figure the build holds", off[0] if off else None,
+             "the video script's beat 0:10 should say 'three hundred and seventy' for the mints "
+             "whose live value differs from the field named multiplier, and does not")
+
+        # The two forms, side by side on the same input. This reaches into a private helper
+        # deliberately: the comparison is between the form that is in the module and the form that
+        # was, and only one of them is still in the module.
+        case("negative control: the old substring form accepts the moved figure",
+             spoken_present_old("three hundred and seventy",
+                                "on three hundred and seventy-one of nine hundred"), True)
+        case("  ... and the boundary form rejects it, which is why it replaced the substring",
+             published._phrase_present("three hundred and seventy",
+                                       "on three hundred and seventy-one of nine hundred"), False)
+
+        # A beat the check cannot find is a figure nobody hears checked. The heading is the key, so
+        # renaming it has to be reported rather than silently dropping the beat.
+        off = published.spoken_figures(spoken_sample,
+                                       script_text().replace("### 0:33 ", "### 0:34 "))
+        case("negative control: a renamed beat leaves its figure unchecked, and says so",
+             off, ["the video script has no beat starting at 0:33, so the read rule checked on "
+                   "every mint is unchecked"])
+
+        # The modal time is the one figure the module can hold no spoken form for, because it is the
+        # only one whose vocabulary is finite. A silent None here would switch the check off exactly
+        # when the modal time moved, which is when it is needed, so the None has to be a complaint.
+        odd_hour = json.loads(json.dumps(spoken_sample))
+        odd_hour["activation_timing"]["top_times"] = [["14:05", 407]]
+        case("negative control: a modal time with no spoken form is reported, not skipped",
+             published.spoken_figures(odd_hour, script_text()),
+             ["the video script says nothing for when the activations land: this module has no "
+              "rendering for the build's current value, so the check would pass without looking"])
+
+        # ------------------------------------------------- what is on screen rather than said
+        #
+        # The first version of this check read only the blockquotes. The reviewer then named "the
+        # 94.2% card" among the figures to verify, and a card is read by a viewer, so a stale card
+        # fails exactly as a stale sentence does. It was uncovered, and the fix is not a second check
+        # but the same check over the other lines: `published._figures` is shared by all three
+        # surfaces so the derivation and the boundary rule cannot drift apart between them.
+        print()
+        print("  the video script's on-screen figures, against a build they carry")
+        case("every on-screen figure matches, so nothing is reported",
+             published.screen_figures(spoken_sample, script_text()), [])
+
+        off = published.screen_figures(spoken_sample, script_text(card="94.0%"))
+        case("negative control: a card moved in the script is reported", len(off), 1)
+        case("  ... and it names the beat and the value the build holds", off[0] if off else None,
+             "the video script's on-screen direction at 0:00 should carry '94.2%' for the card in "
+             "the hero, which the opening beat holds the camera on, and does not")
+
+        # The continuation bug, and the direction of it tested rather than assumed. The old parser
+        # reads the marker's own line only, so it cannot see the pair on the next line, and a check
+        # over it would refuse a correct script. A false refusal, not a silent pass: the mirror of the
+        # substring case above, which is why both are kept rather than only the dangerous one.
+        case("negative control: the old marker-only parser cannot see the pair, so a check over it "
+             "would refuse a correct script",
+             published._phrase_present("1.01", screen_text_old(script_text())["0:10"]), False)
+        case("  ... and the block parser reads the continuation line, which is why it replaced it",
+             "1.01" in published._screen_text(script_text())["0:10"], True)
+
+        off = published.screen_figures(spoken_sample, script_text(wrap=False))
+        case("negative control: a beat whose on-screen line lost its pair is reported", len(off), 2)
+
+        # ------------------------------------------------- the prep section
+        #
+        # Not in the recording, and still worth checking: the prep section is a list of figures to
+        # confirm on the page before the camera is turned on, and a step naming a figure the page no
+        # longer shows costs the reader time on the morning they have least of it.
+        print()
+        print("  the video script's prep figures, against a build they carry")
+        case("every prep figure matches, so nothing is reported",
+             published.prep_figures(spoken_sample, script_text()), [])
+
+        off = published.prep_figures(spoken_sample, script_text(card="94.0%"))
+        case("negative control: a prep figure moved in the script is reported", len(off), 1)
+        case("  ... and it names the figure and what it is for", off[0] if off else None,
+             "the video script's prep section should tell the reader to confirm '94.2%' for the "
+             "first card, and does not")
+
+        # A script with no Part 1 is a check that has stopped looking, not a script with nothing to
+        # check. The two would print the same if the section lookup returned an empty string instead
+        # of None, which is why `published._part_text` returns None.
+        no_prep = script_text().split("## Part 2")[1]
+        case("negative control: a script with no prep section is reported, not skipped",
+             published.prep_figures(spoken_sample, no_prep),
+             ["the video script has no prep section, so the hero chip's withheld share is unchecked",
+              "the video script has no prep section, so the first card is unchecked",
+              "the video script has no prep section, so the hero headline's mint count is unchecked",
+              "the video script has no prep section, so the read-rule sentence is unchecked"])
+
+        # ------------------------------------------------- the upload notes
+        #
+        # The title and the description are the copy a judge reads before the video, and nothing read
+        # them until 20 September 2026. Found by mutating one occurrence of a checked figure at a
+        # time: with every occurrence moved at once the build refuses on the first problem it can
+        # see, so a line no check reaches is never reported and reads as covered.
+        print()
+        print("  the video script's upload notes, against a build they carry")
+        case("every upload-note figure matches, so nothing is reported",
+             published.after_figures(spoken_sample, script_text()), [])
+
+        off = published.after_figures(spoken_sample, script_text(card="94.0%"))
+        case("negative control: the watch-back checklist's figure moved is reported", len(off), 1)
+        case("  ... and it names the figure and what it is for", off[0] if off else None,
+             "the video script's upload notes should carry '94.2%' for the watch-back checklist's "
+             "first item, and do not")
+
+        # The title and the description each carry the mint count, so one region over the whole
+        # section would let either move unnoticed while the other satisfied the check. These two
+        # controls are what makes the decomposition load-bearing rather than tidy: each moves one
+        # copy and expects exactly one complaint, and a single-region version fails both.
+        title_moved = script_text().replace("**Title:** `Record Date: on 370 of 927",
+                                            "**Title:** `Record Date: on 371 of 927")
+        off = published.after_figures(spoken_sample, title_moved)
+        case("negative control: the title's mint count moved is reported", len(off), 1)
+        case("  ... and the description's copy of it is not implicated", off[0] if off else None,
+             "the video script's upload notes should carry '370 of 927' for the upload title's mint "
+             "count, and do not")
+
+        desc_moved = script_text().replace("> On 370 of 927 mints", "> On 371 of 927 mints")
+        off = published.after_figures(spoken_sample, desc_moved)
+        case("negative control: the description's mint count moved is reported", len(off), 1)
+        case("  ... and it is the description that is named", off[0] if off else None,
+             "the video script's upload notes should carry '370 of 927' for the description's mint "
+             "count, which repeats the title's, and do not")
+
+        off = published.after_figures(spoken_sample, script_text().replace("$11.6m", "$11.7m"))
+        case("negative control: the description's annualised figure moved is reported", len(off), 1)
+
+        # Upload notes whose label has gone are a check that has stopped looking, not a script with
+        # nothing to check, for the reason the prep control above gives.
+        case("negative control: upload notes with no title label are reported, not skipped",
+             published.after_figures(spoken_sample,
+                                     script_text().replace("**Title:**", "**Titel:**")),
+             ["the video script's upload notes have no title, so the upload title's mint count is "
+              "unchecked"])
+
+    # ------------------------------------------------------------- the price record's key set
+    #
+    # `fetch_prices` normalises every mint into one dict and every caller reads it with `.get`, so a
+    # key it forgets is `None` on every token rather than an error, and nothing fails. That is not
+    # hypothetical. `liquidity` was absent from this dict for the whole 17 September build, so all
+    # 379 tokens recorded `null` while the endpoint was answering with a value for 47 of them, and
+    # the README quoted a pool depth off it. The field is carried now and this asserts the key set,
+    # because a comment saying the dict is normalised in one place is not a check on that place.
+    print()
+    print("  the price record, whose key set every caller reads with .get")
+    fetch = load_fetch()
+    if fetch is None:
+        case("fetch.py could not be loaded, so this control is skipped rather than passed",
+             "skipped", "not skipped")
+    else:
+        payload = {"usdPrice": 12.5, "liquidity": 7164452.0, "stockData": {"price": 12.75}}
+        rec = fetch.price_record(payload, 12.75, "stockData.price", 12.5, "USD")
+        case("every key a caller reads is present",
+             sorted(rec), sorted(["usd", "local", "source", "alt", "currency", "liquidity"]))
+        case("  ... and liquidity survives the normalisation, which is what it did not do",
+             rec.get("liquidity"), 7164452.0)
+        case("  ... and the reference field is still read out of stockData",
+             rec.get("local"), 12.75)
+        case("negative control: a payload with no liquidity gives None rather than raising",
+             fetch.price_record({"usdPrice": 1.0}, 1.0, "usdPrice", None, "USD").get("liquidity"),
+             None)
 
     print()
     print("%d of %d as expected" % (passed, total))

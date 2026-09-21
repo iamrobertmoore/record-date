@@ -8,6 +8,7 @@ without going near the arithmetic, and every figure is written into the HTML as 
 state: the page is complete and correct with scripting off, and the script only animates.
 """
 
+import glob
 import html
 import json
 import os
@@ -27,7 +28,10 @@ sys.path.insert(0, HERE)
 import published  # noqa: E402
 # The page and the check on the banner print the same figures, so they print them with the same
 # function. They had one each and they disagreed in the last digit; see `published.to_places`.
-from published import multiplier, to_places  # noqa: E402
+# `pct` and `worked_example` moved to `published` on 18 September 2026 for the same reason: the card
+# value and the worked-example pair are now also what the check on the video script derives, and a
+# second copy of either is how two surfaces come to disagree about one build.
+from published import multiplier, pct, to_places, worked_example  # noqa: E402
 
 
 def check_published(data, page):
@@ -46,16 +50,71 @@ def check_published(data, page):
     hand-written surface describes *this build*; neither asks whether two surfaces that quote one
     build agree with *each other*, and the banner and the page did not. See
     `published.page_agrees_with_banner`.
+
+    The fourth covers the one surface that is typed rather than rebuilt. See `script_problems`.
     """
     problems = published.stale(data, ROOT)
     problems += published.stale_banner_example(data, ROOT)
     problems += published.page_agrees_with_banner(page, ROOT)
+    problems += script_problems(data)
     if problems:
         raise SystemExit(
-            "the build has moved and these hand-written figures have not:\n  "
+            "the build has moved and these figures have not:\n  "
             + "\n  ".join(problems)
             + "\n\nUpdate them to match data.json, then build again.")
     return len(problems)
+
+
+# The video script is not in this repository, so a clone has no script and nothing to check. It is
+# found by file name beside the repository rather than at a path written here, because the directory
+# that holds it is not part of the deliverable and its name has no meaning to a reader of one. That is
+# the leak the three pre-push sweeps exist to catch, and their pattern is anchored on a trailing
+# slash, so a path assembled from segments passes the sweep and leaks anyway. Hence no segments here.
+SCRIPT_NAME = "VIDEO-SCRIPT.md"
+
+
+def _video_script():
+    """The video script beside this repository, or None.
+
+    If more than one matches, the first alphabetically is used. There is one in this workspace, and a
+    second would be a finding rather than something to choose between silently.
+    """
+    beside = sorted(glob.glob(os.path.join(os.path.dirname(ROOT), "*", SCRIPT_NAME)))
+    return beside[0] if beside else None
+
+
+def script_problems(data):
+    """The video script's figures, or nothing and a printed note when there is no script.
+
+    Four surfaces, because the script carries figures in four places and each has the same failure
+    mode: what is spoken, what is put on screen, what the prep section tells the reader to confirm on
+    the page before recording, and what the upload notes carry in the title and the description. The
+    recording is the one artefact in this entry that cannot be rebuilt from the tree, so a figure that
+    moves between the script being written and the camera being turned on is spoken, or shown, or
+    printed under the video, while the build contradicts it.
+
+    The first version of this checked only what is spoken, and the reviewer named "the 94.2% card"
+    among the figures to verify: a card is read by a viewer, so it was the same defect and it was
+    uncovered. The on-screen lines are checked now. The fourth surface arrived on 20 September 2026,
+    after a probe that mutated one occurrence of a checked figure at a time showed the upload notes
+    were read by nothing, and the list of what is still not checked lives in
+    `published.SCRIPT_NOT_CHECKED` rather than here, so a reader of the module finds it.
+
+    The script is not in this repository, so a clone of the public repository has no script and
+    nothing to check. That is the expected state there, and it is not a pass: the skip is printed,
+    because a silent skip and a clean run look identical on a terminal.
+    """
+    script = _video_script()
+    if script is None:
+        print("  script figures: not checked, no %s beside this repository (it is not committed)"
+              % SCRIPT_NAME)
+        return []
+    with open(script) as handle:
+        text = handle.read()
+    return (published.spoken_figures(data, text)
+            + published.screen_figures(data, text)
+            + published.prep_figures(data, text)
+            + published.after_figures(data, text))
 
 
 def check_assets(page):
@@ -109,10 +168,6 @@ def short_money(value):
     return "${:.0f}".format(n)
 
 
-def pct(value, places=1):
-    return "{:.{p}f}".format(float(value) * 100, p=places)
-
-
 def esc(text):
     return html.escape(str(text), quote=True)
 
@@ -138,6 +193,34 @@ def timing_slots(timing):
             "<u>{when}</u></div>".format(clock=esc(clock), count=count, when=esc(when))
         )
     return "\n".join(slots)
+
+
+def timing_top_pair(timing):
+    """The two modal activation times as a sentence fragment, labelled with the New York clock.
+
+    Built from `top_times`, which is the same source `timing_slots` renders, so the sentence and
+    the table beside it cannot disagree. Eastern time is UTC-4 here for the reason `timing_slots`
+    gives: daylight time applies to every activation in the window this build reads.
+
+    This fills a sentence that used to read "Every activation observed here lands at 20:30 ET",
+    which the table on the same page contradicted at 177 of the 640. A claim about all of a
+    population is the one shape a per-slot table cannot support, and the fix is to quote the
+    slots rather than characterise them.
+    """
+    slots = timing.get("top_times", [])[:2]
+    if len(slots) < 2:
+        return ""
+    parts = []
+    for index, (clock, count) in enumerate(slots):
+        hh, mm = int(clock[:2]), int(clock[3:])
+        et = (hh * 60 + mm - 4 * 60) % (24 * 60)
+        label = "%02d:%02d ET" % (et // 60, et % 60)
+        parts.append(
+            "%d of the %d activations land at %s" % (count, timing["n"], label)
+            if index == 0
+            else "%d at %s" % (count, label)
+        )
+    return " and ".join(parts)
 
 
 def recon_rows(rows):
@@ -323,10 +406,9 @@ def render(data):
     keep = float(net / gross * 100)
     take = float(withheld / gross * 100)
 
-    example = next(
-        (t for t in data["tokens"] if t["symbol"] == "PEPx" and t["base_multiplier"] != t["live_multiplier"]),
-        next((t for t in data["tokens"] if t["base_multiplier"] != t["live_multiplier"]), None),
-    )
+    # The selection lives in `published` because the video script's mechanism beat points the camera
+    # at this card and quotes the pair, so the check on the script derives it with the same rule.
+    example = worked_example(data)
     if example is None:
         raise SystemExit("no token with a moved multiplier; nothing to show as the example")
     effective = example.get("effective_at") or 0
@@ -389,6 +471,7 @@ def render(data):
             sum(count for _, count in timing["top_times"]) / timing["n"]
         ),
         "TIMING_SLOTS": timing_slots(timing),
+        "TIMING_TOP_PAIR": timing_top_pair(timing),
         "RATED_SYMBOLS": str(with_holding["rated_symbols"]),
         "TOP_RATE_SYMBOLS": str(with_holding["top_rate_symbols"]),
         "TOP_RATE_PCT": pct(with_holding["top_rate_share"]),
