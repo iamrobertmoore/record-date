@@ -70,6 +70,22 @@ ANCHOR_ERRORS = {
 }
 
 
+
+def dial_json(data):
+    """The hero dial's data: activations by minute, the counts, and the US session in UTC minutes."""
+    import datetime as _dt, zoneinfo as _zi
+    timing = data["activation_timing"]
+    built = _dt.datetime.fromisoformat(data["built_utc"].replace("Z", "+00:00"))
+    ny = built.astimezone(_zi.ZoneInfo(timing.get("timezone") or "America/New_York"))
+    offset = int(ny.utcoffset().total_seconds() // 60)
+    o, c = (timing.get("session") or "09:30-16:00").split("-")
+    to_min = lambda s: int(s[:2]) * 60 + int(s[3:5])
+    return json.dumps({
+        "by_minute": timing["by_minute"], "n": timing["n"],
+        "outside": timing.get("outside_calendar", timing["outside"]),
+        "open": (to_min(o) - offset) % 1440, "close": (to_min(c) - offset) % 1440,
+    }, separators=(",", ":"))
+
 def error_name(code, offset=6000):
     if code is None:
         return None
@@ -293,7 +309,13 @@ def main():
             "e": token.get("effective_at"),
             "g": token.get("gross_per_unit"),
             "n": token.get("net_per_unit"),
-            "w": token.get("withheld_per_unit"),
+            # A zero Decimal can serialise as "0E-13", which the page's BigInt parse rejects.
+            "w": (
+                "0"
+                if token.get("withheld_per_unit") is not None
+                and Decimal(token["withheld_per_unit"]) == 0
+                else token.get("withheld_per_unit")
+            ),
             "wu": token.get("withheld_usd"),
             "ev": token.get("events"),
         }
@@ -630,6 +652,10 @@ def main():
             "rpc": MAINNET_RPC,
             "asOf": main["built_utc"],
             "default": HOLDER_DEFAULT,
+            # The board's total is the build's exact ledger total, not a sum of rounded rows, so
+            # it reads the same figure as the README.
+            "tw": main["money"]["withheld_usd"],
+            "mo": main["actions"]["months"],
             "tokens": holder_tokens,
         },
         separators=(",", ":"),
@@ -667,6 +693,7 @@ def main():
         "HOLDER_SINCE": h_since,
         "HOLDER_UNTIL": h_until,
         "HOLDER_COUNT": f"{len(holder_tokens):,}",
+        "DIAL_JSON": dial_json(main),
         "HOLDER_OPTIONS": "\n".join(
             f'            <option value="{esc(symbol)}"></option>'
             for symbol in sorted(holder_tokens)

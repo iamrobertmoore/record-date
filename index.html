@@ -438,9 +438,90 @@ main>.reveal .wrap{opacity:1}
  footer .txt{min-width:0}.srcs div{padding:18px}
 }
 
+/* ---------- snazz: the moving field, the dial, the headline ---------- */
+body{position:relative;isolation:isolate}
+.field{position:fixed;inset:-20vmax;z-index:-2;pointer-events:none;
+  background:
+   radial-gradient(38vmax 30vmax at 18% 12%,#e7d3a4 0%,transparent 70%),
+   radial-gradient(34vmax 30vmax at 82% 8%,#cfe2d2 0%,transparent 72%),
+   radial-gradient(30vmax 26vmax at 70% 62%,#f1d6c9 0%,transparent 70%),
+   radial-gradient(40vmax 34vmax at 12% 78%,#dde6cf 0%,transparent 72%);
+  filter:saturate(1.08);opacity:.78;animation:drift 38s ease-in-out infinite alternate}
+.field::after{content:"";position:absolute;inset:0;
+  background-image:radial-gradient(#2a2f2a22 .8px,transparent .9px);background-size:16px 16px;
+  mask-image:radial-gradient(ellipse 60% 45% at 70% 22%,#000 10%,transparent 70%);
+  -webkit-mask-image:radial-gradient(ellipse 60% 45% at 70% 22%,#000 10%,transparent 70%)}
+@keyframes drift{0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
+  50%{transform:translate3d(3vmax,-2vmax,0) rotate(6deg) scale(1.06)}
+  100%{transform:translate3d(-3vmax,2vmax,0) rotate(-4deg) scale(1.02)}}
+header.hero,section,footer,.masthead,nav{position:relative}
+header.hero{background:transparent!important}
+main section{background:transparent}
+.hero h1 .hl{background:linear-gradient(100deg,#b0321c 0%,#c4692a 35%,#9a7318 70%,#b0321c 100%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:sheen 7s ease-in-out infinite}
+@keyframes sheen{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+.hero .wrap.has-art{display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(300px,.95fr)!important;
+  gap:26px 44px!important;align-items:center!important}
+.hero .has-art>.hero-main{grid-column:1;min-width:0}
+.hero .has-art>.hero-art{grid-column:2;grid-row:1/span 3;justify-self:end;align-self:center}
+.hero .has-art>.hero-rest{grid-column:1/-1}
+.hero .has-art .lede{border-left:0!important;padding-left:0!important;margin-top:22px}
+.hero .hero-main .hero-cta{border-left:0!important;padding:0!important;margin-top:26px!important}
+.hero .hero-main .hero-cta .cta{width:auto!important;border-radius:999px!important;padding:17px 26px!important;
+  background:linear-gradient(120deg,#1f2a25,#2f4a3b 55%,#1f2a25)!important;background-size:200% 100%!important;
+  box-shadow:0 18px 34px -18px #1c7a58aa,0 0 0 1px #ffffff14 inset!important;animation:sheen 6s ease-in-out infinite}
+.hero .hero-main .hero-cta .cta:hover{transform:translateY(-2px);box-shadow:0 22px 40px -18px #1c7a58cc!important}
+.hero .hero-main .hero-cta .small{display:block;margin:14px 0 0!important}
+.hero-art{position:relative;width:min(420px,100%);aspect-ratio:1;animation:rise 1s cubic-bezier(.2,.7,.2,1) both .1s}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.hero-art svg{width:100%;height:100%;overflow:visible;display:block}
+.hero-art .halo{position:absolute;inset:12%;border-radius:50%;
+  background:radial-gradient(circle,#ffffffd9 0%,#fbf9f2b3 48%,transparent 70%);filter:blur(2px)}
+.dial .orbit{transform-origin:200px 200px;animation:orbit 80s linear infinite}
+.dial .orbit.rev{animation-duration:120s;animation-direction:reverse}
+@keyframes orbit{to{transform:rotate(360deg)}}
+.dial .bar{transform-origin:200px 200px;transform:scale(.001);opacity:0;
+  transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .6s ease}
+.dial.on .bar{transform:scale(1);opacity:1}
+.dial .sess{stroke-dasharray:1000;stroke-dashoffset:1000;transition:stroke-dashoffset 1.6s ease .3s}
+.dial.on .sess{stroke-dashoffset:0}
+.dial .pulse{transform-box:fill-box;transform-origin:center;animation:ping 2.6s ease-out infinite}
+@keyframes ping{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+.dial .hand{transform-origin:200px 200px;transition:transform 1s linear}
+.dial .sweep{transform-origin:200px 200px;animation:orbit 14s linear infinite;opacity:.55}
+.dial text{font-family:var(--mono);fill:#6b7078;font-size:10px;letter-spacing:.08em}
+.dial .big{font-family:var(--serif);fill:#15171b;font-size:54px;letter-spacing:-.03em}
+.dial .cap{font-family:var(--sans);fill:#6b7078;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.dial .warm{fill:#b0321c}
+.art-chip{position:absolute;display:flex;align-items:center;gap:9px;padding:9px 12px;background:#fffdf8e6;
+  border:1px solid #e5e0d4;border-radius:12px;box-shadow:0 14px 30px -20px #15171b55;font:600 12px/1.25 var(--sans);
+  color:#15171b;white-space:nowrap;animation:bob 6s ease-in-out infinite;backdrop-filter:blur(6px)}
+.art-chip small{display:block;font:500 10.5px/1.3 var(--sans);color:#6b7078;letter-spacing:.02em}
+.art-chip i{width:9px;height:9px;border-radius:50%;flex:none;background:#b0321c;box-shadow:0 0 0 4px #b0321c1f}
+.art-chip.g i{background:#1c7a58;box-shadow:0 0 0 4px #1c7a581f}
+.art-chip.b i{background:#9a7318;box-shadow:0 0 0 4px #9a73181f}
+.art-chip.c1{top:4%;left:-6%}.art-chip.c2{top:30%;right:-8%;animation-delay:-2s}.art-chip.c3{bottom:6%;left:2%;animation-delay:-4s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.console,.card,.stats>div,.limits>div{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.console:hover,.card:hover{transform:translateY(-2px);box-shadow:0 24px 48px -30px #15171b55}
+.eyebrow{position:relative}
+.eyebrow::after{content:"";height:1px;flex:1;max-width:120px;margin-left:10px;
+  background:linear-gradient(90deg,#9a731866,transparent)}
+@media(max-width:900px){
+  .hero .wrap.has-art{grid-template-columns:1fr!important}
+  .hero .has-art>.hero-art{grid-column:1;grid-row:auto;justify-self:center;width:min(330px,88vw);margin:6px 0 4px}
+  .art-chip{font-size:11px;padding:7px 10px}.art-chip.c1{left:-2%}.art-chip.c2{right:-2%}
+}
+@media(prefers-reduced-motion:reduce){
+  .field,.dial .orbit,.dial .sweep,.dial .pulse,.art-chip,.hero h1 .hl,.hero-art,.hero .hero-main .hero-cta .cta{animation:none!important}
+  .dial .bar,.dial .sess{transition:none!important}
+}
+.hero-main .stamp{margin-bottom:26px}
 </style>
 </head>
 <body>
+<div class="field" aria-hidden="true"></div>
 
 <div class="top">
   <div class="wrap">
@@ -468,20 +549,29 @@ main>.reveal .wrap{opacity:1}
 </div>
 
 <header class="hero">
-  <div class="wrap">
+  <div class="wrap has-art">
+    <div class="hero-main">
     <div class="stamp">
       <span class="chip">Solana mainnet · read <b>17 September 2026</b></span>
       <span class="chip">Token-2022 mints <b>927</b></span>
       <span class="chip hot">withheld <b>26.2%</b> of dividend income</span>
     </div>
 
-    <h1>Tokenized stocks pay dividends invisibly, 30% short, and at hours no market is open.</h1>
+    <h1>Tokenized stocks pay dividends invisibly, <span class="hl">30% short,</span> and at hours no market is open.</h1>
 
     <p class="hero-cta" style="margin-top:28px"><a class="cta" href="desk.html">Open the settlement desk
       <span class="arw">&rarr;</span></a>
       <span class="small" style="margin-left:14px;vertical-align:2px">A static page with no key and
         no backend that asks the deployed program what a holding is worth, live.</span></p>
-
+    </div>
+    <div class="hero-art">
+      <div class="halo"></div>
+      <div id="hero-dial" style="position:absolute;inset:0"></div>
+      <div class="art-chip c1"><i></i><span>00:30 UTC<small>when dividends go live</small></span></div>
+      <div class="art-chip c2 g"><i></i><span>927 mints<small>read on chain</small></span></div>
+      <div class="art-chip c3 b"><i></i><span>30% withheld<small>before it is reinvested</small></span></div>
+    </div>
+    <div class="hero-rest">
     <div class="hero-copy">
     <p class="lede">The dividend is a number in the mint account, and on 370 of
       927 mints the obvious field is the previous one. A tokenized US stock pays its
@@ -504,6 +594,7 @@ main>.reveal .wrap{opacity:1}
       <span><b>Read from</b><span>the mint accounts, the issuer's own feed, and the price API</span></span>
       <span><b>Reproduce with</b><span class="num">python3 scripts/fetch.py</span></span>
       <span><b>Built for</b><span>Stocklana, Solana Foundation</span></span>
+    </div>
     </div>
   </div>
 </header>
@@ -1129,6 +1220,110 @@ function createPresentation() {
   presentation.observe();
   var pair = document.querySelectorAll('.pair .v');
   presentation.pair(pair[0],pair[1]);
+})();
+</script>
+<script type="application/json" id="dial-data">{"by_minute":{"00:30":407,"02:30":2,"23:55":177,"08:45":1,"02:00":1,"22:00":3,"01:15":5,"13:50":1,"14:35":2,"13:30":3,"00:15":11,"15:30":1,"01:30":1,"03:35":1,"03:30":1,"13:00":1,"21:47":1,"12:00":1,"11:20":2,"02:45":1,"00:00":2,"11:40":1,"04:00":2,"21:48":1,"15:00":1,"00:20":3,"09:00":1,"00:55":1,"14:00":1,"14:30":1,"00:40":1,"08:00":1,"14:50":1},"n":640,"outside":631,"open":810,"close":1200}</script>
+<script>
+/* The 24-hour dial in the hero. Every bar is a minute of the day that activations land on, from
+   this build's own count; the green arc is the US session in UTC; the hand is the time now. */
+(function () {
+  var host = document.getElementById("hero-dial");
+  if (!host) return;
+  var D = JSON.parse(document.getElementById("dial-data").textContent);
+  var NS = "http://www.w3.org/2000/svg", C = 200;
+  function mk(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(e); return e;
+  }
+  function ang(min) { return (min / 1440) * 2 * Math.PI - Math.PI / 2; }
+  function pt(r, a) { return [C + r * Math.cos(a), C + r * Math.sin(a)]; }
+  function arc(r, m0, m1) {
+    var a0 = ang(m0), a1 = ang(m1), p0 = pt(r, a0), p1 = pt(r, a1);
+    return "M" + p0[0] + " " + p0[1] + " A" + r + " " + r + " 0 " + ((m1 - m0) > 720 ? 1 : 0) + " 1 " + p1[0] + " " + p1[1];
+  }
+  var svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 400 400"); svg.setAttribute("class", "dial");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", D.n + " dividend activations by minute of the day in UTC; " +
+    D.outside + " fall outside the US session, shown as the green arc.");
+  host.appendChild(svg);
+  var defs = mk("defs", {});
+  var g = mk("radialGradient", { id: "dialface", cx: "50%", cy: "45%", r: "60%" }, defs);
+  mk("stop", { offset: "0%", "stop-color": "#ffffff" }, g);
+  mk("stop", { offset: "100%", "stop-color": "#f5f0e4" }, g);
+  var sw = mk("linearGradient", { id: "sweepg", x1: "0", y1: "0", x2: "1", y2: "0" }, defs);
+  mk("stop", { offset: "0%", "stop-color": "#9a7318", "stop-opacity": "0" }, sw);
+  mk("stop", { offset: "100%", "stop-color": "#9a7318", "stop-opacity": ".45" }, sw);
+
+  var o1 = mk("g", { "class": "orbit" });
+  mk("circle", { cx: C, cy: C, r: 188, fill: "none", stroke: "#cfc6b3", "stroke-dasharray": "2 7" }, o1);
+  mk("circle", { cx: C + 188, cy: C, r: 3.2, fill: "#9a7318" }, o1);
+  var o2 = mk("g", { "class": "orbit rev" });
+  mk("circle", { cx: C, cy: C, r: 176, fill: "none", stroke: "#e2dccd" }, o2);
+  mk("circle", { cx: C, cy: C - 176, r: 2.4, fill: "#1c7a58" }, o2);
+  mk("circle", { cx: C, cy: C, r: 158, fill: "url(#dialface)", stroke: "#e5dfd1" });
+
+  for (var h = 0; h < 24; h++) {
+    var a = ang(h * 60), inner = h % 6 === 0 ? 146 : 151, p0 = pt(inner, a), p1 = pt(156, a);
+    mk("line", { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1], stroke: "#b9b1a0", "stroke-width": h % 6 === 0 ? 1.6 : .8 });
+    if (h % 6 === 0) {
+      var lp = pt(135, a), t = mk("text", { x: lp[0], y: lp[1] + 3.5, "text-anchor": "middle" });
+      t.textContent = (h < 10 ? "0" : "") + h + ":00";
+    }
+  }
+  mk("path", { d: arc(166, D.open, D.close), fill: "none", stroke: "#1c7a58", "stroke-width": 6,
+    "stroke-linecap": "round", "class": "sess", opacity: ".85" });
+  var sl = pt(166, ang((D.open + D.close) / 2));
+  var st = mk("text", { x: sl[0] - 34, y: sl[1] + 20, "class": "cap" }); st.textContent = "US session";
+  st.setAttribute("style", "fill:#1c7a58");
+
+  var mins = Object.keys(D.by_minute).map(function (k) {
+    var p = k.split(":"); return { m: +p[0] * 60 + +p[1], n: D.by_minute[k] };
+  }).sort(function (x, y) { return x.n - y.n; });
+  var top = mins[mins.length - 1];
+  mins.forEach(function (b, i) {
+    var a = ang(b.m), len = 10 + 34 * Math.log10(b.n + 1) / Math.log10(top.n + 1);
+    var inside = b.m >= D.open && b.m < D.close;
+    var p0 = pt(76, a), p1 = pt(76 + len, a);
+    var ln = mk("line", { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1], "class": "bar",
+      stroke: inside ? "#1c7a58" : "#b0321c", "stroke-width": b.n > 50 ? 5 : 2.6,
+      "stroke-linecap": "round", opacity: b.n > 50 ? 1 : .75 });
+    ln.style.transitionDelay = (0.4 + i * 0.035) + "s";
+  });
+  var pp = pt(76 + 44, ang(top.m));
+  mk("circle", { cx: pp[0], cy: pp[1], r: 7, fill: "none", stroke: "#b0321c", "stroke-width": 1.5, "class": "pulse" });
+
+  var sweep = mk("g", { "class": "sweep" });
+  mk("path", { d: "M200 200 L200 44 A156 156 0 0 1 278 65 Z", fill: "url(#sweepg)", opacity: ".35" }, sweep);
+  var hand = mk("g", { "class": "hand" });
+  mk("line", { x1: C, y1: C, x2: C, y2: C - 150, stroke: "#15171b", "stroke-width": 1.4 }, hand);
+  mk("circle", { cx: C, cy: C - 150, r: 4, fill: "#15171b" }, hand);
+  mk("circle", { cx: C, cy: C, r: 5, fill: "#15171b" });
+  function tick() {
+    var d = new Date(), m = d.getUTCHours() * 60 + d.getUTCMinutes() + d.getUTCSeconds() / 60;
+    hand.setAttribute("transform", "rotate(" + (m / 1440 * 360) + " 200 200)");
+  }
+  tick(); setInterval(tick, 1000);
+
+  mk("circle", { cx: C, cy: C, r: 66, fill: "#fffdf8", stroke: "#ece6d8" });
+  var big = mk("text", { x: C, y: C + 14, "text-anchor": "middle", "class": "big" }); big.textContent = "0";
+  var cap = mk("text", { x: C, y: C + 34, "text-anchor": "middle", "class": "cap" }); cap.textContent = "activations";
+  var cap2 = mk("text", { x: C, y: C - 36, "text-anchor": "middle", "class": "cap warm" });
+  cap2.textContent = D.outside + " outside";
+
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function go() {
+    svg.classList.add("on");
+    if (reduce) { big.textContent = D.n; return; }
+    var t0 = performance.now();
+    (function step(t) {
+      var k = Math.min(1, (t - t0) / 1600), e = 1 - Math.pow(1 - k, 3);
+      big.textContent = Math.round(D.n * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  requestAnimationFrame(function () { setTimeout(go, 150); });
 })();
 </script>
 </body>

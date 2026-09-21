@@ -58,7 +58,7 @@ XOMx, the Exxon Mobil xStock, read from its mint account on mainnet:
 | a 100-share position, as a wallet reading the obvious field shows it | **101.31** |
 | the same position, as the mint actually holds it | **101.76** |
 
-**Two numbers in one account, and the one with the obvious name is a dividend behind.** The same mint's feed shows $3.09 a share paid gross and $2.163 reinvested: **$0.927 a share withheld at 30%**, $112,966 across the float, and nothing in the holder's wallet says so. The [settlement desk](https://iamrobertmoore.github.io/record-date/desk.html) opens on this mint and reads it live, and you can type any of the 379 others.
+**Two numbers in one account, and the one with the obvious name is a dividend behind.** The same mint's feed shows $3.09 a share paid gross and $2.163 reinvested: **$0.927 a share withheld at 30%**, $112,966 across the float, and nothing in the holder's wallet says so. The [settlement desk](https://iamrobertmoore.github.io/record-date/desk.html) opens on this mint and reads it live, and you can type every one of the 379 is on the live board beneath it.
 
 ---
 

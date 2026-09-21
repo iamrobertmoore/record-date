@@ -34,6 +34,22 @@ import published  # noqa: E402
 from published import multiplier, pct, to_places, worked_example  # noqa: E402
 
 
+
+def dial_json(data):
+    """The hero dial's data: activations by minute, the counts, and the US session in UTC minutes."""
+    import datetime as _dt, zoneinfo as _zi
+    timing = data["activation_timing"]
+    built = _dt.datetime.fromisoformat(data["built_utc"].replace("Z", "+00:00"))
+    ny = built.astimezone(_zi.ZoneInfo(timing.get("timezone") or "America/New_York"))
+    offset = int(ny.utcoffset().total_seconds() // 60)
+    o, c = (timing.get("session") or "09:30-16:00").split("-")
+    to_min = lambda s: int(s[:2]) * 60 + int(s[3:5])
+    return json.dumps({
+        "by_minute": timing["by_minute"], "n": timing["n"],
+        "outside": timing.get("outside_calendar", timing["outside"]),
+        "open": (to_min(o) - offset) % 1440, "close": (to_min(c) - offset) % 1440,
+    }, separators=(",", ":"))
+
 def check_published(data, page):
     """Refuse to build a page whose hand-written neighbours no longer describe the same build.
 
@@ -423,6 +439,7 @@ def render(data):
         "READ_RULE_DISAGREED": str(read_rule["disagreed"]),
         "READ_RULE_NO_VALUE": str(read_rule["no_value"]),
         "TIMING_N": str(timing["n"]),
+        "DIAL_JSON": dial_json(data),
         # The UTC window, which is the loose bound.
         "TIMING_OUTSIDE": str(timing["outside"]),
         # `pct` takes a fraction and does the scaling, so passing a percentage here double-counts
