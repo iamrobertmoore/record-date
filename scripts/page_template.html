@@ -518,6 +518,8 @@ main section{background:transparent}
   .dial .bar,.dial .sess{transition:none!important}
 }
 .hero-main .stamp{margin-bottom:26px}
+a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
+.hero .byline{margin-top:44px!important}
 </style>
 </head>
 <body>
@@ -525,14 +527,14 @@ main section{background:transparent}
 
 <div class="top">
   <div class="wrap">
-    <span class="brand">
+    <a class="brand" href="index.html" aria-label="Record Date, home">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="12" cy="12.6" r="8.2" stroke="#15171b" stroke-width="1.5"/>
         <path d="M12 4.4V1.6" stroke="#9a7318" stroke-width="1.5" stroke-linecap="round"/>
         <path d="M8.1 12.6h7.8" stroke="#15171b" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       Record&nbsp;Date
-    </span>
+    </a>
     <nav>
       <a href="desk.html" style="color:var(--ink);font-weight:650">The desk</a>
       <a href="#claim">The claim</a>
@@ -1186,9 +1188,12 @@ function createPresentation() {
   }
   mk("path", { d: arc(166, D.open, D.close), fill: "none", stroke: "#1c7a58", "stroke-width": 6,
     "stroke-linecap": "round", "class": "sess", opacity: ".85" });
-  var sl = pt(166, ang((D.open + D.close) / 2));
-  var st = mk("text", { x: sl[0] - 34, y: sl[1] + 20, "class": "cap" }); st.textContent = "US session";
-  st.setAttribute("style", "fill:#1c7a58");
+  mk("path", { id: "sess-label-path", d: arc(182, D.open, D.close), fill: "none", stroke: "none" });
+  var st = mk("text", { "class": "cap sess-label" });
+  var tp = document.createElementNS(NS, "textPath");
+  tp.setAttribute("href", "#sess-label-path"); tp.setAttribute("startOffset", "50%");
+  tp.setAttribute("text-anchor", "middle"); tp.textContent = "US session";
+  st.appendChild(tp); st.setAttribute("style", "fill:#1c7a58;font-weight:650");
 
   var mins = Object.keys(D.by_minute).map(function (k) {
     var p = k.split(":"); return { m: +p[0] * 60 + +p[1], n: D.by_minute[k] };
@@ -1214,7 +1219,7 @@ function createPresentation() {
   mk("circle", { cx: C, cy: C, r: 5, fill: "#15171b" });
   function tick() {
     var d = new Date(), m = d.getUTCHours() * 60 + d.getUTCMinutes() + d.getUTCSeconds() / 60;
-    hand.setAttribute("transform", "rotate(" + (m / 1440 * 360) + " 200 200)");
+    hand.style.transform = "rotate(" + (m / 1440 * 360) + "deg)";
   }
   tick(); setInterval(tick, 1000);
 
