@@ -207,14 +207,14 @@ footer code{font-size:12.5px;color:var(--ink)}
       <span class="chip">devnet · program <b>ycg2obpK…</b></span>
       <span class="chip ok">no key · no backend</span>
       <span class="chip">plain RPC · <b>api.devnet.solana.com</b></span>
-      <span class="chip hot"><b>4</b> of 5 mints read wrongly</span>
+      <span class="chip hot"><b id="disagree-chip">5</b> of <b id="mint-chip">6</b> mints read wrongly</span>
     </div>
 
     <h1>Ask the deployed program what a tokenized share is worth.</h1>
 
     <p class="lede">This page has no key, no server and nothing to sign. It reads devnet over plain RPC
       and puts its questions to the program that is actually deployed there. On
-      <b>4 of the 5 registered mints the field named
+      <b><span id="disagree-lede">5</span> of the <span id="mint-lede">6</span> registered mints the field named
       <span class="num">multiplier</span> holds the previous value</b> while the live multiplier
       has already moved, so a reader who takes the obvious field is one corporate action behind.
       The program is not.</p>
@@ -225,7 +225,7 @@ footer code{font-size:12.5px;color:var(--ink)}
 
     <div class="byline">
       <span><b>Reads</b><span>the mint account, the program's own accounts, and Pyth</span></span>
-      <span><b>Captured</b><span class="num">2026-09-17 14:12:04.086 UTC</span></span>
+      <span><b>Captured</b><span class="num">2026-09-17 19:54:30.383 UTC</span></span>
       <span><b>Reproduce with</b><span class="num">npm run desk</span></span>
     </div>
   </div>
@@ -239,7 +239,7 @@ footer code{font-size:12.5px;color:var(--ink)}
     <div class="head">
       <h2>Pick a registered mint. Everything below follows it.</h2>
       <p>These are the mints this program has registered on devnet, and there are
-        <span class="num" id="mint-count">5</span> of them. A dot marks one where the
+        <span class="num" id="mint-count">6</span> of them. A dot marks one where the
         field named <span class="num">multiplier</span> and the live
         <span class="num">new_multiplier</span> disagree, which is the state the entry is about.</p>
     </div>
@@ -248,7 +248,7 @@ footer code{font-size:12.5px;color:var(--ink)}
       <div class="bar">
         <span class="dot " id="status-dot"></span>
         <span class="label" id="status-label">Recorded</span>
-        <span class="tiny" id="status-when">capture from 2026-09-17 14:12:04.086 UTC; this page re-reads devnet when it loads</span>
+        <span class="tiny" id="status-when">capture from 2026-09-17 19:54:30.383 UTC; this page re-reads devnet when it loads</span>
         <span class="grow">
           <button class="go ghost" id="recheck" type="button">Re-read devnet</button>
         </span>
@@ -257,6 +257,7 @@ footer code{font-size:12.5px;color:var(--ink)}
       <div class="picker" id="picker" role="group" aria-label="registered mints">
         <button type="button" data-mint="5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR" aria-pressed="true" title="5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR"><span class="flag"></span>DEMOx · 5N7a…</button>
         <button type="button" data-mint="5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq" aria-pressed="false" title="5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq"><span class="flag"></span>DEMOx · 5KLQ…</button>
+        <button type="button" data-mint="DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS" aria-pressed="false" title="DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS"><span class="flag"></span>DEMOx · DoF9…</button>
         <button type="button" data-mint="BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ" aria-pressed="false" title="BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ"><span class="flag"></span>DEMOx · BrjC…</button>
         <button type="button" data-mint="8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe" aria-pressed="false" title="8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe">DEMOx · 8RUM…</button>
         <button type="button" data-mint="BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp" aria-pressed="false" title="BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp"><span class="flag"></span>DEMOx · BC5b…</button>
@@ -365,33 +366,40 @@ footer code{font-size:12.5px;color:var(--ink)}
       <h2>The window, from the program's own clock.</h2>
       <p>The issuer's own documentation recommends that venues and protocols pause around each
         activation, and nothing in a mint account can enforce that. The program's
-        <span class="num">settlement_window</span> instruction reads the mint and returns the
-        seconds between now and the activation, measured against the validator's clock rather
-        than yours, so the answer is the same from any machine.</p>
+        <span class="num">settlement_window</span> instruction returns two numbers: the seconds
+        since the multiplier in force took effect, and the seconds until an activation the issuer
+        has staged. Both are measured against the validator's clock rather than yours, so the
+        answer is the same from any machine.</p>
+      <p style="margin-top:10px">The second of those is the one the mint cannot supply. The issuer
+        stages the next value about four hours before it takes effect, and staging it overwrites
+        the timestamp of the value now in force, so during that window the mint says nothing about
+        when the live multiplier started. This program's own record does hold it, and the first
+        number is where that shows.</p>
     </div>
 
     <div class="console">
       <div class="verdict">
         <span class="tag settle" id="verdict">Settle</span>
-        <span class="why" id="verdict-why">The activation was 21.2 hours ago. The window closed 20.9 hours ago, so this trade is clear.</span>
+        <span class="why" id="verdict-why">The activation was 1.1 days ago, which is outside the 15 minute window this desk holds for, so this trade is clear.</span>
       </div>
 
       <div class="grid3">
         <div class="cell">
-          <p class="k">seconds since the activation</p>
-          <p class="v" id="delta">76,196</p>
-          <p class="note">Returned as a little-endian <span class="num">i64</span> by the program.</p>
+          <p class="k">since the last, until the next</p>
+          <p class="v" id="delta">96,724s ago · nothing staged</p>
+          <p class="note">Two little-endian <span class="num">i64</span>s. Either is
+            <span class="num">-1</span> when there is nothing to report.</p>
         </div>
         <div class="cell">
           <p class="k">the venue's rule</p>
           <p class="v">±15 min</p>
           <p class="note">Hold inside 900 seconds either side of an activation. This is
-            the desk's policy, and the program supplies the number it is applied to.</p>
+            the desk's policy, and the program supplies both of the numbers it is applied to.</p>
         </div>
         <div class="cell">
           <p class="k">the raw answer</p>
-          <p class="mono" style="font-size:15px;word-break:break-all" id="delta-hex">no return data</p>
-          <p class="note">The program's return data, unedited.</p>
+          <p class="mono" style="font-size:15px;word-break:break-all" id="delta-hex">d479010000000000ffffffffffffffff</p>
+          <p class="note">The program's return data, unedited. Sixteen bytes, two i64s.</p>
         </div>
       </div>
 
@@ -408,17 +416,20 @@ footer code{font-size:12.5px;color:var(--ink)}
         </div>
       </div>
 
-      <pre><span class="c">// settlement_window, and what it does with a timestamp that has not passed</span>
-<span class="k">let</span> delta = now - effective_at;        <span class="c">// i64, signed: negative means the activation is ahead</span>
-<span class="k">let</span> in_window = delta.abs() &lt;= <span class="s">900</span>;
+      <pre><span class="c">// settlement_window: two numbers, because the issuer's window is two-sided</span>
+<span class="k">let</span> since = <span class="k">if</span> live.staged_at == <span class="s">0</span> &amp;&amp; live.effective_at &gt; <span class="s">0</span> {
+    now - live.effective_at            <span class="c">// the mint can answer this one itself</span>
+} <span class="k">else</span> <span class="k">if</span> record.live_effective_at &gt; <span class="s">0</span> {
+    now - record.live_effective_at     <span class="c">// the mint overwrote it; the record kept it</span>
+} <span class="k">else</span> { -<span class="s">1</span> };
+<span class="k">let</span> until = <span class="k">if</span> live.staged_at &gt; <span class="s">0</span> { live.staged_at - now } <span class="k">else</span> { -<span class="s">1</span> };
 
-<span class="c">// effective_at() returns 0 unless the activation timestamp has already passed, so a mint</span>
-<span class="c">// whose activation is still ahead reports delta = now and reads as outside the window.</span>
-<span class="c">// The window is only ever open for fifteen minutes after an activation, which is why a</span>
-<span class="c">// desk that wants to hold has to ask at the right moment.</span></pre>
+<span class="c">// A venue holds while either is inside 900. Before this, one signed number was returned and it</span>
+<span class="c">// could never be negative: a staged activation makes effective_at() return 0, so the answer was</span>
+<span class="c">// "seconds since 1970" and read as 56 years outside the window with an activation minutes away.</span></pre>
     </div>
 
-    <div class="note-box"><b>A window that was open.</b> On 2026-09-17 14:10:34.650 UTC the desk was asked about <span class="num">5KLQzvg4…</span> with an activation <span class="num">2 seconds</span> old, and it held. That reading is recorded here because the window is only open for fifteen minutes: a live page cannot be made to show a hold on demand, so one was staged and captured. The activation was written in <a href="https://explorer.solana.com/tx/28PumW49gSYhbagpK4wxVphPceMcNjkioNcjyuWzLLg4AovRXCSaXhTV75eESE8pGHZ4TAjFDt5qnjh9M3eroc21?cluster=devnet">transaction <span class="num">28PumW49gSYhbagp…</span></a>, which a judge can open. Every other number on this page is read live.</div>
+    <div class="note-box"><b>A window that was open.</b> On 2026-09-17 14:10:34.650 UTC the desk was asked about <span class="num">5KLQzvg4…</span> with an activation <span class="num">2 seconds</span> old and nothing staged, and it held. That reading is recorded here because the window is only open for fifteen minutes: a live page cannot be made to show a hold on demand, so one was staged and captured. It predates the widening of the return from one number to two, and the seconds-since arithmetic it exercised is the same arithmetic. The activation was written in <a href="https://explorer.solana.com/tx/28PumW49gSYhbagpK4wxVphPceMcNjkioNcjyuWzLLg4AovRXCSaXhTV75eESE8pGHZ4TAjFDt5qnjh9M3eroc21?cluster=devnet">transaction <span class="num">28PumW49gSYhbagp…</span></a>, which a judge can open. Every other number on this page is read live.</div>
   </div>
 </section>
 
@@ -484,8 +495,9 @@ footer code{font-size:12.5px;color:var(--ink)}
             </tr>
           </thead>
           <tbody id="price-body">
-            <tr><td>DEMOx</td><td>AAPL</td><td class="mono">DJgUxxLVN1QxAXykPzpH5Kz5feo1bTCBDipGRUYYqMw</td><td class="mono">2026-08-14T20:00:19Z</td><td class="mono">33.8 days</td><td><span class="pill no">StalePythPrice</span></td></tr>
-            <tr><td>DEMOx</td><td>SOL</td><td class="mono">6F7n5SQru3LE72ovrzTgAuMRNdm727fdUvsZdhRBmSPu</td><td class="mono">2026-09-17T14:11:54Z</td><td class="mono">10 seconds</td><td><span class="pill ok">accepted</span></td></tr>
+            <tr><td>DEMOx</td><td>AAPL</td><td class="mono">DJgUxxLVN1QxAXykPzpH5Kz5feo1bTCBDipGRUYYqMw</td><td class="mono">2026-08-14T20:00:19Z</td><td class="mono">34.0 days</td><td><span class="pill no">StalePythPrice</span></td></tr>
+            <tr><td>DEMOx</td><td>SOL</td><td class="mono">7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE</td><td class="mono">2026-09-17T19:53:02Z</td><td class="mono">1.5 minutes</td><td><span class="pill ok">accepted</span></td></tr>
+            <tr><td>DEMOx</td><td>SOL</td><td class="mono">7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE</td><td class="mono">2026-09-17T19:53:02Z</td><td class="mono">1.5 minutes</td><td><span class="pill ok">accepted</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -558,7 +570,7 @@ POST api.devnet.solana.com
       <span><b>Reproduce</b><code>npm run desk</code><br><code>npm run desk:page</code></span>
       <span><b>Reads</b><code>https://api.devnet.solana.com</code></span>
       <span><b>Program</b><code>ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG</code></span>
-      <span><b>Captured</b><code>2026-09-17 14:12:04.086 UTC</code></span>
+      <span><b>Captured</b><code>2026-09-17 19:54:30.383 UTC</code></span>
     </div>
     <p style="margin-top:24px;max-width:60em">Record Date, built for Stocklana. The evidence page
       carries the sourced problem figures and the build checks; this page is the desk that reads
@@ -566,7 +578,7 @@ POST api.devnet.solana.com
   </div>
 </footer>
 
-<script type="application/json" id="desk-state">{"capturedAt":"2026-09-17T14:12:04.086Z","rpc":"https://api.devnet.solana.com","cluster":"devnet","programId":"ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG","token2022":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","pythReceiver":"rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ","deskPayer":"9GwUYoXLix8k27MjwnYFqzwsn4bKD2tZf5Dcz9ydp9vX","pauseSecs":900,"registry":{"address":"6ZgJXYGsw4VBuiaRD1dTYo1QDMEA6FYcXKKs9Ua5jVyb","authority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","mints":5,"activations":6,"bump":253},"tokenRecords":[{"address":"7MupvMRPG1RCmxsy1xGM9nM3a1mhprNSZv241mrjX1BV","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789578122,"activations":1,"lastSeenSlot":499390177,"bump":254},{"address":"7c3aKW9Z8iJ4kE49zt6KUykYQs7U2hmsrWaWA2Rsh6Je","mint":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789577772,"activations":1,"lastSeenSlot":499388414,"bump":253},{"address":"As6mSSqM5MdwZzYCFCzbFBJRuUhjP2YkuFbkFDBXGvf5","mint":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789579322,"activations":1,"lastSeenSlot":499397420,"bump":253},{"address":"BCMdUzx6Tr4BD6KuBf4uvNw1gy6FG352Vs1C98VHfZ5C","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789643252,"activations":2,"lastSeenSlot":499783921,"bump":252},{"address":"CWts9sgWUfGckNL8ubfT3NXA1tG8vqVvEgiUonXTS7gY","mint":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789579268,"activations":1,"lastSeenSlot":499397100,"bump":255}],"mints":{"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR":{"address":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789578122,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq":{"address":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1.0042,"newMultiplier":1.0084,"effectiveAt":1789654231,"fieldDisagrees":true,"liveNow":1.0084,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ":{"address":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789579322,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe":{"address":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1.0042,"newMultiplier":1.0042,"effectiveAt":1789643252,"fieldDisagrees":false,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp":{"address":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789579268,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166}},"receipts":[{"address":"aPiExpKAL6cb35K4aTawykwYsJcQFVWKCQiCxYjtGe1","mint":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789577772,"recordedAt":1789577833,"rawSupply":100000000,"bump":254},{"address":"2B6yLrgzquoZgsXtd1dLDjnLgUu6b892R2NCWGH64DCX","mint":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789579268,"recordedAt":1789579269,"rawSupply":100000000,"bump":255},{"address":"B8AqwoXnjXqZFp6PCPbVYs6ai2xtE2fSDmcuSDWARZLp","mint":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789579322,"recordedAt":1789579323,"rawSupply":100000000,"bump":254},{"address":"BBCoat1EfKSR4VNsxBTeoY5t5ygaCTVMQFmDVYKdJ71H","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789643173,"recordedAt":1789643174,"rawSupply":100000000,"bump":252},{"address":"GeFdQaQL4moCYpY2PykzTw5gBssJpsPhzGxFxJsTi2E5","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789578122,"recordedAt":1789578123,"rawSupply":100000000,"bump":254},{"address":"HrFTT4Ygy45ssRLrbchT7Y2d9cDKM8iXxhvx7TEuHtpu","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","sequence":1,"previousMultiplier":1.0042,"newMultiplier":1.0042,"previousFp":"1.0042","newFp":"1.0042","deltaFp":"0","flat":true,"effectiveAt":1789643252,"recordedAt":1789643253,"rawSupply":100000000,"bump":255}],"pyth":{"bindings":[{"address":"9ddmyaZfM4MJiUuGckAHtb5TJ1q8YxAwtv79LyifEsQ","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","feedId":"49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688","feedSymbol":"AAPL","boundAt":1789654087,"bump":255},{"address":"9AHmMAUKeA8SW8adDSrP4EAVu4tCS6qoDMhQbTD4iroz","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","feedId":"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d","feedSymbol":"SOL","boundAt":1789643258,"bump":255}],"feeds":{"49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688":{"count":189,"newest":{"address":"DJgUxxLVN1QxAXykPzpH5Kz5feo1bTCBDipGRUYYqMw","price":30592000,"exponent":-5,"publishTime":1786737619},"oldest":{"address":"Fd2tZNSQenmmR1vkUYQ3qCFZieDfUb97PJ5CduWkhrk6","price":23723000,"exponent":-5,"publishTime":1741100149},"verify":{"err":"{\"InstructionError\":[0,{\"Custom\":6016}]}","errorCode":6016,"logs":[]}},"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d":{"count":63894,"newest":{"address":"6F7n5SQru3LE72ovrzTgAuMRNdm727fdUvsZdhRBmSPu","price":10090619437,"exponent":-8,"publishTime":1789654314},"oldest":{"address":"Es7N3gDAJZPKaPCz1wKtEQnTLWi4GkKrtxdKdW9gs9nv","price":6879382246,"exponent":-8,"publishTime":1702285724},"verify":{"err":null,"errorCode":null,"logs":["Program log: Record Date: DEMOx verified against Pyth SOL at 100.90619437000001 (age 9s of a 300s limit), caller said 100906194370000000000e-18, deviation 0bps of a 50-bps tolerance, feed H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"]}}}},"answers":{"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR":{"deltaSeconds":76196,"insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx activation was 76196s ago, inside the recommended 15 minute pause: false"]},"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq":{"deltaSeconds":87,"insideWindow":true,"pending":true,"oneShareRaw":"100000000","programUnits":"100840000","programUnitsDisplay":"1.0084","naiveUnits":"100420000","naiveUnitsDisplay":"1.0042","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx activation was 87s ago, inside the recommended 15 minute pause: true"]},"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ":{"deltaSeconds":74997,"insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx activation was 74997s ago, inside the recommended 15 minute pause: false"]},"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe":{"deltaSeconds":11067,"insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100420000","naiveUnitsDisplay":"1.0042","gapUnits":"0","gapUnitsDisplay":"0","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx activation was 11067s ago, inside the recommended 15 minute pause: false"]},"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp":{"deltaSeconds":75051,"insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx activation was 75051s ago, inside the recommended 15 minute pause: false"]}},"errorNames":["NotToken2022","MintTooShort","MintPaddingNotZero","NotAMint","NoScaledUiAmount","BadExtensionLength","UnknownExtension","ExtensionOverrunsAccount","BadMultiplier","SymbolTooLong","NotRegistered","NothingToRecord","NotPythReceiver","NotAPriceUpdate","PriceUpdateTooShort","FeedIdMismatch","StalePythPrice","PriceDeviation","PriceOutOfRange","NegativePythPrice","FeedSymbolTooLong","PriceAgeCeilingExceeded","TruncatedExtensionHeader"],"errorCodeOffset":6000,"defaultMint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR"}</script>
+<script type="application/json" id="desk-state">{"capturedAt":"2026-09-17T19:54:30.383Z","rpc":"https://api.devnet.solana.com","cluster":"devnet","programId":"ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG","token2022":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","pythReceiver":"rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ","deskPayer":"9GwUYoXLix8k27MjwnYFqzwsn4bKD2tZf5Dcz9ydp9vX","pauseSecs":900,"registry":{"address":"6ZgJXYGsw4VBuiaRD1dTYo1QDMEA6FYcXKKs9Ua5jVyb","authority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","mints":6,"activations":7,"bump":253},"tokenRecords":[{"address":"7MupvMRPG1RCmxsy1xGM9nM3a1mhprNSZv241mrjX1BV","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789578122,"activations":1,"lastSeenSlot":499390177,"bump":254},{"address":"7c3aKW9Z8iJ4kE49zt6KUykYQs7U2hmsrWaWA2Rsh6Je","mint":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789577772,"activations":1,"lastSeenSlot":499388414,"bump":253},{"address":"AAPztUZ42iEEiDc94L4HUj8qXwXmqSYnbuM1A2T6HmWb","mint":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789655348,"activations":1,"lastSeenSlot":499857004,"bump":254},{"address":"As6mSSqM5MdwZzYCFCzbFBJRuUhjP2YkuFbkFDBXGvf5","mint":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789579322,"activations":1,"lastSeenSlot":499397420,"bump":253},{"address":"BCMdUzx6Tr4BD6KuBf4uvNw1gy6FG352Vs1C98VHfZ5C","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789643252,"activations":2,"lastSeenSlot":499783921,"bump":252},{"address":"CWts9sgWUfGckNL8ubfT3NXA1tG8vqVvEgiUonXTS7gY","mint":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","symbol":"DEMOx","decimals":8,"baseMultiplier":1,"liveMultiplier":1.0042,"liveFp":"1.0042","liveEffectiveAt":1789579268,"activations":1,"lastSeenSlot":499397100,"bump":255}],"mints":{"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR":{"address":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789578122,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq":{"address":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1.0042,"newMultiplier":1.0084,"effectiveAt":1789654231,"fieldDisagrees":true,"liveNow":1.0084,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS":{"address":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789655348,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ":{"address":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789579322,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe":{"address":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1.0042,"newMultiplier":1.0042,"effectiveAt":1789643252,"fieldDisagrees":false,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166},"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp":{"address":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","decimals":8,"supply":"100000000","mintAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","extensionAuthority":"9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi","multiplier":1,"newMultiplier":1.0042,"effectiveAt":1789579268,"fieldDisagrees":true,"liveNow":1.0042,"accountLength":226,"owner":"TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb","tlvHeaderOffset":166}},"receipts":[{"address":"aPiExpKAL6cb35K4aTawykwYsJcQFVWKCQiCxYjtGe1","mint":"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789577772,"recordedAt":1789577833,"rawSupply":100000000,"bump":254},{"address":"2B6yLrgzquoZgsXtd1dLDjnLgUu6b892R2NCWGH64DCX","mint":"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789579268,"recordedAt":1789579269,"rawSupply":100000000,"bump":255},{"address":"B8AqwoXnjXqZFp6PCPbVYs6ai2xtE2fSDmcuSDWARZLp","mint":"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789579322,"recordedAt":1789579323,"rawSupply":100000000,"bump":254},{"address":"BBCoat1EfKSR4VNsxBTeoY5t5ygaCTVMQFmDVYKdJ71H","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789643173,"recordedAt":1789643174,"rawSupply":100000000,"bump":252},{"address":"ByEHAz1NLiGi6wTVGr8dSMabMgCCnazET5pdwYzuSsNd","mint":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789655348,"recordedAt":1789655349,"rawSupply":100000000,"bump":255},{"address":"GeFdQaQL4moCYpY2PykzTw5gBssJpsPhzGxFxJsTi2E5","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","sequence":0,"previousMultiplier":1,"newMultiplier":1.0042,"previousFp":"1","newFp":"1.0042","deltaFp":"0.0042","flat":false,"effectiveAt":1789578122,"recordedAt":1789578123,"rawSupply":100000000,"bump":254},{"address":"HrFTT4Ygy45ssRLrbchT7Y2d9cDKM8iXxhvx7TEuHtpu","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","sequence":1,"previousMultiplier":1.0042,"newMultiplier":1.0042,"previousFp":"1.0042","newFp":"1.0042","deltaFp":"0","flat":true,"effectiveAt":1789643252,"recordedAt":1789643253,"rawSupply":100000000,"bump":255}],"pyth":{"bindings":[{"address":"9ddmyaZfM4MJiUuGckAHtb5TJ1q8YxAwtv79LyifEsQ","mint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR","feedId":"49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688","feedSymbol":"AAPL","boundAt":1789654087,"bump":255},{"address":"9AHmMAUKeA8SW8adDSrP4EAVu4tCS6qoDMhQbTD4iroz","mint":"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe","feedId":"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d","feedSymbol":"SOL","boundAt":1789643258,"bump":255},{"address":"GLPvWLXwJXVfVFjzBPoW73b7k1mEJUnb2ziShbxG7DHr","mint":"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS","feedId":"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d","feedSymbol":"SOL","boundAt":1789655355,"bump":255}],"feeds":{"49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688":{"count":189,"newest":{"address":"DJgUxxLVN1QxAXykPzpH5Kz5feo1bTCBDipGRUYYqMw","price":30592000,"exponent":-5,"publishTime":1786737619},"oldest":{"address":"Fd2tZNSQenmmR1vkUYQ3qCFZieDfUb97PJ5CduWkhrk6","price":23723000,"exponent":-5,"publishTime":1741100149},"verify":{"err":"{\"InstructionError\":[0,{\"Custom\":6016}]}","errorCode":6016,"returnHex":null,"logs":[]}},"ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d":{"count":63894,"newest":{"address":"7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE","price":10086833888,"exponent":-8,"publishTime":1789674782},"oldest":{"address":"Es7N3gDAJZPKaPCz1wKtEQnTLWi4GkKrtxdKdW9gs9nv","price":6879382246,"exponent":-8,"publishTime":1702285724},"verify":{"err":null,"errorCode":null,"returnHex":"00801fbac953d477050000000000000000000000000000000000000000000000","logs":["Program log: Record Date: DEMOx verified against Pyth SOL at 100.86833888 (age 82s of a 300s limit), caller said 100868338880000000000e-18, deviation 0bps of a 50-bps tolerance, feed H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"]}}}},"answers":{"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR":{"sinceSeconds":96724,"untilSeconds":-1,"deltaHex":"d479010000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 96724s ago, next in -1s, inside the recommended 15 minute pause: false"]},"5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq":{"sinceSeconds":20615,"untilSeconds":-1,"deltaHex":"8750000000000000ffffffffffffffff","insideWindow":false,"pending":true,"oneShareRaw":"100000000","programUnits":"100840000","programUnitsDisplay":"1.0084","naiveUnits":"100420000","naiveUnitsDisplay":"1.0042","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 20615s ago, next in -1s, inside the recommended 15 minute pause: false"]},"DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS":{"sinceSeconds":19498,"untilSeconds":-1,"deltaHex":"2a4c000000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 19498s ago, next in -1s, inside the recommended 15 minute pause: false"]},"BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ":{"sinceSeconds":95525,"untilSeconds":-1,"deltaHex":"2575010000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 95525s ago, next in -1s, inside the recommended 15 minute pause: false"]},"8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe":{"sinceSeconds":31595,"untilSeconds":-1,"deltaHex":"6b7b000000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100420000","naiveUnitsDisplay":"1.0042","gapUnits":"0","gapUnitsDisplay":"0","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 31595s ago, next in -1s, inside the recommended 15 minute pause: false"]},"BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp":{"sinceSeconds":95579,"untilSeconds":-1,"deltaHex":"5b75010000000000ffffffffffffffff","insideWindow":false,"pending":false,"oneShareRaw":"100000000","programUnits":"100420000","programUnitsDisplay":"1.0042","naiveUnits":"100000000","naiveUnitsDisplay":"1","gapUnits":"420000","gapUnitsDisplay":"0.0042","activationAttempt":{"err":"{\"InstructionError\":[0,{\"Custom\":3010}]}","errorCode":3010,"logs":[]},"windowLog":["Program log: Record Date: DEMOx last activation 95579s ago, next in -1s, inside the recommended 15 minute pause: false"]}},"errorNames":["NotToken2022","MintTooShort","MintPaddingNotZero","NotAMint","NoScaledUiAmount","BadExtensionLength","UnknownExtension","ExtensionOverrunsAccount","BadMultiplier","SymbolTooLong","NotRegistered","NothingToRecord","NotPythReceiver","NotAPriceUpdate","PriceUpdateTooShort","FeedIdMismatch","StalePythPrice","PriceDeviation","PriceOutOfRange","NegativePythPrice","FeedSymbolTooLong","PriceAgeCeilingExceeded","TruncatedExtensionHeader","PythPriceNotVerified"],"errorCodeOffset":6000,"defaultMint":"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR"}</script>
 
 <script>
 /* eslint-disable */
@@ -693,18 +705,62 @@ POST api.devnet.solana.com
 
   /* ------------------------------------------------------------------ rpc */
 
-  function rpc(method, params) {
+  /* The read is the page, and the page says so: the status chip reads `Recorded` the moment the
+     read fails, because the figures below it are then the baked capture rather than the chain.
+     A public RPC throttles under load, and a judge arrives behind whoever else is asking, so a
+     transient refusal is retried rather than reported. Only a failure that survives the retries
+     is, and its reason is what the chip names.
+
+     There is deliberately no second endpoint. The keyless public devnet host is the only one that
+     serves getProgramAccounts without a key: the alternates were checked on 18 September 2026 and
+     either 404 or answer `missing api key`. Carrying an API key would buy a fallback and cost the
+     `no key` property the page states in three places, which is not a trade worth making. */
+  var RETRY_DELAYS = [400, 1200, 3000];
+
+  function rpcOnce(method, params) {
     return fetch(RPC, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: method, params: params })
     }).then(function (r) {
-      if (!r.ok) throw new Error(method + " returned HTTP " + r.status);
+      if (!r.ok) {
+        var e = new Error(method + " returned HTTP " + r.status);
+        /* 429 is the throttle and 5xx is a transient fault. A 4xx that is neither is this page's
+           own bug and is not worth a second attempt. */
+        e.retryable = (r.status === 429 || r.status >= 500);
+        throw e;
+      }
       return r.json();
+    }, function () {
+      /* fetch rejects when the connection drops or DNS fails. No status, and worth another try. */
+      var e = new Error(method + ": the connection to " + RPC.replace(/^https?:\/\//, "") + " failed");
+      e.retryable = true;
+      throw e;
     }).then(function (j) {
-      if (j.error) throw new Error(method + ": " + (j.error.message || JSON.stringify(j.error)));
+      if (j.error) {
+        /* A throttle can also arrive as HTTP 200 with the reason in the body. */
+        var msg = j.error.message || JSON.stringify(j.error);
+        var e = new Error(method + ": " + msg);
+        e.retryable = /rate|limit|throttl|too many|try again/i.test(msg);
+        throw e;
+      }
       return j.result;
     });
+  }
+
+  function rpc(method, params) {
+    var attempt = 0;
+    function go() {
+      return rpcOnce(method, params).catch(function (e) {
+        if (!e.retryable || attempt >= RETRY_DELAYS.length) throw e;
+        var wait = RETRY_DELAYS[attempt++];
+        /* Say so on the chip. A retry the reader cannot see is indistinguishable from a hang. */
+        mark("reading", "asking " + RPC.replace(/^https?:\/\//, "") + " \u00b7 retry "
+          + attempt + " of " + RETRY_DELAYS.length + " in " + (wait / 1000) + "s");
+        return new Promise(function (res) { setTimeout(res, wait); }).then(go);
+      });
+    }
+    return go();
   }
 
   function simulate(accounts, data) {
@@ -895,7 +951,27 @@ POST api.devnet.solana.com
     }
     host.innerHTML = html;
     setText("mint-count", String(order.length));
+    renderHero(order);
     return order;
+  }
+
+  /* The hero is build-time markup and the live read used to leave it alone, so the page could say
+     "4 of 5 mints read wrongly" in the header and "there are 6 of them" eight lines below, on the
+     same screen, from the same read. The counts are recomputed here from the same live read the
+     picker is built from, so the two cannot disagree. The total is the registered count, which is
+     what the sentence below it means by "them". */
+  function renderHero(order) {
+    if (!live) return;
+    var disagree = 0;
+    for (var i = 0; i < order.length; i++) {
+      var state = live.mints[order[i]] ? live.mints[order[i]].mint : null;
+      if (state && state.fieldDisagrees) disagree += 1;
+    }
+    var total = String(order.length);
+    setText("disagree-chip", String(disagree));
+    setText("mint-chip", total);
+    setText("disagree-lede", String(disagree));
+    setText("mint-lede", total);
   }
 
   function renderMint(mint) {
@@ -933,43 +1009,76 @@ POST api.devnet.solana.com
     }
     setText("gap-pct-inline", gapPct);
 
-    var delta = a.deltaSeconds;
-    var inside = delta !== null && Math.abs(delta) <= PAUSE;
-    setText("delta", delta === null ? "n/a" : fmtInt(Math.abs(delta)));
+    /* Two numbers, because the issuer's pause window is two-sided and the mint can only carry
+       one timestamp. `since` is seconds since the multiplier in force took effect; `until` is
+       seconds until an activation the issuer has staged. Either is -1 when there is nothing to
+       report. While a value is staged the mint has overwritten the timestamp of the value in
+       force, so `since` comes from the program's own record, which is the one thing here the
+       mint has forgotten. */
+    var since = a.sinceSeconds, until = a.untilSeconds;
+    var after = since !== null && since >= 0 && since <= PAUSE;
+    var before = until !== null && until >= 0 && until <= PAUSE;
+    var inside = after || before;
+    var answered = since !== null || until !== null;
+
+    setText("delta", !answered ? "n/a"
+      : (since === null || since < 0 ? "no activation yet" : fmtInt(since) + "s ago")
+        + " \u00b7 "
+        + (until === null || until < 0 ? "nothing staged" : "in " + fmtInt(until) + "s"));
     setText("delta-hex", a.deltaHex || "no return data");
 
     var verdict = el("verdict");
-    verdict.className = "tag " + (delta === null ? "hold" : inside ? "hold" : "settle");
-    verdict.textContent = delta === null ? "No answer" : inside ? "Hold" : "Settle";
-    setText("verdict-why", delta === null
+    verdict.className = "tag " + (!answered ? "hold" : inside ? "hold" : "settle");
+    verdict.textContent = !answered ? "No answer" : inside ? "Hold" : "Settle";
+    /* When the activation is long past, the age and the time since the window closed round to the
+       same string and the sentence said "1.1 days ago. The window closed 1.1 days ago", which
+       reads as a bug even though both halves are true. Compare the rendered strings rather than
+       pick a threshold: when they differ, the closed-ago figure is the more useful one; when they
+       do not, the age alone is what there is to say. */
+    var ageText = fmtDuration(since), closedText = fmtDuration(since - PAUSE);
+    setText("verdict-why", !answered
       ? "The program returned nothing this page can read."
       : inside
-        ? "The activation was " + fmtDuration(delta) + " ago, which is inside the "
-          + (PAUSE / 60) + " minute window this desk holds for."
-        : "The activation was " + fmtDuration(delta) + " ago. The window closed "
-          + fmtDuration(Math.abs(delta) - PAUSE) + " ago, so this trade is clear.");
+        ? (before
+            ? "The issuer has staged an activation that takes effect in " + fmtDuration(until)
+              + ", which is inside the " + (PAUSE / 60) + " minute window this desk holds for."
+            : "The activation was " + ageText + " ago, which is inside the "
+              + (PAUSE / 60) + " minute window this desk holds for.")
+        : (before || after
+            ? "The nearest activation is inside the window."
+            : (since >= 0
+                ? (closedText === ageText
+                    ? "The activation was " + ageText + " ago, which is outside the "
+                      + (PAUSE / 60) + " minute window this desk holds for, so this trade is clear."
+                    : "The activation was " + ageText + " ago. The window closed "
+                      + closedText + " ago, so this trade is clear.")
+                : "No activation is near, so this trade is clear.")));
 
-    drawAxis(delta);
+    drawAxis(since, until);
     renderTrail(c.receipts, rec);
   }
 
-  function drawAxis(delta) {
+  /* The axis places the reader on one timeline, so a staged activation has to be the same
+     distance to the left of zero that a past one is to the right. */
+  function drawAxis(since, until) {
     var win = el("win"), now = el("now");
     var span = 7200;                       // the axis spans two hours either side
     var pct = function (secs) { return (secs + span) / (2 * span) * 100; };
     win.style.left = pct(-PAUSE) + "%";
     win.style.width = (pct(PAUSE) - pct(-PAUSE)) + "%";
-    if (delta === null) { now.style.display = "none"; return; }
+    var staged = until !== null && until >= 0;
+    var pos = staged ? -until : since;
+    if (pos === null || pos < 0 && !staged) { now.style.display = "none"; return; }
     now.style.display = "";
-    if (Math.abs(delta) <= span) {
-      now.style.left = pct(delta) + "%";
+    if (Math.abs(pos) <= span) {
+      now.style.left = pct(pos) + "%";
       now.className = "mark";
-      now.setAttribute("data-l", "now");
+      now.setAttribute("data-l", staged ? "next activation" : "now");
     } else {
-      var right = delta > 0;
+      var right = pos > 0;
       now.style.left = right ? "100%" : "0%";
       now.className = "mark off " + (right ? "at-right" : "at-left");
-      now.setAttribute("data-l", fmtDuration(Math.abs(delta) - span) + " outside");
+      now.setAttribute("data-l", fmtDuration(Math.abs(pos) - span) + " outside");
     }
   }
 
@@ -1073,8 +1182,10 @@ POST api.devnet.solana.com
         jobs.push(disc("settlement_window").then(function (d) {
           return simulate([mint, rec], d).then(function (r) {
             entry.answers.deltaHex = r.returnData.length ? toHex(r.returnData) : null;
-            entry.answers.deltaSeconds = r.returnData.length === 8
-              ? Number(new DataView(r.returnData.buffer).getBigInt64(0, true)) : null;
+            var view = r.returnData.length === 16
+              ? new DataView(r.returnData.buffer, r.returnData.byteOffset) : null;
+            entry.answers.sinceSeconds = view ? Number(view.getBigInt64(0, true)) : null;
+            entry.answers.untilSeconds = view ? Number(view.getBigInt64(8, true)) : null;
             entry.answers.windowLogs = r.logs;
           });
         }));

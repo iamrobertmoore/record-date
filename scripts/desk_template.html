@@ -207,14 +207,14 @@ footer code{font-size:12.5px;color:var(--ink)}
       <span class="chip">devnet · program <b>{{PROGRAM_ID_SHORT}}</b></span>
       <span class="chip ok">no key · no backend</span>
       <span class="chip">plain RPC · <b>{{RPC_HOST}}</b></span>
-      <span class="chip hot"><b>{{DISAGREE_COUNT}}</b> of {{MINT_COUNT}} mints read wrongly</span>
+      <span class="chip hot"><b id="disagree-chip">{{DISAGREE_COUNT}}</b> of <b id="mint-chip">{{MINT_COUNT}}</b> mints read wrongly</span>
     </div>
 
     <h1>Ask the deployed program what a tokenized share is worth.</h1>
 
     <p class="lede">This page has no key, no server and nothing to sign. It reads devnet over plain RPC
       and puts its questions to the program that is actually deployed there. On
-      <b>{{DISAGREE_COUNT}} of the {{MINT_COUNT}} registered mints the field named
+      <b><span id="disagree-lede">{{DISAGREE_COUNT}}</span> of the <span id="mint-lede">{{MINT_COUNT}}</span> registered mints the field named
       <span class="num">multiplier</span> holds the previous value</b> while the live multiplier
       has already moved, so a reader who takes the obvious field is one corporate action behind.
       The program is not.</p>
@@ -361,9 +361,15 @@ footer code{font-size:12.5px;color:var(--ink)}
       <h2>The window, from the program's own clock.</h2>
       <p>The issuer's own documentation recommends that venues and protocols pause around each
         activation, and nothing in a mint account can enforce that. The program's
-        <span class="num">settlement_window</span> instruction reads the mint and returns the
-        seconds between now and the activation, measured against the validator's clock rather
-        than yours, so the answer is the same from any machine.</p>
+        <span class="num">settlement_window</span> instruction returns two numbers: the seconds
+        since the multiplier in force took effect, and the seconds until an activation the issuer
+        has staged. Both are measured against the validator's clock rather than yours, so the
+        answer is the same from any machine.</p>
+      <p style="margin-top:10px">The second of those is the one the mint cannot supply. The issuer
+        stages the next value about four hours before it takes effect, and staging it overwrites
+        the timestamp of the value now in force, so during that window the mint says nothing about
+        when the live multiplier started. This program's own record does hold it, and the first
+        number is where that shows.</p>
     </div>
 
     <div class="console">
@@ -374,20 +380,21 @@ footer code{font-size:12.5px;color:var(--ink)}
 
       <div class="grid3">
         <div class="cell">
-          <p class="k">seconds since the activation</p>
+          <p class="k">since the last, until the next</p>
           <p class="v" id="delta">{{DEFAULT_DELTA}}</p>
-          <p class="note">Returned as a little-endian <span class="num">i64</span> by the program.</p>
+          <p class="note">Two little-endian <span class="num">i64</span>s. Either is
+            <span class="num">-1</span> when there is nothing to report.</p>
         </div>
         <div class="cell">
           <p class="k">the venue's rule</p>
           <p class="v">±{{PAUSE_MINUTES}} min</p>
           <p class="note">Hold inside {{PAUSE_SECS}} seconds either side of an activation. This is
-            the desk's policy, and the program supplies the number it is applied to.</p>
+            the desk's policy, and the program supplies both of the numbers it is applied to.</p>
         </div>
         <div class="cell">
           <p class="k">the raw answer</p>
           <p class="mono" style="font-size:15px;word-break:break-all" id="delta-hex">{{DEFAULT_DELTA_HEX}}</p>
-          <p class="note">The program's return data, unedited.</p>
+          <p class="note">The program's return data, unedited. Sixteen bytes, two i64s.</p>
         </div>
       </div>
 
@@ -404,14 +411,17 @@ footer code{font-size:12.5px;color:var(--ink)}
         </div>
       </div>
 
-      <pre><span class="c">// settlement_window, and what it does with a timestamp that has not passed</span>
-<span class="k">let</span> delta = now - effective_at;        <span class="c">// i64, signed: negative means the activation is ahead</span>
-<span class="k">let</span> in_window = delta.abs() &lt;= <span class="s">900</span>;
+      <pre><span class="c">// settlement_window: two numbers, because the issuer's window is two-sided</span>
+<span class="k">let</span> since = <span class="k">if</span> live.staged_at == <span class="s">0</span> &amp;&amp; live.effective_at &gt; <span class="s">0</span> {
+    now - live.effective_at            <span class="c">// the mint can answer this one itself</span>
+} <span class="k">else</span> <span class="k">if</span> record.live_effective_at &gt; <span class="s">0</span> {
+    now - record.live_effective_at     <span class="c">// the mint overwrote it; the record kept it</span>
+} <span class="k">else</span> { -<span class="s">1</span> };
+<span class="k">let</span> until = <span class="k">if</span> live.staged_at &gt; <span class="s">0</span> { live.staged_at - now } <span class="k">else</span> { -<span class="s">1</span> };
 
-<span class="c">// effective_at() returns 0 unless the activation timestamp has already passed, so a mint</span>
-<span class="c">// whose activation is still ahead reports delta = now and reads as outside the window.</span>
-<span class="c">// The window is only ever open for fifteen minutes after an activation, which is why a</span>
-<span class="c">// desk that wants to hold has to ask at the right moment.</span></pre>
+<span class="c">// A venue holds while either is inside 900. Before this, one signed number was returned and it</span>
+<span class="c">// could never be negative: a staged activation makes effective_at() return 0, so the answer was</span>
+<span class="c">// "seconds since 1970" and read as 56 years outside the window with an activation minutes away.</span></pre>
     </div>
 
     <div class="note-box"><b>A window that was open.</b> {{WINDOW_NOTE}}</div>
@@ -688,18 +698,62 @@ POST {{RPC_HOST}}
 
   /* ------------------------------------------------------------------ rpc */
 
-  function rpc(method, params) {
+  /* The read is the page, and the page says so: the status chip reads `Recorded` the moment the
+     read fails, because the figures below it are then the baked capture rather than the chain.
+     A public RPC throttles under load, and a judge arrives behind whoever else is asking, so a
+     transient refusal is retried rather than reported. Only a failure that survives the retries
+     is, and its reason is what the chip names.
+
+     There is deliberately no second endpoint. The keyless public devnet host is the only one that
+     serves getProgramAccounts without a key: the alternates were checked on 18 September 2026 and
+     either 404 or answer `missing api key`. Carrying an API key would buy a fallback and cost the
+     `no key` property the page states in three places, which is not a trade worth making. */
+  var RETRY_DELAYS = [400, 1200, 3000];
+
+  function rpcOnce(method, params) {
     return fetch(RPC, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: method, params: params })
     }).then(function (r) {
-      if (!r.ok) throw new Error(method + " returned HTTP " + r.status);
+      if (!r.ok) {
+        var e = new Error(method + " returned HTTP " + r.status);
+        /* 429 is the throttle and 5xx is a transient fault. A 4xx that is neither is this page's
+           own bug and is not worth a second attempt. */
+        e.retryable = (r.status === 429 || r.status >= 500);
+        throw e;
+      }
       return r.json();
+    }, function () {
+      /* fetch rejects when the connection drops or DNS fails. No status, and worth another try. */
+      var e = new Error(method + ": the connection to " + RPC.replace(/^https?:\/\//, "") + " failed");
+      e.retryable = true;
+      throw e;
     }).then(function (j) {
-      if (j.error) throw new Error(method + ": " + (j.error.message || JSON.stringify(j.error)));
+      if (j.error) {
+        /* A throttle can also arrive as HTTP 200 with the reason in the body. */
+        var msg = j.error.message || JSON.stringify(j.error);
+        var e = new Error(method + ": " + msg);
+        e.retryable = /rate|limit|throttl|too many|try again/i.test(msg);
+        throw e;
+      }
       return j.result;
     });
+  }
+
+  function rpc(method, params) {
+    var attempt = 0;
+    function go() {
+      return rpcOnce(method, params).catch(function (e) {
+        if (!e.retryable || attempt >= RETRY_DELAYS.length) throw e;
+        var wait = RETRY_DELAYS[attempt++];
+        /* Say so on the chip. A retry the reader cannot see is indistinguishable from a hang. */
+        mark("reading", "asking " + RPC.replace(/^https?:\/\//, "") + " \u00b7 retry "
+          + attempt + " of " + RETRY_DELAYS.length + " in " + (wait / 1000) + "s");
+        return new Promise(function (res) { setTimeout(res, wait); }).then(go);
+      });
+    }
+    return go();
   }
 
   function simulate(accounts, data) {
@@ -890,7 +944,27 @@ POST {{RPC_HOST}}
     }
     host.innerHTML = html;
     setText("mint-count", String(order.length));
+    renderHero(order);
     return order;
+  }
+
+  /* The hero is build-time markup and the live read used to leave it alone, so the page could say
+     "4 of 5 mints read wrongly" in the header and "there are 6 of them" eight lines below, on the
+     same screen, from the same read. The counts are recomputed here from the same live read the
+     picker is built from, so the two cannot disagree. The total is the registered count, which is
+     what the sentence below it means by "them". */
+  function renderHero(order) {
+    if (!live) return;
+    var disagree = 0;
+    for (var i = 0; i < order.length; i++) {
+      var state = live.mints[order[i]] ? live.mints[order[i]].mint : null;
+      if (state && state.fieldDisagrees) disagree += 1;
+    }
+    var total = String(order.length);
+    setText("disagree-chip", String(disagree));
+    setText("mint-chip", total);
+    setText("disagree-lede", String(disagree));
+    setText("mint-lede", total);
   }
 
   function renderMint(mint) {
@@ -928,43 +1002,76 @@ POST {{RPC_HOST}}
     }
     setText("gap-pct-inline", gapPct);
 
-    var delta = a.deltaSeconds;
-    var inside = delta !== null && Math.abs(delta) <= PAUSE;
-    setText("delta", delta === null ? "n/a" : fmtInt(Math.abs(delta)));
+    /* Two numbers, because the issuer's pause window is two-sided and the mint can only carry
+       one timestamp. `since` is seconds since the multiplier in force took effect; `until` is
+       seconds until an activation the issuer has staged. Either is -1 when there is nothing to
+       report. While a value is staged the mint has overwritten the timestamp of the value in
+       force, so `since` comes from the program's own record, which is the one thing here the
+       mint has forgotten. */
+    var since = a.sinceSeconds, until = a.untilSeconds;
+    var after = since !== null && since >= 0 && since <= PAUSE;
+    var before = until !== null && until >= 0 && until <= PAUSE;
+    var inside = after || before;
+    var answered = since !== null || until !== null;
+
+    setText("delta", !answered ? "n/a"
+      : (since === null || since < 0 ? "no activation yet" : fmtInt(since) + "s ago")
+        + " \u00b7 "
+        + (until === null || until < 0 ? "nothing staged" : "in " + fmtInt(until) + "s"));
     setText("delta-hex", a.deltaHex || "no return data");
 
     var verdict = el("verdict");
-    verdict.className = "tag " + (delta === null ? "hold" : inside ? "hold" : "settle");
-    verdict.textContent = delta === null ? "No answer" : inside ? "Hold" : "Settle";
-    setText("verdict-why", delta === null
+    verdict.className = "tag " + (!answered ? "hold" : inside ? "hold" : "settle");
+    verdict.textContent = !answered ? "No answer" : inside ? "Hold" : "Settle";
+    /* When the activation is long past, the age and the time since the window closed round to the
+       same string and the sentence said "1.1 days ago. The window closed 1.1 days ago", which
+       reads as a bug even though both halves are true. Compare the rendered strings rather than
+       pick a threshold: when they differ, the closed-ago figure is the more useful one; when they
+       do not, the age alone is what there is to say. */
+    var ageText = fmtDuration(since), closedText = fmtDuration(since - PAUSE);
+    setText("verdict-why", !answered
       ? "The program returned nothing this page can read."
       : inside
-        ? "The activation was " + fmtDuration(delta) + " ago, which is inside the "
-          + (PAUSE / 60) + " minute window this desk holds for."
-        : "The activation was " + fmtDuration(delta) + " ago. The window closed "
-          + fmtDuration(Math.abs(delta) - PAUSE) + " ago, so this trade is clear.");
+        ? (before
+            ? "The issuer has staged an activation that takes effect in " + fmtDuration(until)
+              + ", which is inside the " + (PAUSE / 60) + " minute window this desk holds for."
+            : "The activation was " + ageText + " ago, which is inside the "
+              + (PAUSE / 60) + " minute window this desk holds for.")
+        : (before || after
+            ? "The nearest activation is inside the window."
+            : (since >= 0
+                ? (closedText === ageText
+                    ? "The activation was " + ageText + " ago, which is outside the "
+                      + (PAUSE / 60) + " minute window this desk holds for, so this trade is clear."
+                    : "The activation was " + ageText + " ago. The window closed "
+                      + closedText + " ago, so this trade is clear.")
+                : "No activation is near, so this trade is clear.")));
 
-    drawAxis(delta);
+    drawAxis(since, until);
     renderTrail(c.receipts, rec);
   }
 
-  function drawAxis(delta) {
+  /* The axis places the reader on one timeline, so a staged activation has to be the same
+     distance to the left of zero that a past one is to the right. */
+  function drawAxis(since, until) {
     var win = el("win"), now = el("now");
     var span = 7200;                       // the axis spans two hours either side
     var pct = function (secs) { return (secs + span) / (2 * span) * 100; };
     win.style.left = pct(-PAUSE) + "%";
     win.style.width = (pct(PAUSE) - pct(-PAUSE)) + "%";
-    if (delta === null) { now.style.display = "none"; return; }
+    var staged = until !== null && until >= 0;
+    var pos = staged ? -until : since;
+    if (pos === null || pos < 0 && !staged) { now.style.display = "none"; return; }
     now.style.display = "";
-    if (Math.abs(delta) <= span) {
-      now.style.left = pct(delta) + "%";
+    if (Math.abs(pos) <= span) {
+      now.style.left = pct(pos) + "%";
       now.className = "mark";
-      now.setAttribute("data-l", "now");
+      now.setAttribute("data-l", staged ? "next activation" : "now");
     } else {
-      var right = delta > 0;
+      var right = pos > 0;
       now.style.left = right ? "100%" : "0%";
       now.className = "mark off " + (right ? "at-right" : "at-left");
-      now.setAttribute("data-l", fmtDuration(Math.abs(delta) - span) + " outside");
+      now.setAttribute("data-l", fmtDuration(Math.abs(pos) - span) + " outside");
     }
   }
 
@@ -1068,8 +1175,10 @@ POST {{RPC_HOST}}
         jobs.push(disc("settlement_window").then(function (d) {
           return simulate([mint, rec], d).then(function (r) {
             entry.answers.deltaHex = r.returnData.length ? toHex(r.returnData) : null;
-            entry.answers.deltaSeconds = r.returnData.length === 8
-              ? Number(new DataView(r.returnData.buffer).getBigInt64(0, true)) : null;
+            var view = r.returnData.length === 16
+              ? new DataView(r.returnData.buffer, r.returnData.byteOffset) : null;
+            entry.answers.sinceSeconds = view ? Number(view.getBigInt64(0, true)) : null;
+            entry.answers.untilSeconds = view ? Number(view.getBigInt64(8, true)) : null;
             entry.answers.windowLogs = r.logs;
           });
         }));

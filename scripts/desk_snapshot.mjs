@@ -33,6 +33,98 @@ const PAUSE_SECS = 900;
 const SIZES = { Registry: 57, TokenRecord: 111, Receipt: 121, PythBinding: 94 };
 
 const connection = new Connection(RPC, "confirmed");
+
+/// The free devnet endpoint answers a burst and then returns 429 for a while. A capture makes
+/// roughly eighty calls, most of them at once, so without this the run dies partway and writes
+/// nothing, which is what happened on the first attempt. Two changes: space the requests out,
+/// and retry the ones that are refused anyway. There is no API key here, so this is the price of
+/// the free endpoint, and it is paid at build time rather than by a reader.
+const GAP_MS = 110;
+let nextSlot = 0;
+const throttled = (e) => /429|too many requests|rate limit/i.test(String(e));
+
+/// Reserve a slot and wait for it. Spacing the starts rather than the completions lets the
+/// requests overlap, so the capture takes seconds rather than minutes.
+async function reserveSlot() {
+  const now = Date.now();
+  const wait = Math.max(0, nextSlot - now);
+  nextSlot = Math.max(now, nextSlot) + GAP_MS;
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+}
+
+/// Retry the refusals, not the mistakes. A 429 is the endpoint asking for a slower caller; a
+/// program error is the answer and must be returned, or every refusal on the page becomes a
+/// success.
+async function withRetry(fn) {
+  for (let attempt = 0; ; attempt++) {
+    await reserveSlot();
+    try {
+      return await fn();
+    } catch (e) {
+      if (!throttled(e) || attempt >= 6) throw e;
+      await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+    }
+  }
+}
+
+/// This wraps `_rpcRequest` rather than the named methods on purpose. Every method funnels
+/// through it, and the named ones call each other: `simulateTransaction` asks for a blockhash
+/// through `getLatestBlockhashAndContext`. A queue over the named methods therefore deadlocks
+/// the first time one of them makes a call, because the inner call waits behind the outer one.
+/// The leaf has no such problem.
+const rawRpcRequest = connection._rpcRequest;
+connection._rpcRequest = (method, args) => withRetry(() => rawRpcRequest(method, args));
+
+/// Ask the program a question the way the page asks it: a legacy transaction carrying a zero
+/// blockhash, base64-encoded, with `replaceRecentBlockhash` so the cluster supplies a current
+/// one and the question is about the program rather than about the clock.
+///
+/// This script used web3.js's own `simulateTransaction`, which ignores the blockhash it is given
+/// and substitutes one from an internal cache that expires after thirty seconds. A capture takes
+/// longer than that, so the last simulations came back `BlockhashNotFound` instead of the
+/// program's answer, and the page would have printed a refusal the program never made. Building
+/// the bytes here also makes the two paths ask the identical question, which is what this file
+/// claims of them.
+const ZERO_BLOCKHASH = "11111111111111111111111111111111";
+
+async function simulate(keys, data) {
+  const tx = new Transaction().add({ programId: PROGRAM_ID, keys, data });
+  tx.feePayer = DESK_PAYER;
+  tx.recentBlockhash = ZERO_BLOCKHASH;
+  const encoded = tx
+    .serialize({ requireAllSignatures: false, verifySignatures: false })
+    .toString("base64");
+
+  return withRetry(async () => {
+    const res = await fetch(RPC, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "simulateTransaction",
+        params: [encoded, { encoding: "base64", sigVerify: false, replaceRecentBlockhash: true }],
+      }),
+    });
+    if (!res.ok) throw new Error(`simulateTransaction returned HTTP ${res.status}`);
+    const body = await res.json();
+    if (body.error) throw new Error(`simulateTransaction: ${body.error.message}`);
+    const v = body.result.value;
+    const ret = v.returnData ? Buffer.from(v.returnData.data[0], "base64") : Buffer.alloc(0);
+    const err = v.err;
+    const custom =
+      err && typeof err === "object" && err.InstructionError
+        && typeof err.InstructionError[1] === "object"
+        ? err.InstructionError[1].Custom ?? null
+        : null;
+    return {
+      err: err ? JSON.stringify(err) : null,
+      errorCode: custom,
+      returnHex: ret.length ? ret.toString("hex") : null,
+      logs: (v.logs ?? []).filter((l) => l.includes("Record Date")),
+    };
+  });
+}
 const disc = (n) => crypto.createHash("sha256").update(`global:${n}`).digest().subarray(0, 8);
 
 const f64 = (bits) => {
@@ -196,34 +288,14 @@ for (const record of tokenRecords) {
 
 // ------------------------------------------------------------------ the program's answers
 
-const { blockhash } = await connection.getLatestBlockhash("confirmed");
-
 async function ask(mint, record, data) {
-  const tx = new Transaction().add({
-    programId: PROGRAM_ID,
-    keys: [
+  return simulate(
+    [
       { pubkey: new PublicKey(mint), isSigner: false, isWritable: false },
       { pubkey: new PublicKey(record), isSigner: false, isWritable: false },
     ],
-    data,
-  });
-  tx.feePayer = DESK_PAYER;
-  tx.recentBlockhash = blockhash;
-  const sim = await connection.simulateTransaction(tx, undefined, false);
-  const ret = sim.value.returnData
-    ? Buffer.from(sim.value.returnData.data[0], "base64")
-    : Buffer.alloc(0);
-  const err = sim.value.err;
-  const custom =
-    err && typeof err === "object" && err.InstructionError && typeof err.InstructionError[1] === "object"
-      ? err.InstructionError[1].Custom ?? null
-      : null;
-  return {
-    err: err ? JSON.stringify(err) : null,
-    errorCode: custom,
-    returnHex: ret.length ? ret.toString("hex") : null,
-    logs: (sim.value.logs ?? []).filter((l) => l.includes("Record Date")),
-  };
+    data
+  );
 }
 
 /// One share, at the mint's own decimals.
@@ -245,9 +317,14 @@ for (const record of tokenRecords) {
   );
   const activation = await ask(record.mint, recordAddr, disc("record_activation"));
 
-  const deltaSeconds = window_.returnHex
-    ? Number(Buffer.from(window_.returnHex, "hex").readBigInt64LE(0))
-    : null;
+  /* Two i64s: seconds since the multiplier in force took effect, then seconds until a staged
+     activation takes effect. Either is -1 when there is nothing to report, which is why the
+     page tests `>= 0` rather than `!== 0`: zero is a real answer, and -1 is not a duration. */
+  const windowBytes = window_.returnHex ? Buffer.from(window_.returnHex, "hex") : null;
+  const sinceSeconds =
+    windowBytes && windowBytes.length === 16 ? Number(windowBytes.readBigInt64LE(0)) : null;
+  const untilSeconds =
+    windowBytes && windowBytes.length === 16 ? Number(windowBytes.readBigInt64LE(8)) : null;
   const programUnits = entitlement.returnHex
     ? Buffer.from(entitlement.returnHex, "hex").readBigUInt64LE(0) |
       (Buffer.from(entitlement.returnHex, "hex").readBigUInt64LE(8) << 64n)
@@ -257,8 +334,17 @@ for (const record of tokenRecords) {
   const naive = mint.multiplier !== null ? naiveScaled(ONE_SHARE, mint.multiplier) : null;
 
   answers[record.mint] = {
-    deltaSeconds,
-    insideWindow: deltaSeconds !== null ? Math.abs(deltaSeconds) <= PAUSE_SECS : null,
+    sinceSeconds,
+    untilSeconds,
+    // The unedited bytes, so the page's resting state shows the real answer rather than a
+    // placeholder the script would fill in later. A number that only exists once JavaScript
+    // has run is not a claim the file makes.
+    deltaHex: window_.returnHex,
+    insideWindow:
+      sinceSeconds === null || untilSeconds === null
+        ? null
+        : (sinceSeconds >= 0 && sinceSeconds <= PAUSE_SECS) ||
+          (untilSeconds >= 0 && untilSeconds <= PAUSE_SECS),
     pending: pending.returnHex ? pending.returnHex === "01" : null,
     oneShareRaw: ONE_SHARE.toString(),
     programUnits: programUnits === null ? null : programUnits.toString(),
@@ -323,29 +409,16 @@ for (const binding of pythBindings) {
   const maxAge = Buffer.alloc(8);
   maxAge.writeBigInt64LE(300n, 0);
 
-  const tx = new Transaction().add({
-    programId: PROGRAM_ID,
-    keys: [
+  pyth.feeds[binding.feedId].verify = await simulate(
+    [
       { pubkey: new PublicKey(binding.mint), isSigner: false, isWritable: false },
       { pubkey: new PublicKey(
           tokenRecords.find((r) => r.mint === binding.mint).address), isSigner: false, isWritable: false },
       { pubkey: new PublicKey(binding.address), isSigner: false, isWritable: false },
       { pubkey: new PublicKey(found.newest.address), isSigner: false, isWritable: false },
     ],
-    data: Buffer.concat([disc("verify_against_pyth"), expected, tol, maxAge]),
-  });
-  tx.feePayer = DESK_PAYER;
-  tx.recentBlockhash = blockhash;
-  const sim = await connection.simulateTransaction(tx, undefined, false);
-  const err = sim.value.err;
-  pyth.feeds[binding.feedId].verify = {
-    err: err ? JSON.stringify(err) : null,
-    errorCode:
-      err && typeof err === "object" && err.InstructionError && typeof err.InstructionError[1] === "object"
-        ? err.InstructionError[1].Custom ?? null
-        : null,
-    logs: (sim.value.logs ?? []).filter((l) => l.includes("Record Date")),
-  };
+    Buffer.concat([disc("verify_against_pyth"), expected, tol, maxAge])
+  );
 }
 
 // ------------------------------------------------------------------ write
@@ -367,18 +440,22 @@ const out = {
   answers,
   /// The two errors the desk can provoke on purpose, named rather than numbered, because a
   /// simulation reports a number and a number is not something a reader can check.
+  /// The program's error variants, in declaration order, so the code is 6000 + index. This is a
+  /// manual mirror of the enum in `programs/record_date/src/error.rs`, and it has now silently
+  /// gone one short twice, which is what a manual mirror does. `scripts/test_checks.py` asserts
+  /// this list against the Rust source, so the third time fails a gate instead of shipping a
+  /// number the page would name wrongly.
   errorNames: [
     "NotToken2022", "MintTooShort", "MintPaddingNotZero", "NotAMint", "NoScaledUiAmount",
     "BadExtensionLength", "UnknownExtension", "ExtensionOverrunsAccount", "BadMultiplier",
     "SymbolTooLong", "NotRegistered", "NothingToRecord", "NotPythReceiver", "NotAPriceUpdate",
     "PriceUpdateTooShort", "FeedIdMismatch", "StalePythPrice", "PriceDeviation", "PriceOutOfRange",
     "NegativePythPrice", "FeedSymbolTooLong", "PriceAgeCeilingExceeded",
-    # Added 17 Sep 2026, with the whole-TLV-area walk. Anchor numbers these positionally from
-    # 6000, so a new variant goes on the end and nothing above it moves. This list is a manual
-    # mirror of the enum in `programs/record_date/src/error.rs`, and it silently went one short
-    # the moment the variant was added, which is the argument for asserting the order rather
-    # than trusting it.
+    // Added 17 Sep 2026, with the whole-TLV-area walk.
     "TruncatedExtensionHeader",
+    // Added 17 Sep 2026, with the verification-level check. Anchor numbers these positionally
+    // from 6000, so a new variant goes on the end and nothing above it moves.
+    "PythPriceNotVerified",
   ],
   errorCodeOffset: 6000,
 };
@@ -394,7 +471,8 @@ for (const r of tokenRecords) {
   const m = mints[r.mint];
   console.log(
     `    ${r.symbol.padEnd(6)} field=${String(m.multiplier).padEnd(7)} live=${String(m.newMultiplier).padEnd(7)} ` +
-      `disagrees=${String(m.fieldDisagrees).padEnd(5)} delta=${String(a.deltaSeconds).padEnd(8)} ` +
+      `disagrees=${String(m.fieldDisagrees).padEnd(5)} since=${String(a.sinceSeconds).padEnd(9)} ` +
+      `until=${String(a.untilSeconds).padEnd(9)} ` +
       `program=${String(a.programUnitsDisplay).padEnd(11)} naive=${String(a.naiveUnitsDisplay).padEnd(11)} ` +
       `gap=${a.gapUnitsDisplay}`
   );

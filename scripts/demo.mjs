@@ -445,16 +445,20 @@ async function pending(connection, payer, mint) {
   return bytes[0] === 1;
 }
 
+/// `settlement_window` returns two i64s: seconds since the last activation, then seconds until the
+/// next. Each is -1 when there is nothing to report. Two numbers because the issuer's pause window
+/// is two-sided, and the earlier half is only readable while the issuer has a value staged.
 async function settlementWindow(connection, payer, mint) {
   const bytes = await returnData(connection, payer, ix("settlement_window",
     [{ pubkey: mint, isSigner: false, isWritable: false },
      { pubkey: tokenRecordPda(mint), isSigner: false, isWritable: false }]));
-  return Number(bytes.readBigInt64LE(0));
+  return { since: Number(bytes.readBigInt64LE(0)), until: Number(bytes.readBigInt64LE(8)) };
 }
 
 function bindPythFeedIx(payer, mint, feedId, symbol) {
   return ix("bind_pyth_feed", [
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: registryPda(), isSigner: false, isWritable: true },
     { pubkey: mint, isSigner: false, isWritable: false },
     { pubkey: tokenRecordPda(mint), isSigner: false, isWritable: false },
     { pubkey: pythBindingPda(mint), isSigner: false, isWritable: true },
@@ -771,10 +775,10 @@ async function main() {
   }
 
   rule("8. what a protocol reads instead of an API");
-  const seconds = await settlementWindow(connection, payer, mint);
-  kv("settlement_window", `${seconds} seconds since the activation`);
+  const { since, until } = await settlementWindow(connection, payer, mint);
+  kv("settlement_window", `${since} seconds since the last activation, ${until} until the next`);
   kv("issuer recommends pausing", "900 seconds either side");
-  kv("so a venue would", seconds >= 0 && seconds < 900
+  kv("so a venue would", (since >= 0 && since < 900) || (until >= 0 && until < 900)
      ? "REFUSE to settle right now" : "settle normally");
   kv("activation_pending", (await pending(connection, payer, mint)) ? "1" : "0  (nothing new)");
 

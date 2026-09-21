@@ -122,21 +122,64 @@ def main():
             problems.append(f"no program answer recorded for {mint}")
             continue
         answer = answers[mint]
-        # The program's delta is now - effective_at. Cross-check it against the mint's own
-        # timestamp, read in the same pass. This is the check that the two halves of the page
-        # agree: a wrong offset in either decoder shows up here.
-        effective = mints[mint]["effectiveAt"]
-        delta = answer["deltaSeconds"]
-        if effective is not None and delta is not None and effective <= captured_epoch:
-            drift = abs((captured_epoch - effective) - delta)
-            if drift > 300:
+        # Two numbers, and each is cross-checked against a different account read in the same
+        # pass. Token-2022 carries exactly one timestamp, `new_multiplier_effective_timestamp`,
+        # and the program splits it by whether it has passed: the seconds since the value in force
+        # took effect, or the seconds until the staged one does. So the mint's own field decides
+        # which branch is correct, and a wrong offset in either decoder, or the wrong branch,
+        # shows up here rather than on the page.
+        since = answer.get("sinceSeconds")
+        until = answer.get("untilSeconds")
+        if since is None or until is None:
+            problems.append(
+                f"{record['symbol']}: settlement_window returned nothing this build can read"
+            )
+            continue
+        ts = mints[mint]["effectiveAt"]
+        if ts is None:
+            problems.append(f"{record['symbol']}: the mint has no ScaledUiAmountConfig to read")
+            continue
+        if ts <= captured_epoch:
+            # The value in force is the mint's own, so the mint can date it and `since` is a
+            # duration. Nothing is staged, and `until` must say so rather than say zero.
+            implied = captured_epoch - ts
+            if until != -1:
                 problems.append(
-                    f"{record['symbol']}: the program reports {delta}s since the activation but "
-                    f"the mint's own timestamp implies {captured_epoch - effective:.0f}s "
-                    f"({drift:.0f}s apart)"
+                    f"{record['symbol']}: the mint's timestamp has passed, so nothing is staged, "
+                    f"but the program reports {until}s until the next activation"
                 )
-        if delta is None:
-            problems.append(f"{record['symbol']}: settlement_window returned nothing")
+            if abs(since - implied) > 300:
+                problems.append(
+                    f"{record['symbol']}: the program reports {since}s since the activation but "
+                    f"the mint's own timestamp implies {implied:.0f}s "
+                    f"({abs(since - implied):.0f}s apart)"
+                )
+        else:
+            # Staged. The mint has overwritten the timestamp of the value in force with the one
+            # that has not arrived, so `since` can only come from the program's own record, and
+            # the check is that it agrees with the newest receipt for this mint rather than with
+            # the mint. This is the branch that a single-number return could not express at all.
+            implied = ts - captured_epoch
+            if abs(until - implied) > 300:
+                problems.append(
+                    f"{record['symbol']}: the program reports {until}s until the staged activation "
+                    f"but the mint's own timestamp implies {implied:.0f}s "
+                    f"({abs(until - implied):.0f}s apart)"
+                )
+            trail = [r for r in receipts if r["mint"] == mint]
+            kept = max((r["effectiveAt"] for r in trail), default=0)
+            if kept <= 0:
+                if since != -1:
+                    problems.append(
+                        f"{record['symbol']}: a value is staged and no receipt dates the value in "
+                        f"force, so the program should report -1 and it reports {since}"
+                    )
+            elif abs(since - (captured_epoch - kept)) > 300:
+                problems.append(
+                    f"{record['symbol']}: a value is staged, so the program should report the "
+                    f"newest receipt's {captured_epoch - kept:.0f}s since the activation, and it "
+                    f"reports {since}s"
+                )
 
     for binding in data["pyth"]["bindings"]:
         if binding["mint"] not in mints:
@@ -180,22 +223,55 @@ def main():
         ) * 100
         gap_pct = f"{g:.4f}".rstrip("0").rstrip(".") + "%"
 
-    delta = danswer["deltaSeconds"]
-    inside = delta is not None and abs(delta) <= pause
-    verdict = "No answer" if delta is None else ("Hold" if inside else "Settle")
-    verdict_class = "hold" if (delta is None or inside) else "settle"
-    if delta is None:
+    # Two numbers, because the issuer's pause window is two-sided. This mirrors the page's own
+    # script word for word, so the value baked into the markup and the value the live read
+    # replaces it with cannot say different things. `-1` is "nothing to report"; `0` is a real
+    # answer, which is why the tests below are `>= 0` rather than truthiness.
+    since = danswer.get("sinceSeconds")
+    until = danswer.get("untilSeconds")
+    after = since is not None and 0 <= since <= pause
+    before = until is not None and 0 <= until <= pause
+    inside = after or before
+    answered = since is not None or until is not None
+
+    delta = "n/a"
+    if answered:
+        delta = (
+            "no activation yet" if since is None or since < 0 else f"{since:,}s ago"
+        ) + " \u00b7 " + (
+            "nothing staged" if until is None or until < 0 else f"in {until:,}s"
+        )
+
+    verdict = "No answer" if not answered else ("Hold" if inside else "Settle")
+    verdict_class = "hold" if (not answered or inside) else "settle"
+    if not answered:
         why = "The program returned nothing this page can read."
     elif inside:
         why = (
-            f"The activation was {duration(delta)} ago, which is inside the {pause // 60} minute "
-            f"window this desk holds for."
+            f"The issuer has staged an activation that takes effect in {duration(until)}, which "
+            f"is inside the {pause // 60} minute window this desk holds for."
+            if before
+            else f"The activation was {duration(since)} ago, which is inside the "
+            f"{pause // 60} minute window this desk holds for."
+        )
+    elif after or before:
+        why = "The nearest activation is inside the window."
+    elif since >= 0:
+        # When the activation is long past, the age and the time since the window closed round to
+        # the same string and the sentence read "1.1 days ago. The window closed 1.1 days ago",
+        # which looks like a bug even though both halves are true. Compare the rendered strings
+        # rather than pick a threshold, and keep this identical to the page's own script.
+        age_text = duration(since)
+        closed_text = duration(since - pause)
+        why = (
+            f"The activation was {age_text} ago, which is outside the {pause // 60} minute window "
+            f"this desk holds for, so this trade is clear."
+            if closed_text == age_text
+            else f"The activation was {age_text} ago. The window closed {closed_text} ago, so "
+            f"this trade is clear."
         )
     else:
-        why = (
-            f"The activation was {duration(delta)} ago. The window closed "
-            f"{duration(abs(delta) - pause)} ago, so this trade is clear."
-        )
+        why = "No activation is near, so this trade is clear."
 
     # ---------------------------------------------------------------- the mint picker
 
@@ -295,23 +371,31 @@ def main():
 
     if WINDOW.exists():
         w = json.loads(WINDOW.read_text())
+        # The capture was taken under the single-number return and is kept as it was recorded.
+        # `sinceSeconds` is that same measured value under the two-number return; the arithmetic
+        # is unchanged, so the number is quoted once and the note says which shape it came from
+        # rather than restating it in the newer vocabulary and implying a measurement that was
+        # never made.
+        captured_since = w.get("sinceSeconds", w.get("deltaSeconds"))
         window_note = (
             f"On {human_utc(w['capturedAt'])} the desk was asked about "
             f"<span class=\"num\">{esc(w['mint'][:8])}\u2026</span> with an activation "
-            f"<span class=\"num\">{w['deltaSeconds']} seconds</span> old, and it held. That "
-            f"reading is recorded here because the window is only open for fifteen minutes: a "
-            f"live page cannot be made to show a hold on demand, so one was staged and captured. "
-            f"The activation was written in "
+            f"<span class=\"num\">{captured_since} seconds</span> old and nothing staged, and it "
+            f"held. That reading is recorded here because the window is only open for fifteen "
+            f"minutes: a live page cannot be made to show a hold on demand, so one was staged and "
+            f"captured. It predates the widening of the return from one number to two, and the "
+            f"seconds-since arithmetic it exercised is the same arithmetic. The activation was "
+            f"written in "
             f'<a href="https://explorer.solana.com/tx/{esc(w["signature"])}?cluster=devnet">'
             f'transaction <span class="num">{esc(w["signature"][:16])}\u2026</span></a>, which a '
             f"judge can open. Every other number on this page is read live."
         )
     else:
         window_note = (
-            "The settlement window is thirty minutes wide and it opens when an issuer "
-            "activates a multiplier. A live page cannot be made to show a hold on demand, so "
-            "this desk shows the program's own delta and applies the rule to it. When the "
-            "absolute delta is inside the window the verdict above reads Hold."
+            "The window is fifteen minutes wide and it opens when an issuer activates a "
+            "multiplier. A live page cannot be made to show a hold on demand, so this desk shows "
+            "the program's own two numbers and applies the rule to them. When either is inside "
+            "the window the verdict above reads Hold."
         )
 
     # ---------------------------------------------------------------- the state blob
@@ -370,7 +454,7 @@ def main():
         "DEFAULT_VERDICT": verdict,
         "DEFAULT_VERDICT_CLASS": verdict_class,
         "DEFAULT_VERDICT_WHY": why,
-        "DEFAULT_DELTA": f"{abs(delta):,}" if delta is not None else "n/a",
+        "DEFAULT_DELTA": delta,
         "DEFAULT_DELTA_HEX": danswer.get("deltaHex") or "no return data",
         "PAUSE_SECS": pause,
         "PAUSE_MINUTES": pause // 60,
@@ -397,12 +481,16 @@ def main():
         return 1
 
     OUT.write_text(html)
-    print(f"wrote {OUT.relative_to(REPO)}  {len(html):,} bytes")
+    # The byte count, not the character count. `len(html)` counts characters, so on a page carrying
+    # 22 non-ASCII characters it printed 75,625 for a 75,656-byte file. A figure labelled with a unit
+    # it does not carry is the defect this entry is built on, and it was sitting in this build's own
+    # output. `build_page.py` was already right.
+    print(f"wrote {OUT.relative_to(REPO)}  {OUT.stat().st_size:,} bytes")
     print(f"  default mint      {default['symbol']} {dmint}")
     print(f"  field / live      {dstate['multiplier']} / {dstate['newMultiplier']}")
     print(f"  naive / program   {danswer['naiveUnitsDisplay']} / {danswer['programUnitsDisplay']}")
     print(f"  gap               {danswer['gapUnitsDisplay']}  ({gap_pct})")
-    print(f"  delta             {delta}s -> {verdict}")
+    print(f"  window            {delta} -> {verdict}")
     print(f"  receipts on page  {len(default_receipts)} of {len(receipts)}")
     print(f"  mints disagreeing {len(disagreeing)} of {len(records)}")
     print(f"  price rows        {len(price_rows)}")

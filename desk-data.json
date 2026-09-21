@@ -1,1 +1,531 @@
-{"capturedAt": "2026-09-17T14:12:04.086Z", "rpc": "https://api.devnet.solana.com", "cluster": "devnet", "programId": "ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG", "token2022": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", "pythReceiver": "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ", "deskPayer": "9GwUYoXLix8k27MjwnYFqzwsn4bKD2tZf5Dcz9ydp9vX", "pauseSecs": 900, "registry": {"address": "6ZgJXYGsw4VBuiaRD1dTYo1QDMEA6FYcXKKs9Ua5jVyb", "authority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "mints": 5, "activations": 6, "bump": 253}, "tokenRecords": [{"address": "7MupvMRPG1RCmxsy1xGM9nM3a1mhprNSZv241mrjX1BV", "mint": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR", "symbol": "DEMOx", "decimals": 8, "baseMultiplier": 1, "liveMultiplier": 1.0042, "liveFp": "1.0042", "liveEffectiveAt": 1789578122, "activations": 1, "lastSeenSlot": 499390177, "bump": 254}, {"address": "7c3aKW9Z8iJ4kE49zt6KUykYQs7U2hmsrWaWA2Rsh6Je", "mint": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq", "symbol": "DEMOx", "decimals": 8, "baseMultiplier": 1, "liveMultiplier": 1.0042, "liveFp": "1.0042", "liveEffectiveAt": 1789577772, "activations": 1, "lastSeenSlot": 499388414, "bump": 253}, {"address": "As6mSSqM5MdwZzYCFCzbFBJRuUhjP2YkuFbkFDBXGvf5", "mint": "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ", "symbol": "DEMOx", "decimals": 8, "baseMultiplier": 1, "liveMultiplier": 1.0042, "liveFp": "1.0042", "liveEffectiveAt": 1789579322, "activations": 1, "lastSeenSlot": 499397420, "bump": 253}, {"address": "BCMdUzx6Tr4BD6KuBf4uvNw1gy6FG352Vs1C98VHfZ5C", "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe", "symbol": "DEMOx", "decimals": 8, "baseMultiplier": 1, "liveMultiplier": 1.0042, "liveFp": "1.0042", "liveEffectiveAt": 1789643252, "activations": 2, "lastSeenSlot": 499783921, "bump": 252}, {"address": "CWts9sgWUfGckNL8ubfT3NXA1tG8vqVvEgiUonXTS7gY", "mint": "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp", "symbol": "DEMOx", "decimals": 8, "baseMultiplier": 1, "liveMultiplier": 1.0042, "liveFp": "1.0042", "liveEffectiveAt": 1789579268, "activations": 1, "lastSeenSlot": 499397100, "bump": 255}], "mints": {"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR": {"address": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR", "decimals": 8, "supply": "100000000", "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "multiplier": 1, "newMultiplier": 1.0042, "effectiveAt": 1789578122, "fieldDisagrees": true, "liveNow": 1.0042, "accountLength": 226, "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", "tlvHeaderOffset": 166}, "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq": {"address": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq", "decimals": 8, "supply": "100000000", "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "multiplier": 1.0042, "newMultiplier": 1.0084, "effectiveAt": 1789654231, "fieldDisagrees": true, "liveNow": 1.0084, "accountLength": 226, "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", "tlvHeaderOffset": 166}, "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ": {"address": "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ", "decimals": 8, "supply": "100000000", "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "multiplier": 1, "newMultiplier": 1.0042, "effectiveAt": 1789579322, "fieldDisagrees": true, "liveNow": 1.0042, "accountLength": 226, "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", "tlvHeaderOffset": 166}, "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe": {"address": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe", "decimals": 8, "supply": "100000000", "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "multiplier": 1.0042, "newMultiplier": 1.0042, "effectiveAt": 1789643252, "fieldDisagrees": false, "liveNow": 1.0042, "accountLength": 226, "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", "tlvHeaderOffset": 166}, "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp": {"address": "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp", "decimals": 8, "supply": "100000000", "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi", "multiplier": 1, "newMultiplier": 1.0042, "effectiveAt": 1789579268, "fieldDisagrees": true, "liveNow": 1.0042, "accountLength": 226, "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb", "tlvHeaderOffset": 166}}, "receipts": [{"address": "aPiExpKAL6cb35K4aTawykwYsJcQFVWKCQiCxYjtGe1", "mint": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq", "sequence": 0, "previousMultiplier": 1, "newMultiplier": 1.0042, "previousFp": "1", "newFp": "1.0042", "deltaFp": "0.0042", "flat": false, "effectiveAt": 1789577772, "recordedAt": 1789577833, "rawSupply": 100000000, "bump": 254}, {"address": "2B6yLrgzquoZgsXtd1dLDjnLgUu6b892R2NCWGH64DCX", "mint": "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp", "sequence": 0, "previousMultiplier": 1, "newMultiplier": 1.0042, "previousFp": "1", "newFp": "1.0042", "deltaFp": "0.0042", "flat": false, "effectiveAt": 1789579268, "recordedAt": 1789579269, "rawSupply": 100000000, "bump": 255}, {"address": "B8AqwoXnjXqZFp6PCPbVYs6ai2xtE2fSDmcuSDWARZLp", "mint": "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ", "sequence": 0, "previousMultiplier": 1, "newMultiplier": 1.0042, "previousFp": "1", "newFp": "1.0042", "deltaFp": "0.0042", "flat": false, "effectiveAt": 1789579322, "recordedAt": 1789579323, "rawSupply": 100000000, "bump": 254}, {"address": "BBCoat1EfKSR4VNsxBTeoY5t5ygaCTVMQFmDVYKdJ71H", "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe", "sequence": 0, "previousMultiplier": 1, "newMultiplier": 1.0042, "previousFp": "1", "newFp": "1.0042", "deltaFp": "0.0042", "flat": false, "effectiveAt": 1789643173, "recordedAt": 1789643174, "rawSupply": 100000000, "bump": 252}, {"address": "GeFdQaQL4moCYpY2PykzTw5gBssJpsPhzGxFxJsTi2E5", "mint": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR", "sequence": 0, "previousMultiplier": 1, "newMultiplier": 1.0042, "previousFp": "1", "newFp": "1.0042", "deltaFp": "0.0042", "flat": false, "effectiveAt": 1789578122, "recordedAt": 1789578123, "rawSupply": 100000000, "bump": 254}, {"address": "HrFTT4Ygy45ssRLrbchT7Y2d9cDKM8iXxhvx7TEuHtpu", "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe", "sequence": 1, "previousMultiplier": 1.0042, "newMultiplier": 1.0042, "previousFp": "1.0042", "newFp": "1.0042", "deltaFp": "0", "flat": true, "effectiveAt": 1789643252, "recordedAt": 1789643253, "rawSupply": 100000000, "bump": 255}], "pyth": {"bindings": [{"address": "9ddmyaZfM4MJiUuGckAHtb5TJ1q8YxAwtv79LyifEsQ", "mint": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR", "feedId": "49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688", "feedSymbol": "AAPL", "boundAt": 1789654087, "bump": 255}, {"address": "9AHmMAUKeA8SW8adDSrP4EAVu4tCS6qoDMhQbTD4iroz", "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe", "feedId": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d", "feedSymbol": "SOL", "boundAt": 1789643258, "bump": 255}], "feeds": {"49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688": {"count": 189, "newest": {"address": "DJgUxxLVN1QxAXykPzpH5Kz5feo1bTCBDipGRUYYqMw", "price": 30592000, "exponent": -5, "publishTime": 1786737619}, "oldest": {"address": "Fd2tZNSQenmmR1vkUYQ3qCFZieDfUb97PJ5CduWkhrk6", "price": 23723000, "exponent": -5, "publishTime": 1741100149}, "verify": {"err": "{\"InstructionError\":[0,{\"Custom\":6016}]}", "errorCode": 6016, "logs": []}}, "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d": {"count": 63894, "newest": {"address": "6F7n5SQru3LE72ovrzTgAuMRNdm727fdUvsZdhRBmSPu", "price": 10090619437, "exponent": -8, "publishTime": 1789654314}, "oldest": {"address": "Es7N3gDAJZPKaPCz1wKtEQnTLWi4GkKrtxdKdW9gs9nv", "price": 6879382246, "exponent": -8, "publishTime": 1702285724}, "verify": {"err": null, "errorCode": null, "logs": ["Program log: Record Date: DEMOx verified against Pyth SOL at 100.90619437000001 (age 9s of a 300s limit), caller said 100906194370000000000e-18, deviation 0bps of a 50-bps tolerance, feed H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"]}}}}, "answers": {"5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR": {"deltaSeconds": 76196, "insideWindow": false, "pending": false, "oneShareRaw": "100000000", "programUnits": "100420000", "programUnitsDisplay": "1.0042", "naiveUnits": "100000000", "naiveUnitsDisplay": "1", "gapUnits": "420000", "gapUnitsDisplay": "0.0042", "activationAttempt": {"err": "{\"InstructionError\":[0,{\"Custom\":3010}]}", "errorCode": 3010, "logs": []}, "windowLog": ["Program log: Record Date: DEMOx activation was 76196s ago, inside the recommended 15 minute pause: false"]}, "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq": {"deltaSeconds": 87, "insideWindow": true, "pending": true, "oneShareRaw": "100000000", "programUnits": "100840000", "programUnitsDisplay": "1.0084", "naiveUnits": "100420000", "naiveUnitsDisplay": "1.0042", "gapUnits": "420000", "gapUnitsDisplay": "0.0042", "activationAttempt": {"err": "{\"InstructionError\":[0,{\"Custom\":3010}]}", "errorCode": 3010, "logs": []}, "windowLog": ["Program log: Record Date: DEMOx activation was 87s ago, inside the recommended 15 minute pause: true"]}, "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ": {"deltaSeconds": 74997, "insideWindow": false, "pending": false, "oneShareRaw": "100000000", "programUnits": "100420000", "programUnitsDisplay": "1.0042", "naiveUnits": "100000000", "naiveUnitsDisplay": "1", "gapUnits": "420000", "gapUnitsDisplay": "0.0042", "activationAttempt": {"err": "{\"InstructionError\":[0,{\"Custom\":3010}]}", "errorCode": 3010, "logs": []}, "windowLog": ["Program log: Record Date: DEMOx activation was 74997s ago, inside the recommended 15 minute pause: false"]}, "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe": {"deltaSeconds": 11067, "insideWindow": false, "pending": false, "oneShareRaw": "100000000", "programUnits": "100420000", "programUnitsDisplay": "1.0042", "naiveUnits": "100420000", "naiveUnitsDisplay": "1.0042", "gapUnits": "0", "gapUnitsDisplay": "0", "activationAttempt": {"err": "{\"InstructionError\":[0,{\"Custom\":3010}]}", "errorCode": 3010, "logs": []}, "windowLog": ["Program log: Record Date: DEMOx activation was 11067s ago, inside the recommended 15 minute pause: false"]}, "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp": {"deltaSeconds": 75051, "insideWindow": false, "pending": false, "oneShareRaw": "100000000", "programUnits": "100420000", "programUnitsDisplay": "1.0042", "naiveUnits": "100000000", "naiveUnitsDisplay": "1", "gapUnits": "420000", "gapUnitsDisplay": "0.0042", "activationAttempt": {"err": "{\"InstructionError\":[0,{\"Custom\":3010}]}", "errorCode": 3010, "logs": []}, "windowLog": ["Program log: Record Date: DEMOx activation was 75051s ago, inside the recommended 15 minute pause: false"]}}, "errorNames": ["NotToken2022", "MintTooShort", "MintPaddingNotZero", "NotAMint", "NoScaledUiAmount", "BadExtensionLength", "UnknownExtension", "ExtensionOverrunsAccount", "BadMultiplier", "SymbolTooLong", "NotRegistered", "NothingToRecord", "NotPythReceiver", "NotAPriceUpdate", "PriceUpdateTooShort", "FeedIdMismatch", "StalePythPrice", "PriceDeviation", "PriceOutOfRange", "NegativePythPrice", "FeedSymbolTooLong", "PriceAgeCeilingExceeded", "TruncatedExtensionHeader"], "errorCodeOffset": 6000}
+{
+  "capturedAt": "2026-09-17T19:54:30.383Z",
+  "rpc": "https://api.devnet.solana.com",
+  "cluster": "devnet",
+  "programId": "ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG",
+  "token2022": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+  "pythReceiver": "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
+  "deskPayer": "9GwUYoXLix8k27MjwnYFqzwsn4bKD2tZf5Dcz9ydp9vX",
+  "pauseSecs": 900,
+  "registry": {
+    "address": "6ZgJXYGsw4VBuiaRD1dTYo1QDMEA6FYcXKKs9Ua5jVyb",
+    "authority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+    "mints": 6,
+    "activations": 7,
+    "bump": 253
+  },
+  "tokenRecords": [
+    {
+      "address": "7MupvMRPG1RCmxsy1xGM9nM3a1mhprNSZv241mrjX1BV",
+      "mint": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR",
+      "symbol": "DEMOx",
+      "decimals": 8,
+      "baseMultiplier": 1,
+      "liveMultiplier": 1.0042,
+      "liveFp": "1.0042",
+      "liveEffectiveAt": 1789578122,
+      "activations": 1,
+      "lastSeenSlot": 499390177,
+      "bump": 254
+    },
+    {
+      "address": "7c3aKW9Z8iJ4kE49zt6KUykYQs7U2hmsrWaWA2Rsh6Je",
+      "mint": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq",
+      "symbol": "DEMOx",
+      "decimals": 8,
+      "baseMultiplier": 1,
+      "liveMultiplier": 1.0042,
+      "liveFp": "1.0042",
+      "liveEffectiveAt": 1789577772,
+      "activations": 1,
+      "lastSeenSlot": 499388414,
+      "bump": 253
+    },
+    {
+      "address": "AAPztUZ42iEEiDc94L4HUj8qXwXmqSYnbuM1A2T6HmWb",
+      "mint": "DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS",
+      "symbol": "DEMOx",
+      "decimals": 8,
+      "baseMultiplier": 1,
+      "liveMultiplier": 1.0042,
+      "liveFp": "1.0042",
+      "liveEffectiveAt": 1789655348,
+      "activations": 1,
+      "lastSeenSlot": 499857004,
+      "bump": 254
+    },
+    {
+      "address": "As6mSSqM5MdwZzYCFCzbFBJRuUhjP2YkuFbkFDBXGvf5",
+      "mint": "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ",
+      "symbol": "DEMOx",
+      "decimals": 8,
+      "baseMultiplier": 1,
+      "liveMultiplier": 1.0042,
+      "liveFp": "1.0042",
+      "liveEffectiveAt": 1789579322,
+      "activations": 1,
+      "lastSeenSlot": 499397420,
+      "bump": 253
+    },
+    {
+      "address": "BCMdUzx6Tr4BD6KuBf4uvNw1gy6FG352Vs1C98VHfZ5C",
+      "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe",
+      "symbol": "DEMOx",
+      "decimals": 8,
+      "baseMultiplier": 1,
+      "liveMultiplier": 1.0042,
+      "liveFp": "1.0042",
+      "liveEffectiveAt": 1789643252,
+      "activations": 2,
+      "lastSeenSlot": 499783921,
+      "bump": 252
+    },
+    {
+      "address": "CWts9sgWUfGckNL8ubfT3NXA1tG8vqVvEgiUonXTS7gY",
+      "mint": "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp",
+      "symbol": "DEMOx",
+      "decimals": 8,
+      "baseMultiplier": 1,
+      "liveMultiplier": 1.0042,
+      "liveFp": "1.0042",
+      "liveEffectiveAt": 1789579268,
+      "activations": 1,
+      "lastSeenSlot": 499397100,
+      "bump": 255
+    }
+  ],
+  "mints": {
+    "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR": {
+      "address": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR",
+      "decimals": 8,
+      "supply": "100000000",
+      "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "multiplier": 1,
+      "newMultiplier": 1.0042,
+      "effectiveAt": 1789578122,
+      "fieldDisagrees": true,
+      "liveNow": 1.0042,
+      "accountLength": 226,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "tlvHeaderOffset": 166
+    },
+    "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq": {
+      "address": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq",
+      "decimals": 8,
+      "supply": "100000000",
+      "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "multiplier": 1.0042,
+      "newMultiplier": 1.0084,
+      "effectiveAt": 1789654231,
+      "fieldDisagrees": true,
+      "liveNow": 1.0084,
+      "accountLength": 226,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "tlvHeaderOffset": 166
+    },
+    "DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS": {
+      "address": "DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS",
+      "decimals": 8,
+      "supply": "100000000",
+      "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "multiplier": 1,
+      "newMultiplier": 1.0042,
+      "effectiveAt": 1789655348,
+      "fieldDisagrees": true,
+      "liveNow": 1.0042,
+      "accountLength": 226,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "tlvHeaderOffset": 166
+    },
+    "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ": {
+      "address": "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ",
+      "decimals": 8,
+      "supply": "100000000",
+      "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "multiplier": 1,
+      "newMultiplier": 1.0042,
+      "effectiveAt": 1789579322,
+      "fieldDisagrees": true,
+      "liveNow": 1.0042,
+      "accountLength": 226,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "tlvHeaderOffset": 166
+    },
+    "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe": {
+      "address": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe",
+      "decimals": 8,
+      "supply": "100000000",
+      "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "multiplier": 1.0042,
+      "newMultiplier": 1.0042,
+      "effectiveAt": 1789643252,
+      "fieldDisagrees": false,
+      "liveNow": 1.0042,
+      "accountLength": 226,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "tlvHeaderOffset": 166
+    },
+    "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp": {
+      "address": "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp",
+      "decimals": 8,
+      "supply": "100000000",
+      "mintAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "extensionAuthority": "9jcbvYJUw6pcRmjqZ4Bv8VLvDcNtsVoATjCjX747HDHi",
+      "multiplier": 1,
+      "newMultiplier": 1.0042,
+      "effectiveAt": 1789579268,
+      "fieldDisagrees": true,
+      "liveNow": 1.0042,
+      "accountLength": 226,
+      "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      "tlvHeaderOffset": 166
+    }
+  },
+  "receipts": [
+    {
+      "address": "aPiExpKAL6cb35K4aTawykwYsJcQFVWKCQiCxYjtGe1",
+      "mint": "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq",
+      "sequence": 0,
+      "previousMultiplier": 1,
+      "newMultiplier": 1.0042,
+      "previousFp": "1",
+      "newFp": "1.0042",
+      "deltaFp": "0.0042",
+      "flat": false,
+      "effectiveAt": 1789577772,
+      "recordedAt": 1789577833,
+      "rawSupply": 100000000,
+      "bump": 254
+    },
+    {
+      "address": "2B6yLrgzquoZgsXtd1dLDjnLgUu6b892R2NCWGH64DCX",
+      "mint": "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp",
+      "sequence": 0,
+      "previousMultiplier": 1,
+      "newMultiplier": 1.0042,
+      "previousFp": "1",
+      "newFp": "1.0042",
+      "deltaFp": "0.0042",
+      "flat": false,
+      "effectiveAt": 1789579268,
+      "recordedAt": 1789579269,
+      "rawSupply": 100000000,
+      "bump": 255
+    },
+    {
+      "address": "B8AqwoXnjXqZFp6PCPbVYs6ai2xtE2fSDmcuSDWARZLp",
+      "mint": "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ",
+      "sequence": 0,
+      "previousMultiplier": 1,
+      "newMultiplier": 1.0042,
+      "previousFp": "1",
+      "newFp": "1.0042",
+      "deltaFp": "0.0042",
+      "flat": false,
+      "effectiveAt": 1789579322,
+      "recordedAt": 1789579323,
+      "rawSupply": 100000000,
+      "bump": 254
+    },
+    {
+      "address": "BBCoat1EfKSR4VNsxBTeoY5t5ygaCTVMQFmDVYKdJ71H",
+      "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe",
+      "sequence": 0,
+      "previousMultiplier": 1,
+      "newMultiplier": 1.0042,
+      "previousFp": "1",
+      "newFp": "1.0042",
+      "deltaFp": "0.0042",
+      "flat": false,
+      "effectiveAt": 1789643173,
+      "recordedAt": 1789643174,
+      "rawSupply": 100000000,
+      "bump": 252
+    },
+    {
+      "address": "ByEHAz1NLiGi6wTVGr8dSMabMgCCnazET5pdwYzuSsNd",
+      "mint": "DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS",
+      "sequence": 0,
+      "previousMultiplier": 1,
+      "newMultiplier": 1.0042,
+      "previousFp": "1",
+      "newFp": "1.0042",
+      "deltaFp": "0.0042",
+      "flat": false,
+      "effectiveAt": 1789655348,
+      "recordedAt": 1789655349,
+      "rawSupply": 100000000,
+      "bump": 255
+    },
+    {
+      "address": "GeFdQaQL4moCYpY2PykzTw5gBssJpsPhzGxFxJsTi2E5",
+      "mint": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR",
+      "sequence": 0,
+      "previousMultiplier": 1,
+      "newMultiplier": 1.0042,
+      "previousFp": "1",
+      "newFp": "1.0042",
+      "deltaFp": "0.0042",
+      "flat": false,
+      "effectiveAt": 1789578122,
+      "recordedAt": 1789578123,
+      "rawSupply": 100000000,
+      "bump": 254
+    },
+    {
+      "address": "HrFTT4Ygy45ssRLrbchT7Y2d9cDKM8iXxhvx7TEuHtpu",
+      "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe",
+      "sequence": 1,
+      "previousMultiplier": 1.0042,
+      "newMultiplier": 1.0042,
+      "previousFp": "1.0042",
+      "newFp": "1.0042",
+      "deltaFp": "0",
+      "flat": true,
+      "effectiveAt": 1789643252,
+      "recordedAt": 1789643253,
+      "rawSupply": 100000000,
+      "bump": 255
+    }
+  ],
+  "pyth": {
+    "bindings": [
+      {
+        "address": "9ddmyaZfM4MJiUuGckAHtb5TJ1q8YxAwtv79LyifEsQ",
+        "mint": "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR",
+        "feedId": "49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688",
+        "feedSymbol": "AAPL",
+        "boundAt": 1789654087,
+        "bump": 255
+      },
+      {
+        "address": "9AHmMAUKeA8SW8adDSrP4EAVu4tCS6qoDMhQbTD4iroz",
+        "mint": "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe",
+        "feedId": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+        "feedSymbol": "SOL",
+        "boundAt": 1789643258,
+        "bump": 255
+      },
+      {
+        "address": "GLPvWLXwJXVfVFjzBPoW73b7k1mEJUnb2ziShbxG7DHr",
+        "mint": "DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS",
+        "feedId": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+        "feedSymbol": "SOL",
+        "boundAt": 1789655355,
+        "bump": 255
+      }
+    ],
+    "feeds": {
+      "49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688": {
+        "count": 189,
+        "newest": {
+          "address": "DJgUxxLVN1QxAXykPzpH5Kz5feo1bTCBDipGRUYYqMw",
+          "price": 30592000,
+          "exponent": -5,
+          "publishTime": 1786737619
+        },
+        "oldest": {
+          "address": "Fd2tZNSQenmmR1vkUYQ3qCFZieDfUb97PJ5CduWkhrk6",
+          "price": 23723000,
+          "exponent": -5,
+          "publishTime": 1741100149
+        },
+        "verify": {
+          "err": "{\"InstructionError\":[0,{\"Custom\":6016}]}",
+          "errorCode": 6016,
+          "returnHex": null,
+          "logs": []
+        }
+      },
+      "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d": {
+        "count": 63894,
+        "newest": {
+          "address": "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
+          "price": 10086833888,
+          "exponent": -8,
+          "publishTime": 1789674782
+        },
+        "oldest": {
+          "address": "Es7N3gDAJZPKaPCz1wKtEQnTLWi4GkKrtxdKdW9gs9nv",
+          "price": 6879382246,
+          "exponent": -8,
+          "publishTime": 1702285724
+        },
+        "verify": {
+          "err": null,
+          "errorCode": null,
+          "returnHex": "00801fbac953d477050000000000000000000000000000000000000000000000",
+          "logs": [
+            "Program log: Record Date: DEMOx verified against Pyth SOL at 100.86833888 (age 82s of a 300s limit), caller said 100868338880000000000e-18, deviation 0bps of a 50-bps tolerance, feed H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
+          ]
+        }
+      }
+    }
+  },
+  "answers": {
+    "5N7aHZRBfQ92y4NBjwKx2EKzvFCaUPZRzReA8gRAQCjR": {
+      "sinceSeconds": 96724,
+      "untilSeconds": -1,
+      "deltaHex": "d479010000000000ffffffffffffffff",
+      "insideWindow": false,
+      "pending": false,
+      "oneShareRaw": "100000000",
+      "programUnits": "100420000",
+      "programUnitsDisplay": "1.0042",
+      "naiveUnits": "100000000",
+      "naiveUnitsDisplay": "1",
+      "gapUnits": "420000",
+      "gapUnitsDisplay": "0.0042",
+      "activationAttempt": {
+        "err": "{\"InstructionError\":[0,{\"Custom\":3010}]}",
+        "errorCode": 3010,
+        "logs": []
+      },
+      "windowLog": [
+        "Program log: Record Date: DEMOx last activation 96724s ago, next in -1s, inside the recommended 15 minute pause: false"
+      ]
+    },
+    "5KLQzvg4r8vuTPdcu829c9vVBGFNqMfEe84Qoak5Ujvq": {
+      "sinceSeconds": 20615,
+      "untilSeconds": -1,
+      "deltaHex": "8750000000000000ffffffffffffffff",
+      "insideWindow": false,
+      "pending": true,
+      "oneShareRaw": "100000000",
+      "programUnits": "100840000",
+      "programUnitsDisplay": "1.0084",
+      "naiveUnits": "100420000",
+      "naiveUnitsDisplay": "1.0042",
+      "gapUnits": "420000",
+      "gapUnitsDisplay": "0.0042",
+      "activationAttempt": {
+        "err": "{\"InstructionError\":[0,{\"Custom\":3010}]}",
+        "errorCode": 3010,
+        "logs": []
+      },
+      "windowLog": [
+        "Program log: Record Date: DEMOx last activation 20615s ago, next in -1s, inside the recommended 15 minute pause: false"
+      ]
+    },
+    "DoF9ogLNvR7Dazac1EnHTfwg8cmc6xWsmz6y1tM9zuRS": {
+      "sinceSeconds": 19498,
+      "untilSeconds": -1,
+      "deltaHex": "2a4c000000000000ffffffffffffffff",
+      "insideWindow": false,
+      "pending": false,
+      "oneShareRaw": "100000000",
+      "programUnits": "100420000",
+      "programUnitsDisplay": "1.0042",
+      "naiveUnits": "100000000",
+      "naiveUnitsDisplay": "1",
+      "gapUnits": "420000",
+      "gapUnitsDisplay": "0.0042",
+      "activationAttempt": {
+        "err": "{\"InstructionError\":[0,{\"Custom\":3010}]}",
+        "errorCode": 3010,
+        "logs": []
+      },
+      "windowLog": [
+        "Program log: Record Date: DEMOx last activation 19498s ago, next in -1s, inside the recommended 15 minute pause: false"
+      ]
+    },
+    "BrjCcv5hksJ5RYPfBbzEADTui316k1qQjBhxHjwVRGHZ": {
+      "sinceSeconds": 95525,
+      "untilSeconds": -1,
+      "deltaHex": "2575010000000000ffffffffffffffff",
+      "insideWindow": false,
+      "pending": false,
+      "oneShareRaw": "100000000",
+      "programUnits": "100420000",
+      "programUnitsDisplay": "1.0042",
+      "naiveUnits": "100000000",
+      "naiveUnitsDisplay": "1",
+      "gapUnits": "420000",
+      "gapUnitsDisplay": "0.0042",
+      "activationAttempt": {
+        "err": "{\"InstructionError\":[0,{\"Custom\":3010}]}",
+        "errorCode": 3010,
+        "logs": []
+      },
+      "windowLog": [
+        "Program log: Record Date: DEMOx last activation 95525s ago, next in -1s, inside the recommended 15 minute pause: false"
+      ]
+    },
+    "8RUMEuD4kKCPz7QoKXzVokHVQTazJyKZY7fx6maAfmwe": {
+      "sinceSeconds": 31595,
+      "untilSeconds": -1,
+      "deltaHex": "6b7b000000000000ffffffffffffffff",
+      "insideWindow": false,
+      "pending": false,
+      "oneShareRaw": "100000000",
+      "programUnits": "100420000",
+      "programUnitsDisplay": "1.0042",
+      "naiveUnits": "100420000",
+      "naiveUnitsDisplay": "1.0042",
+      "gapUnits": "0",
+      "gapUnitsDisplay": "0",
+      "activationAttempt": {
+        "err": "{\"InstructionError\":[0,{\"Custom\":3010}]}",
+        "errorCode": 3010,
+        "logs": []
+      },
+      "windowLog": [
+        "Program log: Record Date: DEMOx last activation 31595s ago, next in -1s, inside the recommended 15 minute pause: false"
+      ]
+    },
+    "BC5babENedJdReXSr1pp5mo2JQhMxnfGw9AzXiAgnVrp": {
+      "sinceSeconds": 95579,
+      "untilSeconds": -1,
+      "deltaHex": "5b75010000000000ffffffffffffffff",
+      "insideWindow": false,
+      "pending": false,
+      "oneShareRaw": "100000000",
+      "programUnits": "100420000",
+      "programUnitsDisplay": "1.0042",
+      "naiveUnits": "100000000",
+      "naiveUnitsDisplay": "1",
+      "gapUnits": "420000",
+      "gapUnitsDisplay": "0.0042",
+      "activationAttempt": {
+        "err": "{\"InstructionError\":[0,{\"Custom\":3010}]}",
+        "errorCode": 3010,
+        "logs": []
+      },
+      "windowLog": [
+        "Program log: Record Date: DEMOx last activation 95579s ago, next in -1s, inside the recommended 15 minute pause: false"
+      ]
+    }
+  },
+  "errorNames": [
+    "NotToken2022",
+    "MintTooShort",
+    "MintPaddingNotZero",
+    "NotAMint",
+    "NoScaledUiAmount",
+    "BadExtensionLength",
+    "UnknownExtension",
+    "ExtensionOverrunsAccount",
+    "BadMultiplier",
+    "SymbolTooLong",
+    "NotRegistered",
+    "NothingToRecord",
+    "NotPythReceiver",
+    "NotAPriceUpdate",
+    "PriceUpdateTooShort",
+    "FeedIdMismatch",
+    "StalePythPrice",
+    "PriceDeviation",
+    "PriceOutOfRange",
+    "NegativePythPrice",
+    "FeedSymbolTooLong",
+    "PriceAgeCeilingExceeded",
+    "TruncatedExtensionHeader",
+    "PythPriceNotVerified"
+  ],
+  "errorCodeOffset": 6000
+}
