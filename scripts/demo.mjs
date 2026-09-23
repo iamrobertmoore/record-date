@@ -848,10 +848,15 @@ async function main() {
     kv("the caller's price", "Pyth's own, so the deviation is 0 of a 50bps tolerance");
     kv("age limit asked for", `${MAX_PRICE_AGE_CEILING_SECS}s, the most permissive allowed`);
     kv("the price's age", `${ageSeconds}s`);
+    // Devnet's equity publisher went quiet on 14 August 2026 and came back on 23 September, so
+    // whether this price is old enough to refuse depends on the day. The instruction is the same
+    // either way; what the line reports is which side of the caller's age limit the price fell.
+    const tooOld = ageSeconds > MAX_PRICE_AGE_CEILING_SECS;
     kv("result", code === null
-      ? "ACCEPTED, which would be a bug: this price is weeks old"
+      ? (tooOld ? "ACCEPTED, which would be a bug: this price is past the age limit"
+                : "ACCEPTED: devnet's equity publisher is live today, so this price is inside the limit")
       : `${errorName(code)}  (code ${code})`);
-    kv("so the numbers were never the reason", "the deviation is zero and it is still refused");
+    if (code !== null) kv("so the numbers were never the reason", "the deviation is zero and it is still refused");
   }
 
   rule("11. the same instruction, a price it accepts");

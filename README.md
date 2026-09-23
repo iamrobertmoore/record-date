@@ -6,6 +6,7 @@
 
 **Tokenized stocks pay dividends invisibly, 30% short, and at hours no market is open.**
 
+<a href="https://www.youtube.com/watch?v=sqpdC2OmnSQ"><b>Watch the 3-minute video</b></a> &nbsp;·&nbsp;
 <a href="https://iamrobertmoore.github.io/record-date/desk.html"><b>Settlement desk</b></a> &nbsp;·&nbsp;
 <a href="https://iamrobertmoore.github.io/record-date/"><b>Evidence page</b></a> &nbsp;·&nbsp;
 <a href="https://explorer.solana.com/address/ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG?cluster=devnet"><b>Program on devnet</b></a> &nbsp;·&nbsp;
@@ -71,6 +72,7 @@ XOMx, the Exxon Mobil xStock, read straight from its mint account on mainnet:
 
 | Try this | What you'll see |
 |---|---|
+| [Watch the video](https://www.youtube.com/watch?v=sqpdC2OmnSQ) | Three minutes: the trap, the live board, the program saying hold, and the numbers behind it |
 | [Open the settlement desk](https://iamrobertmoore.github.io/record-date/desk.html) | Pick any xStock: the field named `multiplier` against the live value, what your wallet shows against what you own, the dividends reinvested, what was withheld at 30%, and a hold or settle verdict. Below it, a live board of every moved xStock, and the deployed program answering the same question on devnet |
 | [Open the evidence page](https://iamrobertmoore.github.io/record-date/) | Every figure in this file, with the freshest reconciliations and the gap against the market by age |
 | [Fetch NVDAx's multiplier history](https://api.xstocks.fi/api/v2/public/assets/NVDAx/multiplier/history?page=0&pageSize=5&network=Solana) | The issuer's own record of each activation, old and new multiplier side by side, no API key |
