@@ -435,7 +435,7 @@ async function waitUntilLive(connection, effectiveAt) {
   console.log(`  waiting ${(remaining / 1000).toFixed(1)}s for the activation timestamp to pass`);
   await new Promise((resolve) => setTimeout(resolve, remaining));
   // The validator clock, not this machine's, is what the program reads.
-  await connection.getSlot("confirmed");
+  await withRetry("read the validator clock", () => connection.getSlot("confirmed"));
 }
 
 async function pending(connection, payer, mint) {
@@ -579,7 +579,24 @@ async function account(connection, address, what) {
 
 async function main() {
   const statusOnly = process.argv.includes("--status");
-  const connection = new Connection(RPC, "confirmed");
+  // The public devnet endpoint rate-limits bursts with a 429 ("Connection rate limits exceeded").
+  // web3.js's own retry gives up after four short waits, and the demo then died mid-run, so every
+  // request goes through a fetch that waits longer instead: 1s, 2s, 4s, 8s, then 15s, up to ten
+  // times. A 429 carries no information about the request, so retrying it is always safe.
+  const patientFetch = async (url, options) => {
+    for (let attempt = 1; ; attempt++) {
+      const response = await fetch(url, options);
+      if (response.status !== 429 || attempt >= 10) return response;
+      const delay = Math.min(1000 * 2 ** (attempt - 1), 15000);
+      console.log(`  rate-limited by the RPC, waiting ${delay / 1000}s (attempt ${attempt} of 10)`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  };
+  const connection = new Connection(RPC, {
+    commitment: "confirmed",
+    fetch: patientFetch,
+    disableRetryOnRateLimit: true,
+  });
   const payer = loadPayer();
   const state = loadState();
 

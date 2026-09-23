@@ -1036,6 +1036,18 @@ def _spoken_time_utc(hhmm):
     return None
 
 
+def _spoken_percent_1dp(fraction):
+    """A fraction as a percent to one place, in words: `0.028339` -> `two point eight percent`.
+
+    The age-gradient beat speaks the same one-decimal figures the page shows under it (2.8% and
+    6.5%), because rounding 6.5 to "seven" put a number in the narration the viewer could not see on
+    screen. A whole number is spoken without the point: `0.0198` -> `two percent`.
+    """
+    tenths = int((Decimal(str(fraction)) * 1000).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    whole, tenth = divmod(tenths, 10)
+    return _cardinal(whole) + (" point " + _UNITS[tenth] if tenth else "") + " percent"
+
+
 def _spoken_bucket_days(label):
     """A bucket label as the script speaks its boundary: `over 60 days` -> `sixty days`."""
     found = re.search(r"(\d+)", str(label))
@@ -1082,8 +1094,8 @@ SPOKEN = (
      # Within ten days against beyond sixty, the pair the README asserts, rather than the first
      # bucket alone: on 23 September 2026 the 0-2 day bucket held six events and read 0.4%, which
      # is a small-sample number and not the gradient the beat describes.
-     lambda d: (_spoken_percent(d["reconciliation"]["fresh_median"]) + " fresh",
-                _spoken_percent(d["reconciliation"]["stale_median"]),
+     lambda d: (_spoken_percent_1dp(d["reconciliation"]["fresh_median"]) + " in the first ten days",
+                _spoken_percent_1dp(d["reconciliation"]["stale_median"]) + " after",
                 _spoken_bucket_days(d["reconciliation"]["buckets"][-1]["label"]))),
 )
 

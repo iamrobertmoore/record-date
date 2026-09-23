@@ -856,7 +856,7 @@ def main():
                 "",
                 "### 2:00 The falsification test",
                 "**On screen:** Window 1, section 05, the two age medians side by side.",
-                "> It does: two percent fresh, five percent over sixty days.",
+                "> It does: two percent in the first ten days, four point eight percent after sixty days.",
                 "",
                 "**(Total spoken: 100 words)**",
                 "",
