@@ -655,6 +655,14 @@ def main():
             # The board's total is the build's exact ledger total, not a sum of rounded rows, so
             # it reads the same figure as the README.
             "tw": main["money"]["withheld_usd"],
+            # Stale mints with no dividend in the feed, which are the splits: the board lists them
+            # beside the paying tokens so the widest gaps on the chain are on it.
+            "extra": [
+                {"s": t["symbol"], "m": t["mint"], "b": t["base_multiplier"],
+                 "l": t["live_multiplier"], "e": t["effective_at"]}
+                for t in main.get("stale", [])
+                if t["symbol"] and t["symbol"] not in holder_tokens
+            ],
             "mo": main["actions"]["months"],
             "tokens": holder_tokens,
         },
@@ -693,6 +701,9 @@ def main():
         "HOLDER_SINCE": h_since,
         "HOLDER_UNTIL": h_until,
         "HOLDER_COUNT": f"{len(holder_tokens):,}",
+        "MAIN_BUILT": main["built"],
+        "MAIN_STALE": f"{main['mints']['live_differs_from_base']:,}",
+        "MAIN_TOTAL": f"{main['mints']['total']:,}",
         "DIAL_JSON": dial_json(main),
         "HOLDER_OPTIONS": "\n".join(
             f'            <option value="{esc(symbol)}"></option>'

@@ -480,7 +480,7 @@ def main():
         # record and the verification table. The fixture has to move with the allow-list in both
         # directions or the suite reports the fixture rather than the entry, which is what it did
         # when the three new entries were added and this line was not.
-        allowances = ("$9,000. 20% or 30% or 63% or 93.8%. $500 a month. "
+        allowances = ("$9,000. 20% or 30% or 63% or 93.5%. $500 a month. "
                       "99 of 99 as expected. 27 of the 108 repositories. 33.6 days.")
 
         def readme_fixture(*replace):
@@ -543,13 +543,13 @@ def main():
         # naming that figure, or the entry was never doing anything.
         try:
             published.README_ALLOWED["percent"] = dict(real_allow["percent"])
-            del published.README_ALLOWED["percent"]["93.8%"]
+            del published.README_ALLOWED["percent"]["93.5%"]
             off = published.underivable(sample, allow_readme)
         finally:
             published.README_ALLOWED.clear()
             published.README_ALLOWED.update(real_allow)
         case("negative control: dropping the entry that admits a figure is reported", len(off), 1)
-        case("  ... and it names the figure", "'93.8%'" in (off[0] if off else ""), True)
+        case("  ... and it names the figure", "'93.5%'" in (off[0] if off else ""), True)
 
         # A declaration about an entry that does not exist is a comment about nothing, and it would
         # otherwise be a way to silence the check by typo.
@@ -795,7 +795,8 @@ def main():
             "read_rule": {"agreed": 927, "disagreed": 0},
             "activation_timing": {"n": 640, "outside_calendar": 631,
                                   "on_a_non_trading_day": 57, "top_times": [["00:30", 407]]},
-            "reconciliation": {"buckets": [{"label": "0-2 days", "n": 41, "median": 0.0198},
+            "reconciliation": {"fresh_median": 0.0198, "stale_median": 0.0482,
+                               "buckets": [{"label": "0-2 days", "n": 41, "median": 0.0198},
                                            {"label": "over 60 days", "n": 9, "median": 0.0482}]},
             # The pair the page's two-value card shows, which the mechanism beat's on-screen
             # direction quotes. Deliberately round, so the fixture is visibly a fixture: the real

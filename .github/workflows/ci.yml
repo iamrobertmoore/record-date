@@ -1,0 +1,47 @@
+name: CI
+
+# Every push proves three things: the negative controls still fail when they should, the two
+# published pages rebuild byte for byte from the committed data, and the program builds and passes
+# its 56 tests against the real mainnet mint captures.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gates:
+    name: Build gates and published pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 99 negative controls
+        run: python3 scripts/test_checks.py
+      - name: Evidence page rebuilds byte for byte from data.json
+        run: |
+          python3 scripts/build_page.py
+          git diff --exit-code index.html
+      - name: Settlement desk rebuilds byte for byte from its captures
+        run: |
+          python3 scripts/build_desk.py
+          git diff --exit-code desk.html
+
+  program:
+    name: Program builds and passes its tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust toolchain from rust-toolchain.toml
+        run: rustup show
+      - name: Install the Solana (Agave) CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+      - uses: Swatinem/rust-cache@v2
+      - name: Build the SBF program
+        run: cargo build-sbf --manifest-path programs/record_date/Cargo.toml --arch v1
+      - name: Unit, integration and census tests (LiteSVM, no validator, no network)
+        run: cargo test

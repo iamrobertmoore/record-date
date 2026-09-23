@@ -453,7 +453,7 @@ table.board tbody tr:hover{background:#fbf6ea}
 table.board td{white-space:nowrap}
 table.board td.bad{color:#b0321c}
 table.board td.ok{color:#1c7a58}
-table.board .tag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;font-size:.72em;background:#efe7d6;color:#6b5d44;letter-spacing:.04em;text-transform:uppercase}
+table.board .splittag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;font-size:.72em;background:#efe7d6;color:#6b5d44;letter-spacing:.04em;text-transform:uppercase}
 table.board .gapbar{display:inline-block;height:6px;border-radius:3px;background:linear-gradient(90deg,#c4692a,#b0321c);
   vertical-align:middle;margin-right:8px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
 table.board .flash{animation:flash 1.2s ease}
@@ -465,6 +465,7 @@ table.board .pill.settle{background:#eef7f2;color:#1c7a58}
 .hero-main .stamp{margin-bottom:26px}
 a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
 .hero .byline{margin-top:44px!important}
+table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font-size:.92em}
 </style>
 </head>
 <body>
@@ -651,10 +652,10 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
 <div class="program-desk">
 <section id="board">
   <div class="wrap">
-    <p class="eyebrow"><span class="n">02</span><span class="sep">/</span> every xStock that has paid</p>
+    <p class="eyebrow"><span class="n">02</span><span class="sep">/</span> every xStock the issuer has moved</p>
     <div class="head">
       <h2>The whole market, read live, in one table.</h2>
-      <p>Every xStock the issuer has reinvested a dividend into, read from its mint on mainnet the moment this page opens. Sort by any column, find your ticker, and pick a row to open it above.</p>
+      <p>Every xStock whose multiplier has moved, by a dividend or a split, read from its mint on mainnet the moment this page opens. The widest gaps are splits, where the field named multiplier is off by the whole ratio. Sort by any column, or pick a dividend row to open it above.</p>
     </div>
     <div class="console board-console">
       <div class="bar">
@@ -671,9 +672,9 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
             <th data-k="s">ticker</th>
             <th data-k="b" class="mono">field named multiplier</th>
             <th data-k="l" class="mono">live value</th>
-            <th data-k="gap" class="mono">gap</th>
+            <th data-k="gap" class="mono sorted">gap</th>
             <th data-k="e" class="mono">in force since</th>
-            <th data-k="wu" class="mono sorted">withheld, whole float</th>
+            <th data-k="wu" class="mono">withheld, whole float</th>
             <th data-k="v">settle now</th>
           </tr></thead>
           <tbody id="board-body"></tbody>
@@ -799,8 +800,8 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
       raising the multiplier. The balance does not move, so the multiplier is the only record that
       anything happened. A reader one activation behind loses exactly the dividend, and on this
       devnet mint that is <span class="num" id="gap-pct-inline">{{DEFAULT_GAP_PCT}}</span> of the
-      position. On 17 September 2026, 370 of the 927 xStock mints on Solana mainnet were in this
-      state.</div>
+      position. On {{MAIN_BUILT}}, {{MAIN_STALE}} of the {{MAIN_TOTAL}} xStock mints on Solana mainnet were
+      in this state.</div>
   </div>
 </section>
 
@@ -1572,6 +1573,7 @@ function createPresentation() {
 
   var live = null;      // filled by a successful read
   var selected = STATE.defaultMint;
+  var userPicked = false;
 
   function recordedFor(mint) {
     var rec = STATE.tokenRecords.filter(function (r) { return r.mint === mint; })[0];
@@ -2160,6 +2162,16 @@ function createPresentation() {
          absent from the live read if that read partly failed. Falling back to the first record
          keeps the page showing something rather than an empty section. */
       if (!out.mints[selected] && order.length) selected = order[0];
+      /* Until the reader picks a mint, open on the one activated most recently, so a mint the demo
+         activated minutes ago is the one on screen, inside its window, without hunting for it. */
+      if (!userPicked) {
+        var nowS = Date.now() / 1000, best = null;
+        order.forEach(function (m) {
+          var e = out.mints[m] && out.mints[m].mint ? out.mints[m].mint.effectiveAt : null;
+          if (e && e <= nowS && (!best || e > best.e)) best = { m: m, e: e };
+        });
+        if (best) { selected = best.m; renderPicker(out.records, selected); }
+      }
       renderMint(selected);
       mark("live", "re-read just now, against the program at " + PROGRAM.slice(0, 8) + "\u2026");
     }).catch(function (e) {
@@ -2176,6 +2188,7 @@ function createPresentation() {
   picker.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest("button[data-mint]") : null;
     if (!b) return;
+    userPicked = true;
     renderMint(b.getAttribute("data-mint"));
   });
 
@@ -2354,9 +2367,11 @@ function createPresentation() {
   var H = JSON.parse(document.getElementById("holder-state").textContent);
   var rows = Object.keys(H.tokens).map(function (s) {
     var t = H.tokens[s];
-    return { s: s, m: t.m, b: t.b, l: t.l, e: t.e || 0, wu: Number(t.wu || 0), live: false };
-  });
-  var key = "wu", asc = false, q = "";
+    return { s: s, m: t.m, b: t.b, l: t.l, e: t.e || 0, wu: Number(t.wu || 0), live: false, paid: true };
+  }).concat((H.extra || []).map(function (t) {
+    return { s: t.s, m: t.m, b: t.b, l: t.l, e: t.e || 0, wu: -1, live: false, paid: false };
+  }));
+  var key = "gap", asc = false, q = "";
   function gap(r) { return r.b ? (r.l / r.b - 1) : 0; }
   function verdict(r) {
     var now = Date.now() / 1000;
@@ -2375,12 +2390,12 @@ function createPresentation() {
     });
     body.innerHTML = list.map(function (r) {
       var g = gap(r), v = verdict(r), split = g >= 0.2, w = Math.max(2, Math.min(60, Math.round(60 * g / 0.03)));
-      return "<tr data-s=\"" + r.s + "\"" + (flash && r.flash ? " class=\"flash\"" : "") + "><td><b>" + r.s + "</b></td>"
+      return "<tr data-s=\"" + r.s + "\"" + (r.paid ? "" : " data-nopick=\"1\" title=\"A split: no dividend, so nothing to open in the holder view\"") + (flash && r.flash ? " class=\"flash\"" : "") + "><td><b>" + r.s + "</b></td>"
         + "<td class=\"mono " + (g > 0 ? "bad" : "") + "\">" + r.b.toFixed(7) + "</td>"
         + "<td class=\"mono ok\">" + r.l.toFixed(7) + "</td>"
-        + "<td class=\"mono\"><span class=\"gapbar\" style=\"width:" + w + "px\"></span>" + (g * 100).toFixed(3) + "%" + (split ? " <span class=\"tag\">split</span>" : "") + "</td>"
+        + "<td class=\"mono\"><span class=\"gapbar\" style=\"width:" + w + "px\"></span>" + (g * 100).toFixed(3) + "%" + (split ? " <span class=\"splittag\">split</span>" : "") + "</td>"
         + "<td class=\"mono\">" + fmtDate(r.e) + "</td>"
-        + "<td class=\"mono\">" + money(r.wu) + "</td>"
+        + "<td class=\"mono\">" + (r.paid ? money(r.wu) : "<span class=\"muted\">no dividend</span>") + "</td>"
         + "<td><span class=\"pill " + v + "\">" + v + "</span></td></tr>";
     }).join("");
     var stale = rows.filter(function (r) { return gap(r) > 0; }).length;
@@ -2407,7 +2422,7 @@ function createPresentation() {
     q = e.target.value.trim().toLowerCase(); render(false);
   });
   body.addEventListener("click", function (e) {
-    var tr = e.target.closest("tr"); if (!tr) return;
+    var tr = e.target.closest("tr"); if (!tr || tr.getAttribute("data-nopick")) return;
     var input = document.getElementById("holder-symbol"); input.value = tr.getAttribute("data-s");
     document.getElementById("holder-read").click();
     document.getElementById("holder").scrollIntoView({ behavior: "smooth", block: "start" });

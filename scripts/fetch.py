@@ -16,6 +16,7 @@ the script says so, rather than publishing a stale number.
 """
 
 import base64
+import concurrent.futures
 import datetime
 import json
 import os
@@ -564,7 +565,7 @@ def fetch_mints(mints, now):
     return out, layout
 
 
-def verify_supply_against_rpc(addresses, now, stride=7):
+def verify_supply_against_rpc(addresses, now, stride=1):
     """Check the read rule against the RPC's own arithmetic, not the issuer's API.
 
     This is a second, independent witness for the same claim the read-rule census makes. The
@@ -578,36 +579,41 @@ def verify_supply_against_rpc(addresses, now, stride=7):
     passing. The tolerance is one unit in the last decimal place the RPC reports, which is the
     precision it rounds its answer to, not slack.
 
-    Sampled on a stride rather than run over all mints, because the call is not batchable and the
-    census is already covered by the issuer-side check. The stride is fixed so the sample is the
-    same on every run.
+    Run over every mint since 23 September 2026 (it was a stride-7 sample of 133 before). The call
+    is not batchable, so this is the slowest part of the build, and it is the part that makes the
+    claim unconditional: the runtime, not a sample of it, applies the value this program calls live.
     """
     result = {"checked": 0, "agreed": 0, "disagreed": 0, "unavailable": 0, "examples": []}
-    for address in addresses[::stride]:
+
+    def witness(address):
+        """(mine, theirs, tolerance) for one mint, or None when the RPC could not answer."""
         try:
             value = rpc("getAccountInfo", [address, {"encoding": "base64"}])["value"]
-        except Exception:  # noqa: BLE001
-            result["unavailable"] += 1
-            continue
-        if not value:
-            result["unavailable"] += 1
-            continue
-        parsed = read_mint(base64.b64decode(value["data"][0]), now)
-        if not parsed:
-            result["unavailable"] += 1
-            continue
-        try:
+            if not value:
+                return None
+            parsed = read_mint(base64.b64decode(value["data"][0]), now)
+            if not parsed:
+                return None
             supply = rpc("getTokenSupply", [address])["value"]
         except Exception:  # noqa: BLE001
-            result["unavailable"] += 1
-            continue
-
+            return None
         mine = (
             Decimal(parsed["supply"]) / (Decimal(10) ** parsed["decimals"])
             * Decimal(repr(parsed["live"]))
         )
         theirs = Decimal(supply["uiAmountString"])
-        tolerance = Decimal(1) / (Decimal(10) ** supply["decimals"])
+        return mine, theirs, Decimal(1) / (Decimal(10) ** supply["decimals"])
+
+    # Six at a time: each mint's two reads stay back to back inside one worker, which is what the
+    # comparison needs, and the public endpoint's rate limit is met by `rpc`'s own retries.
+    sample = addresses[::stride]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        answers = list(pool.map(witness, sample))
+    for address, answer in zip(sample, answers):
+        if answer is None:
+            result["unavailable"] += 1
+            continue
+        mine, theirs, tolerance = answer
         result["checked"] += 1
         if abs(mine - theirs) <= tolerance:
             result["agreed"] += 1
@@ -617,7 +623,6 @@ def verify_supply_against_rpc(addresses, now, stride=7):
                 result["examples"].append(
                     "%s off by %s" % (address[:8], (mine - theirs).quantize(Decimal("0.00000001")))
                 )
-        time.sleep(0.12)
     return result
 
 
@@ -1351,12 +1356,24 @@ def main():
     # were wrong the issuer's number would differ, and if the issuer's number were merely echoing
     # the field named `multiplier` then the 357 mints where the two fields differ would fail.
     read_rule = {"checked": 0, "agreed": 0, "disagreed": 0, "no_value": 0, "examples": []}
+
+    # One HTTP call per name and over a thousand names, so they are fetched eight at a time. The
+    # comparison below still runs in sorted order over the results, so the output is unchanged.
+    def _issuer_value(symbol):
+        try:
+            return symbol, fetch_current_multiplier(symbol), None
+        except Exception as exc:  # noqa: BLE001 - one name failing must not kill the run
+            return symbol, None, exc
+
+    wanted = [sym for sym, mint in sorted(symbol_to_mint.items()) if mint in mints]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        issuer_values = {sym: (val, err) for sym, val, err in pool.map(_issuer_value, wanted)}
+
     for symbol, mint in sorted(symbol_to_mint.items()):
         if mint not in mints:
             continue
-        try:
-            issuer = fetch_current_multiplier(symbol)
-        except Exception:  # noqa: BLE001 - one name failing must not kill the run
+        issuer, failed = issuer_values[symbol]
+        if failed is not None:
             read_rule["no_value"] += 1
             continue
         if issuer is None:
@@ -1430,6 +1447,28 @@ def main():
         )
     tokens.sort(key=lambda t: -float(t["withheld_usd"]))
     ledger_total = sum(Decimal(t["withheld_usd"]) for t in tokens)
+
+    # Every mint whose field named `multiplier` is not the live value, dividends and splits alike.
+    # The tokens above are the ones with a dividend in the issuer's feed; a split pays nothing, so a
+    # mint whose only action was a split is absent from them while being the worst case of the
+    # trap: NFLXx carried `multiplier` 1 against a live 10 for ten months. The desk's board reads
+    # this list so a split is on it, and the README names the widest gap from it.
+    stale_mints = []
+    for address, parsed in mints.items():
+        if parsed["live"] == parsed["base"]:
+            continue
+        stale_mints.append(
+            {
+                "symbol": (assets.get(address) or {}).get("symbol"),
+                "mint": address,
+                "base_multiplier": parsed["base"],
+                "live_multiplier": parsed["live"],
+                "effective_at": parsed["effective_at"],
+                "decimals": parsed["decimals"],
+            }
+        )
+    stale_mints.sort(key=lambda t: (-(t["live_multiplier"] / t["base_multiplier"]), t["effective_at"],
+                              t["symbol"] or ""))
 
     # ------------------------------------------------------------- assertions
     checks = []
@@ -1676,11 +1715,17 @@ def main():
     # And the same claim against the runtime rather than the issuer. `getTokenSupply` returns the
     # scaled ui amount, so it is the RPC applying a multiplier, and it applies whichever one it
     # considers live. Two witnesses, neither of which can be satisfied by echoing the other.
-    check("the read rule matches the multiplier the runtime applies, on a strided sample",
-          supply_witness["disagreed"] == 0 and supply_witness["agreed"] >= 80,
+    check("the read rule matches the multiplier the runtime applies, on every mint",
+          supply_witness["disagreed"] == 0
+          and supply_witness["agreed"] >= len(mints) - 5
+          and supply_witness["agreed"] + supply_witness["unavailable"] == len(mints),
           "%d agreed, %d disagreed, %d unavailable%s"
           % (supply_witness["agreed"], supply_witness["disagreed"], supply_witness["unavailable"],
              ("; " + "; ".join(supply_witness["examples"])) if supply_witness["examples"] else ""))
+    check("the stale list is the stale count, and every entry is named",
+          len(stale_mints) == live_differs and all(t["symbol"] for t in stale_mints),
+          "%d listed against %d counted, %d unnamed"
+          % (len(stale_mints), live_differs, sum(1 for t in stale_mints if not t["symbol"])))
     # The activation split is derived from the mint bytes, and it has to agree with the two counts
     # computed a different way. If it does not, one of the three is reading the wrong field.
     check("the activation split agrees with the event counts",
@@ -1956,6 +2001,7 @@ def main():
         ],
         "checks": checks,
         "tokens": tokens,
+        "stale": stale_mints,
     }
 
     # The two hand-authored SVGs on the README's first screen carry figures, and nothing tied

@@ -12,13 +12,15 @@
 <a href="docs/architecture.svg"><b>Architecture</b></a> &nbsp;·&nbsp;
 <a href="#reproduce-it">Reproduce the numbers</a>
 
+<a href="https://github.com/iamrobertmoore/record-date/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/iamrobertmoore/record-date/actions/workflows/ci.yml/badge.svg"></a>
+
 </div>
 
 ---
 
-**927 mints read on chain · 640 activations timed against the exchange's own calendar · 370 of 927 mints where the obvious field is the wrong one · 56 tests · 32 checks · 99 negative controls**
+**1026 mints read on chain · 663 activations timed against the exchange's own calendar · 386 of 1,026 mints where the obvious field is the wrong one · 1,026 of 1,026 confirmed against the runtime · 56 tests · 33 checks · 99 negative controls**
 
-Depth after the counts: the 32 checks refuse to build the page, the 99 controls prove each check can fail, and the deployed binary is verified against its own chain bytes rather than against a deploy log.
+Depth after the counts: the 33 checks refuse to build the page, the 99 controls prove each check can fail, and the deployed binary is verified against its own chain bytes rather than against a deploy log.
 
 ---
 
@@ -26,7 +28,8 @@ Depth after the counts: the 32 checks refuse to build the page, the 99 controls 
 
 | Claim | How | What you should see |
 |---|---|---|
-| 927 mints read, 370 carrying the wrong value in the obvious field | `python3 scripts/fetch.py` | `927 agreed, 0 disagreed, 0 published nothing to compare against` |
+| 1026 mints read, 386 carrying the wrong value in the obvious field | `python3 scripts/fetch.py` | `1026 agreed, 0 disagreed, 0 published nothing to compare against` |
+| The live value is the one the runtime applies, on every mint | `python3 scripts/fetch.py` | `supply witness: 1026 agreed, 0 disagreed` |
 | Every figure on this page matches the build | `python3 scripts/build_page.py` | exits 0, or names the figure it wanted and writes no page |
 | The checks themselves can fail | `python3 scripts/test_checks.py` | `99 of 99 as expected`, no network needed |
 | The deployed program is the tested binary | `cat docs/deploy.txt` | `deployed ELF identical to the tested binary` |
@@ -37,9 +40,9 @@ Depth after the counts: the 32 checks refuse to build the page, the 99 controls 
 
 ## What this is
 
-**A tokenized stock pays its dividend by quietly raising a `multiplier` stored inside its Token-2022 mint account.** The mint keeps two multipliers and no more: the value from before the last change, and the latest beside it with the timestamp it takes effect. **On 370 of 927 mints the field named `multiplier` is not the multiplier.** It holds the previous one, and the live value sits in a second field beside it. A reader that takes the obvious one is one corporate action behind.
+**A tokenized stock pays its dividend by quietly raising a `multiplier` stored inside its Token-2022 mint account.** The mint keeps two multipliers and no more: the value from before the last change, and the latest beside it with the timestamp it takes effect. **On 386 of 1,026 mints the field named `multiplier` is not the multiplier.** It holds the previous one, and the live value sits in a second field beside it. A reader that takes the obvious one is one corporate action behind.
 
-That is not a guess from the field names. It is what Token-2022's own `process_update_multiplier` does, and it was checked against the issuer's own published current value on **every** mint rather than a sample: **927 agreed, 0 disagreed, 0 published nothing to compare against**. The comparison is one of the build's checks and it fails the page if it ever stops holding.
+That is not a guess from the field names. It is what Token-2022's own `process_update_multiplier` does, and it was checked against the issuer's own published current value on **every** mint rather than a sample: **1026 agreed, 0 disagreed, 0 published nothing to compare against**. It was then checked against the Token-2022 runtime itself, which applies the multiplier when it answers `getTokenSupply`, so the issuer cannot be the only witness: **1,026 of 1,026 mints agree with the runtime's own `getTokenSupply`**. Both comparisons are build checks and each fails the page if it ever stops holding.
 
 **Tomas holds about $9,000 of tokenized US equities in a Solana wallet.** He is not a trader. He bought them because they pay dividends and they settle in seconds. In March, May and August the issuer reinvested his XOMx dividend, and each time it withheld 30% first. Tomas saw none of it, because Token-2022 leaves the raw amount alone and expects the reader to apply the multiplier. **This is the reader that applies the right one, and the program that keeps the record the mint throws away.**
 
@@ -58,7 +61,9 @@ XOMx, the Exxon Mobil xStock, read from its mint account on mainnet:
 | a 100-share position, as a wallet reading the obvious field shows it | **101.31** |
 | the same position, as the mint actually holds it | **101.76** |
 
-**Two numbers in one account, and the one with the obvious name is a dividend behind.** The same mint's feed shows $3.09 a share paid gross and $2.163 reinvested: **$0.927 a share withheld at 30%**, $112,966 across the float, and nothing in the holder's wallet says so. The [settlement desk](https://iamrobertmoore.github.io/record-date/desk.html) opens on this mint and reads it live, and you can type every one of the 379 is on the live board beneath it.
+**Two numbers in one account, and the one with the obvious name is a dividend behind.** The same mint's feed shows $3.09 a share paid gross and $2.163 reinvested: **$0.927 a share withheld at 30%**, $112,965 across the float, and nothing in the holder's wallet says so. The [settlement desk](https://iamrobertmoore.github.io/record-date/desk.html) opens on this mint and reads it live, and every xStock the issuer has moved is on the live board beneath it.
+
+**The widest gap is not a dividend at all.** It is a split: on NFLXx the field named `multiplier` reads **1** while the chain has applied **10** since 2025-11-16, so a lender reading the obvious field values the position at a tenth of what it holds, and **4** mints are off by a factor of two or more. A split activates the same way a dividend does, through the same two fields, and the settlement window this program answers is the check that would have held it.
 
 ---
 
@@ -75,11 +80,11 @@ XOMx, the Exxon Mobil xStock, read from its mint account on mainnet:
 
 ## The problem, measured
 
-**377 of the 400 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.6 months of the issuer's own feed that is $6,373,807 withheld, about $11,588,741 a year, and nothing in the holder's wallet shows it.** Of that, $23,795,729 of the $24,365,251 gross is dated on or before today and $569,522 is still forward, both reported rather than netted off.
+**403 of the 430 tokenized stocks on Solana that publish a withholding rate lose 30% of every dividend before it is reinvested. Across 6.8 months of the issuer's own feed that is $6,873,017 withheld, about $12,128,854 a year, and nothing in the holder's wallet shows it.** Of that, $25,311,277 of the $26,756,904 gross is dated on or before today and $1,445,628 is still forward, both reported rather than netted off.
 
-The multiplier reinvests the **net** dividend, and that is asserted rather than assumed, because it is the claim the whole entry rests on. Divide the feed's per-unit cashflow by the multiplier step and the answer is the share price: doing that with the net figure lands on the market at **1.033** where the gross figure reads **1.476**. The control is the 40 zero-rate events, where the feed's net and gross are the same number and the test correctly has no preference.
+The multiplier reinvests the **net** dividend, and that is asserted rather than assumed, because it is the claim the whole entry rests on. Divide the feed's per-unit cashflow by the multiplier step and the answer is the share price: doing that with the net figure lands on the market at **1.036** where the gross figure reads **1.480**. The control is the 41 zero-rate events, where the feed's net and gross are the same number and the test correctly has no preference.
 
-**And the dividend does not arrive during trading.** 640 activations, of which **631 fall outside the US regular session as the exchange itself defines it**, and **57 of them take effect on a day the market does not trade at all**. The premise is the organiser's own number rather than mine: the Solana Foundation's 13 September newsletter reports that **63% of tokenized-equity volume settles outside US market hours**. The issuer's own documentation tells venues to pause for fifteen minutes around each activation and attaches no enforcement to it.
+**And the dividend does not arrive during trading.** 663 activations, of which **654 fall outside the US regular session as the exchange itself defines it**, and **59 of them take effect on a day the market does not trade at all**. The premise is the organiser's own number rather than mine: the Solana Foundation's 13 September newsletter reports that **63% of tokenized-equity volume settles outside US market hours**. The issuer's own documentation tells venues to pause for fifteen minutes around each activation and attaches no enforcement to it.
 
 ---
 
@@ -110,20 +115,20 @@ Six distinct uses of Solana, each load-bearing. **Remove any one and either the 
 
 ## The count nobody had made
 
-The issuer publishes when each activation lands. As far as I can find it had not been counted by the minute, so I counted it. **640 activations**, drawn from the 370 symbols that both pay a dividend and carry a price, by the minute of the day they take effect:
+The issuer publishes when each activation lands. As far as I can find it had not been counted by the minute, so I counted it. **663 activations**, drawn from every symbol that pays a dividend and carries a price, by the minute of the day they take effect:
 
 | Time (UTC) | Activations | New York clock |
 |---|---:|---|
-| 00:30 | 407 | 20:30 ET the previous day |
+| 00:30 | 427 | 20:30 ET the previous day |
 | 23:55 | 177 | 19:55 ET, after the close |
 | 00:15 | 11 | 20:15 ET the previous day |
 | 01:15 | 5 | 21:15 ET the previous day |
 
-**631 of the 640, or 98.6%, fall outside the US regular session as the exchange itself defines it, and 93.8% of the sample lands on those four minutes.**
+**654 of the 663, or 98.6%, fall outside the US regular session as the exchange itself defines it, and 93.5% of the sample lands on those four minutes.**
 
-That is measured twice, because one definition of "the market is open" would be mine and the other is the exchange's. A fixed UTC window drawn wide at 13:00 to 21:00 can only make the finding harder to reach, and by it 628 of the 640 are outside. The calendar Pyth publishes in its keyless feed directory, `America/New_York` with a 09:30 to 16:00 session and twelve holiday and half-day overrides, puts 631 outside. The build requires both to agree the market is shut.
+That is measured twice, because one definition of "the market is open" would be mine and the other is the exchange's. A fixed UTC window drawn wide at 13:00 to 21:00 can only make the finding harder to reach, and by it 651 of the 663 are outside. The calendar Pyth publishes in its keyless feed directory, `America/New_York` with a 09:30 to 16:00 session and twelve holiday and half-day overrides, puts 654 outside. The build requires both to agree the market is shut.
 
-The sharper number needs neither window. **57 activations, 8.9% of the sample, take effect on a day the market does not trade at all.** On those days the pause is not merely advisable. The underlying is shut for the whole session and the token is not.
+The sharper number needs neither window. **59 activations, 8.9% of the sample, take effect on a day the market does not trade at all.** On those days the pause is not merely advisable. The underlying is shut for the whole session and the token is not.
 
 This is the part of the story that is not a bug in anyone's code. Activation is scheduled for 00:30 UTC the day after the ex-date, four and a half hours after the US close and thirteen hours before the next open. The fifteen minute pause is what stands in for a market, and it is a recommendation in a document rather than a constraint in a program. **Nothing can enforce it from inside a mint account, which is why this entry ships a program instead of a warning.**
 
@@ -131,19 +136,19 @@ This is the part of the story that is not a bug in anyone's code. Activation is 
 
 ## Two price fields, and one of them is not a price
 
-A tokenized stock on Jupiter carries two prices. `usdPrice` is the pool quote. `stockData.price` is a reference feed. They are not interchangeable, and on 2026-09-17 they **differed by more than 20% on **15** mints**. **The widest is a factor of **30****, on `Xsn3H7AC…`, whose pool quote is $395.01 against a reference of $13.355.
+A tokenized stock on Jupiter carries two prices. `usdPrice` is the pool quote. `stockData.price` is a reference feed. They are not interchangeable, and on 2026-09-23 they **differed by more than 20% on **14** mints**. **The widest is a factor of **26****, on `Xsn3H7AC…`, whose pool quote is $395.01 against a reference of $15.09.
 
-The reconciliation settles which one is a price, and it used no price at all. Across the **443 reconciliations on 351 names** it covers, `net ÷ step` lands on the market at **1.033** while the gross reads **1.476**. It grows with the age of the activation, which is what the identity predicts:
+The reconciliation settles which one is a price, and it used no price at all. Across the **465 reconciliations on 366 names** it covers, `net ÷ step` lands on the market at **1.036** while the gross reads **1.480**. It grows with the age of the activation, which is what the identity predicts:
 
 | Age of the activation | Events | Median gap against today's price |
 |---|---:|---:|
-| 0 to 2 days | 41 | 1.7% |
-| 3 to 10 days | 34 | 2.5% |
-| 11 to 30 days | 160 | 4.9% |
-| 31 to 60 days | 118 | 6.9% |
-| over 60 days | 90 | 4.8% |
+| 0 to 2 days | 6 | 0.4% |
+| 3 to 10 days | 56 | 2.9% |
+| 11 to 30 days | 151 | 4.9% |
+| 31 to 60 days | 158 | 6.8% |
+| over 60 days | 94 | 6.5% |
 
-**370 of the 379 tokens priced here carry a past activation timestamp, median age 26.7 days.** From fresh to sixty days the gap goes 1.7% to 6.9%, and the build asserts the tested form: **2.1% within ten days against 4.8% beyond sixty**.
+**385 of the 413 tokens priced here carry a past activation timestamp, median age 26.4 days.** From fresh to sixty days the gap goes 0.4% to 6.8%, and the build asserts the tested form: **2.8% within ten days against 6.5% beyond sixty**.
 
 ---
 
@@ -151,9 +156,9 @@ The reconciliation settles which one is a price, and it used no price at all. Ac
 
 The field ExDate recommends is the right one, and taking it at face value is the next mistake along.
 
-**174 of the 927 mints track an equity that does not trade in dollars.** The reference feed quotes the price in the underlying's own currency rather than in dollars, and the London listings are quoted in **pence**. A FTSE share is published at roughly **75 times** the dollar price of the same share, because the exchange quotes in pence and the feed carries that figure through as though it were pounds. On this build every one of the 27 is published at **74.8 times** its dollar price, a ratio pinned to 100 divided by the GBP rate rather than varying with the share, which is why it is one number and not a range.
+**174 of the 1,026 mints track an equity that does not trade in dollars.** The reference feed quotes the price in the underlying's own currency rather than in dollars, and the London listings are quoted in **pence**. A FTSE share is published at roughly **75 times** the dollar price of the same share, because the exchange quotes in pence and the feed carries that figure through as though it were pounds. On this build every one of the 57 is published at **74.8 times** its dollar price, a ratio pinned to 100 divided by the GBP rate rather than varying with the share, which is why it is one number and not a range.
 
-Read at face value, the market value of the 784 priced mints is **$13.81bn**. Converted out of each underlying's own currency at the ECB reference rate for 2026-09-17, it is **$6.46bn**. The London listings are **1.54% of the book** by value and **1.54% of the converted book** is all of the difference: reading a pence figure as dollars multiplies that slice by 75, so a slice that rounds to nothing is the whole of the error. The reason this matters beyond a market value nobody trades on is that **the yield denominator is built from these prices**, and a book that is **2.14 times too large** reports a yield 2.14 times too small. A plausible-looking yield is exactly the number that does not get questioned.
+Read at face value, the market value of the 913 priced mints is **$24.21bn**. Converted out of each underlying's own currency at the ECB reference rate for 2026-09-22, it is **$7.05bn**. The London listings are **3.30% of the book** by value and **3.30% of the converted book** is all of the difference: reading a pence figure as dollars multiplies that slice by 75, so a slice that rounds to nothing is the whole of the error. The reason this matters beyond a market value nobody trades on is that **the yield denominator is built from these prices**, and a book that is **3.44 times too large** reports a yield 3.44 times too small. A plausible-looking yield is exactly the number that does not get questioned.
 
 ---
 
@@ -167,7 +172,7 @@ The program is deployed to devnet at `ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtm
 
 **The age limit on a Pyth price is the caller's number, not the program's.** A venue settling inside the session might want a minute, while one settling a weekend corporate action has to accept Friday's close, so the program enforces a one-day ceiling and lets the caller choose below it. Sampling the live AAPL account ten times over three minutes on 2026-09-17, it advanced its `publish_time` **nine times** and was never more than **24 seconds** old. The devnet AAPL fixture tests the staleness refusal because it was genuinely **33.6 days** old when it was captured.
 
-**The mint is parsed as raw bytes rather than through the `spl-token-2022` crate**, because the program does not link against the program that owns the mint, and the layout is not the one the Token-2022 docs describe. The header is computed rather than searched for, and **asserted on all 927 live mints: the padding is zero in 927 of 927, the account-type byte is 1 in 927 of 927, and the `ScaledUiAmountConfig` header is at byte 275 in all 927.** `tests/mints/` holds all 927 mint accounts as raw bytes, captured from mainnet, and `tests/walk_census.rs` walks every one of them on a plain `cargo test` with no network: **927 accounts, 927 walked, 0 refused, body offset 279 on every one.** The Rust parser is also proven on a real account rather than a synthetic one, `fixtures/nvdax_mint.bin`, and `cargo clippy --all-targets -- -D warnings` is clean and wired into `scripts/deploy.sh`, so a warning stops a deploy. And two multipliers are never compared as floats: `TokenRecord` keeps the raw bits of both the trap value and the live one, and every decision compares a `u128` fixed point, because `0.0 == -0.0` is true and `NaN != NaN` is true.
+**The mint is parsed as raw bytes rather than through the `spl-token-2022` crate**, because the program does not link against the program that owns the mint, and the layout is not the one the Token-2022 docs describe. The header is computed rather than searched for, and **asserted on all 1026 live mints: the padding is zero in 1,026 of 1,026, the account-type byte is 1 in 1,026 of 1,026, and the `ScaledUiAmountConfig` header is at byte 275 in all 1026.** `tests/mints/` holds the 927 mint accounts that existed on 17 September as raw bytes, captured from mainnet, and `tests/walk_census.rs` walks every one of them on a plain `cargo test` with no network: **927 accounts, 927 walked, 0 refused, body offset 279 on every one.** The Rust parser is also proven on a real account rather than a synthetic one, `fixtures/nvdax_mint.bin`, and `cargo clippy --all-targets -- -D warnings` is clean and wired into `scripts/deploy.sh`, so a warning stops a deploy. And two multipliers are never compared as floats: `TokenRecord` keeps the raw bits of both the trap value and the live one, and every decision compares a `u128` fixed point, because `0.0 == -0.0` is true and `NaN != NaN` is true.
 
 ---
 
@@ -175,15 +180,15 @@ The program is deployed to devnet at `ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtm
 
 This entry is built for **Best use of Pyth market data**, and it is worth naming rather than leaving a judge to infer it. The track's own description offers three Apple feeds and says builders can *"work with both the underlying market and the on-chain asset representing exposure to it"*. That is the comparison this entry is built on, and both halves are wired.
 
-**The feed is bound on chain.** `bind_pyth_feed` stores the id `Equity.US.AAPL/USD` against a registered mint, and `verify_against_pyth` reads a `PriceUpdateV2` account owned by Pyth's receiver program. Pyth is consumed inside a Solana program rather than beside one. **The other side of the comparison is the mint**: the price Pyth is checked against is the mint's own, which is what makes the check worth making rather than a formality, because on 370 of the 927 mints the field named `multiplier` and the live value disagree.
+**The feed is bound on chain.** `bind_pyth_feed` stores the id `Equity.US.AAPL/USD` against a registered mint, and `verify_against_pyth` reads a `PriceUpdateV2` account owned by Pyth's receiver program. Pyth is consumed inside a Solana program rather than beside one. **The other side of the comparison is the mint**: the price Pyth is checked against is the mint's own, which is what makes the check worth making rather than a formality, because on 386 of the 1,026 mints the field named `multiplier` and the live value disagree.
 
 ---
 
 ## Scope
 
-- **One issuer.** 927 mints from Backed's own asset API, every xStock it publishes on Solana.
-- **The record on devnet holds demo activations.** The read rule is proven on all 927 real mints; feeding the on-chain record from them is the first roadmap item.
-- **The annual figure is scaled** from 6.6 months of the issuer's feed, so read it as an order of magnitude.
+- **One issuer.** 1026 mints from Backed's own asset API, every xStock it publishes on Solana.
+- **The record on devnet holds demo activations.** The read rule is proven on all 1026 real mints; feeding the on-chain record from them is the first roadmap item.
+- **The annual figure is scaled** from 6.8 months of the issuer's feed, so read it as an order of magnitude.
 
 **Built on:** the read rule is described in Solana's Token-2022 documentation, and **ExDate** published the withholding rate and a dollar total on 13 September 2026. **Kamino**'s Scope oracle suspends a price for the 24 hours before an activation. Record Date adds the count, the timing against the exchange's own calendar, and the on-chain record.
 
@@ -203,14 +208,14 @@ Corrections to earlier versions of this file are recorded in [CORRECTIONS.md](CO
 
 ```bash
 # every number on the page, from public endpoints, with no key
-python3 scripts/fetch.py          # writes data.json, asserts 32 checks
+python3 scripts/fetch.py          # writes data.json, asserts 33 checks
 python3 scripts/build_page.py     # writes index.html, after checking the hand-written figures
 
 # the checks themselves
 python3 scripts/test_checks.py    # 99 negative controls, no network needed
 ```
 
-`fetch.py` takes about twelve minutes, most of it the 927-mint read-rule pass against mainnet. If a price moves while it runs, `build_page.py` names the figure that moved and writes no page; run the fetch again.
+`fetch.py` takes about twelve minutes, most of it the two per-mint passes over all 1026 mints, against the issuer and against the runtime. If a price moves while it runs, `build_page.py` names the figure that moved and writes no page; run the fetch again.
 
 ```bash
 # the program

@@ -238,6 +238,33 @@ def proof_figures(token):
     ]
 
 
+def widest_split(data):
+    """The stale mint with the widest gap, or None when the build carries no stale list."""
+    stale = data.get("stale") or []
+    if not stale:
+        return None
+    # Ties are real (two mints sit at exactly 10x), so the order is fixed: widest, then longest
+    # stale, then by name, and a rebuild names the same mint.
+    return min(stale, key=lambda t: (-(t["live_multiplier"] / t["base_multiplier"]),
+                                     t["effective_at"], t["symbol"] or ""))
+
+
+def split_figures(data):
+    """The README's split sentence, derived: the widest gap on the chain and the count at 2x or more."""
+    worst = widest_split(data)
+    if worst is None:
+        return []
+    when = datetime.datetime.fromtimestamp(worst["effective_at"], datetime.timezone.utc)
+    doubled = sum(1 for t in data["stale"]
+                  if t["live_multiplier"] / t["base_multiplier"] >= 2)
+    return [
+        "on %s the field named `multiplier` reads **%g** while the chain has applied **%g** since %s"
+        % (worst["symbol"], worst["base_multiplier"], worst["live_multiplier"],
+           when.strftime("%Y-%m-%d")),
+        "**%d** mints are off by a factor of two or more" % doubled,
+    ]
+
+
 def figures(data):
     """The figure strings each hand-written surface should carry, from a build.
 
@@ -361,6 +388,18 @@ def figures(data):
     token = proof_token(data)
     if token is not None:
         readme.extend(proof_figures(token))
+
+    # The widest gap on the chain, which is a split rather than a dividend, and how many mints are
+    # off by a factor of two or more. Both from the build's stale list, so a README that kept naming
+    # a split after the issuer rewrote its field would fail here rather than stay confidently wrong.
+    readme.extend(split_figures(data))
+
+    # The runtime witness over every mint: the claim that the value this entry calls live is the
+    # value the Token-2022 runtime applies, from `getTokenSupply`, which the issuer cannot echo.
+    witness = data.get("supply_witness") or {}
+    if witness.get("checked"):
+        readme.append("%s of %s mints agree with the runtime's own `getTokenSupply`"
+                      % ("{:,}".format(witness["agreed"]), "{:,}".format(witness["checked"])))
 
     return {"banner": banner, "architecture": architecture, "readme": readme}
 
@@ -597,9 +636,10 @@ README_ALLOWED = {
         "30%": "the withholding rate, which is `withholding.top_rate` but is quoted as policy",
         "5%": "a rounded statement of the age gradient, where the exact pair is also given",
         "63%": "the Solana Foundation's own published figure, cited as theirs",
-        "93.8%": "the share of the 640 activations landing on the four minutes after the close, "
-                 "which the sentence states as `93.8% of the sample lands on those four minutes`. "
-                 "It is 600 of 640, and this build does not render it: the count is held as a "
+        "93.5%": "the share of the 663 activations landing on the four minutes after the close, "
+                 "which the sentence states as `93.5% of the sample lands on those four minutes`. "
+                 "It is 620 of 663 (600 of 640, 93.8%, before the 23 September 2026 refresh), and "
+                 "this build does not render it: the count is held as a "
                  "fraction, and `derivable` renders percentages from a stored fraction only when "
                  "the fraction itself is a leaf, which this one is not. The two figures it was "
                  "previously explained as, the tokenized-equity share of market value and 377 of "
@@ -648,6 +688,8 @@ README_ALLOWED_DOC_ONLY = {
     ("percent", "0%"): "a prose form the build also produces",
     ("percent", "100%"): "a prose form the build also produces",
     ("percent", "5%"): "a prose form the build also produces",
+    ("percent", "20%"): "the README's own divergence threshold, which the build also happens to produce",
+    ("percent", "63%"): "the Solana Foundation's figure, which the build also happens to produce",
 }
 
 
@@ -776,6 +818,14 @@ def derivable(data):
     # `test_checks.py` calls this over hand-built fixtures that carry only the fields the check
     # under test needs, and a derivation that assumes the whole build turns a fixture into a
     # KeyError rather than into a verdict.
+    # The runtime witness is a count over every mint, and the tokens carrying a past activation
+    # timestamp are counted from the token list, which no single field holds.
+    witness = data.get("supply_witness")
+    if isinstance(witness, dict):
+        counts.update(v for v in witness.values() if isinstance(v, int) and not isinstance(v, bool))
+    if isinstance(data.get("tokens"), list):
+        counts.add(len(data["tokens"]))
+        counts.add(sum(1 for t in data["tokens"] if t.get("effective_at")))
     for block, key in (("mints", "total"), ("read_rule", "checked")):
         node = data.get(block)
         if isinstance(node, dict) and isinstance(node.get(key), int):
@@ -940,7 +990,9 @@ def _cardinal(value):
         hundreds, rest = divmod(n, 100)
         return _UNITS[hundreds] + " hundred" + (" and " + _cardinal(rest) if rest else "")
     thousands, rest = divmod(n, 1000)
-    return _cardinal(thousands) + " thousand" + (" " + _cardinal(rest) if rest else "")
+    # British form: "one thousand and twenty-six", with the "and" only when no hundreds follow.
+    joiner = " and " if rest < 100 else " "
+    return _cardinal(thousands) + " thousand" + (joiner + _cardinal(rest) if rest else "")
 
 
 def _spoken_percent(fraction):
@@ -1027,8 +1079,11 @@ SPOKEN = (
                 _cardinal(d["activation_timing"]["outside_calendar"]),
                 _cardinal(d["activation_timing"]["on_a_non_trading_day"]))),
     ("2:00", "the age gradient, fresh against the oldest bucket",
-     lambda d: (_spoken_percent(d["reconciliation"]["buckets"][0]["median"]) + " fresh",
-                _spoken_percent(d["reconciliation"]["buckets"][-1]["median"]),
+     # Within ten days against beyond sixty, the pair the README asserts, rather than the first
+     # bucket alone: on 23 September 2026 the 0-2 day bucket held six events and read 0.4%, which
+     # is a small-sample number and not the gradient the beat describes.
+     lambda d: (_spoken_percent(d["reconciliation"]["fresh_median"]) + " fresh",
+                _spoken_percent(d["reconciliation"]["stale_median"]),
                 _spoken_bucket_days(d["reconciliation"]["buckets"][-1]["label"]))),
 )
 
