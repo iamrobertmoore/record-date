@@ -506,10 +506,10 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
 
     <h1>Tokenized stocks pay dividends invisibly, <span class="hl">30% short,</span> and at hours no market is open.</h1>
 
-    <p class="lede">Type any xStock. The desk reads its mint account on mainnet and shows the two
-      multipliers side by side, what your wallet shows against what you own, the dividend withheld
-      before it was reinvested, and whether a settlement would be held right now. Below it, the
-      deployed program answers the same question itself.</p>
+    <p class="lede">Type any xStock. The desk reads its mint on mainnet and shows you both
+      multipliers side by side, what your wallet shows against what you actually own, the tax taken
+      before your dividend was reinvested, and whether a trade should settle right now. Below that,
+      the deployed program answers the same question itself.</p>
     </div>
     <div class="hero-art">
       <div class="halo"></div>
@@ -529,8 +529,8 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
     <div class="head">
       <h2>The two multipliers, the dividend that was withheld, and the verdict on your own stock.</h2>
       <p>A real mint on mainnet, read live. The verdict applies the program's
-        <span class="num">settlement_window</span> rule in your browser;
-        <a href="#mint">the devnet desk</a> asks the deployed program itself.</p>
+        <span class="num">settlement_window</span> rule right here in your browser;
+        <a href="#mint">the devnet desk</a> asks the deployed program directly.</p>
     </div>
 
     <div class="console holder-console">
@@ -970,9 +970,8 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
         <div class="cell">
           <p class="k">the field named multiplier</p>
           <p class="v wrong" id="holder-field">1.0130866005227463</p>
-          <p class="note">The previous value. Token-2022 keeps the multiplier in force
-            <em>before</em> the most recent activation here, and this is the field a reader
-            reaches for first.</p>
+          <p class="note">The old value. Token-2022 keeps the multiplier from <em>before</em> the most
+            recent activation here, and it's the field you'd reach for first.</p>
         </div>
         <div class="cell">
           <p class="k">the live value, in the field beside it</p>
@@ -1008,8 +1007,8 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
         <div class="cell">
           <p class="k">the dividend, reinvested</p>
           <p class="v" id="holder-events">3</p>
-          <p class="note">Activations this token has had in the issuer's own feed. It is reinvested
-            rather than paid: the raw balance never moves and the multiplier does.</p>
+          <p class="note">How many times the issuer's feed has moved this token. The dividend is
+            reinvested, not paid: your raw balance never moves, the multiplier does.</p>
         </div>
         <div class="cell">
           <p class="k">per share, gross to net</p>
@@ -1021,9 +1020,9 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
         <div class="cell">
           <p class="k">withheld at <span id="holder-rate">30%</span></p>
           <p class="v wrong" id="holder-withheld-unit">0.927</p>
-          <p class="note">Per share, taken before the reinvestment. Across this token's whole float
-            it is <span class="num" id="holder-withheld-usd">$112,965</span>, and no
-            surface a holder looks at reports it.</p>
+          <p class="note">Per share, taken before reinvestment. Across this token's whole float it's
+            <span class="num" id="holder-withheld-usd">$112,965</span>, and nothing a
+            holder looks at ever reports it.</p>
         </div>
       </div>
 
@@ -1031,8 +1030,8 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
         <div class="cell">
           <p class="k">withheld on your holding</p>
           <p class="v wrong" id="holder-withheld-mine">0.927</p>
-          <p class="note">The same rate applied to the raw amount above, at this token's own
-            decimals. This is the figure the entry exists to surface.</p>
+          <p class="note">The same rate applied to your raw amount above, at this token's decimals.
+            This is the number your wallet never shows you.</p>
         </div>
         <div class="cell">
           <p class="k">at <span class="num" id="holder-price">159.09</span> <span class="num" id="holder-currency">USD</span> a share</p>
@@ -1104,7 +1103,7 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
       <p>These are the mints this program has registered on devnet, and there are
         <span class="num" id="mint-count">6</span> of them. A dot marks one where the
         field named <span class="num">multiplier</span> and the live
-        <span class="num">new_multiplier</span> disagree, which is the state the entry is about.</p>
+        <span class="num">new_multiplier</span> disagree, which is exactly the trap.</p>
     </div>
 
     <div class="console">
@@ -1130,7 +1129,7 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
         <div class="cell">
           <p class="k">multiplier</p>
           <p class="v wrong" id="field-multiplier">1</p>
-          <p class="note">The field a reader reaches for first. Token-2022 keeps the value in force
+          <p class="note">The field you'd reach for first. Token-2022 keeps the value from
             <em>before</em> the most recent activation here.</p>
         </div>
         <div class="cell">
@@ -1172,10 +1171,10 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
     <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> what a holding is worth</p>
     <div class="head">
       <h2>The program's answer, against the obvious one.</h2>
-      <p>One question, asked twice. Once of the deployed program through its
-        <span class="num">read_entitlement</span> instruction, and once by multiplying the field
-        named <span class="num">multiplier</span> by the raw amount, which is what a wallet that
-        reached for the obvious field would show.</p>
+      <p>One question, asked two ways. Once of the deployed program, through its
+        <span class="num">read_entitlement</span> instruction, and once by multiplying the raw amount
+        by the field named <span class="num">multiplier</span>, which is what a wallet that trusted
+        the obvious field would show.</p>
     </div>
 
     <div class="console">
@@ -1227,17 +1226,15 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
     <p class="eyebrow"><span class="n">05</span><span class="sep">/</span> whether to settle</p>
     <div class="head">
       <h2>The window, from the program's own clock.</h2>
-      <p>The issuer's own documentation recommends that venues and protocols pause around each
-        activation, and nothing in a mint account can enforce that. The program's
-        <span class="num">settlement_window</span> instruction returns two numbers: the seconds
-        since the multiplier in force took effect, and the seconds until an activation the issuer
-        has staged. Both are measured against the validator's clock rather than yours, so the
-        answer is the same from any machine.</p>
-      <p style="margin-top:10px">The second of those is the one the mint cannot supply. The issuer
-        stages the next value about four hours before it takes effect, and staging it overwrites
-        the timestamp of the value now in force, so during that window the mint says nothing about
-        when the live multiplier started. This program's own record does hold it, and the first
-        number is where that shows.</p>
+      <p>The issuer's own docs ask venues to pause around each activation, and nothing in a mint
+        account can make them. The program's <span class="num">settlement_window</span> instruction
+        returns two numbers: seconds since the current multiplier took effect, and seconds until one
+        the issuer has staged. Both use the validator's clock, not yours, so the answer is the same
+        from any machine.</p>
+      <p style="margin-top:10px">That second number is something the mint can't tell you. The
+        issuer stages the next value about four hours ahead, and staging overwrites the timestamp of
+        the value in force, so for those hours the mint has no idea when the live multiplier
+        started. This program's own record does, and the first number is where you see it.</p>
     </div>
 
     <div class="console">
@@ -1256,8 +1253,8 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
         <div class="cell">
           <p class="k">the venue's rule</p>
           <p class="v">±15 min</p>
-          <p class="note">Hold inside 900 seconds either side of an activation. This is
-            the desk's policy, and the program supplies both of the numbers it is applied to.</p>
+          <p class="note">Hold within 900 seconds either side of an activation. That's this
+            desk's policy; the program supplies both numbers it's applied to.</p>
         </div>
         <div class="cell">
           <p class="k">the raw answer</p>
@@ -1299,10 +1296,10 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
     <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> the trail</p>
     <div class="head">
       <h2>The series the mint does not keep.</h2>
-      <p>A mint keeps the latest two multipliers and nothing before them. There is no sequence and no
-        account per activation, so the history of what a token paid lives in an HTTP API and in
-        transaction logs. These are the receipts this program wrote, one per activation, and they
-        are the same on every machine that reads them.</p>
+      <p>A mint keeps the latest two multipliers and nothing older. No sequence, no account per
+        activation, so the history of what a token paid lives in an HTTP API and in transaction
+        logs. These are the receipts this program wrote, one per activation, and every machine that
+        reads them sees the same thing.</p>
     </div>
 
     <div class="console">
@@ -1335,11 +1332,10 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
     <p class="eyebrow"><span class="n">07</span><span class="sep">/</span> the reference price</p>
     <div class="head">
       <h2>The one number the issuer does not own.</h2>
-      <p>Everything above reads the issuer's own mint account, so a number taken from there is the
-        issuer agreeing with itself. <span class="num">verify_against_pyth</span> is the check
-        against a value this program does not control. It refuses for three reasons: the account
-        is not a Pyth price, the price is for a different feed, or the price is older than the
-        caller's limit.</p>
+      <p>Everything above reads the issuer's own mint account, so on its own it's the issuer agreeing
+        with itself. <span class="num">verify_against_pyth</span> checks against a price this
+        program doesn't control. It refuses for three reasons: the account isn't a Pyth price, the
+        price is for a different feed, or the price is older than the caller allows.</p>
     </div>
 
     <div class="console">
@@ -1364,12 +1360,11 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
       </div>
     </div>
 
-    <p class="small" style="margin-top:18px">The caller settles at exactly Pyth's own number, so
-      the deviation is zero and the age is the only thing left that can refuse it. A desk that
-      settled at a different number would not isolate the cause. On devnet the equity feed's
-      publisher stopped on 14 August 2026, which is why the newest price for a stock feed on this
-      cluster is weeks old while a crypto feed on the same cluster updates every second. Same
-      instruction, same cluster, and the only difference that matters is the age.</p>
+    <p class="small" style="margin-top:18px">The caller settles at exactly Pyth's own price, so the
+      deviation is zero and age is the only thing that can cause a refusal. On devnet the equity
+      feed's publisher stopped on 14 August 2026, so the newest stock price on this cluster is weeks
+      old while a crypto feed updates every second. Same instruction, same cluster; the only
+      difference is age.</p>
   </div>
 </section>
 
@@ -1378,7 +1373,7 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
     <p class="eyebrow"><span class="n">08</span><span class="sep">/</span> how this page talks to the chain</p>
     <div class="head">
       <h2>No key, no backend, no library.</h2>
-      <p>Everything on this page was produced by the browser talking to
+      <p>Everything on this page came from your browser talking to
         <span class="num">api.devnet.solana.com</span> with <span class="num">fetch</span>. Nothing was
         signed and nothing was spent.</p>
     </div>
@@ -1386,10 +1381,10 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
     <div class="cards">
       <div class="card">
         <h3>The transaction is assembled by hand</h3>
-        <p>The page builds the Solana wire format itself: a compact-u16 signature count, a zeroed
-          64-byte signature, the message header, the account keys in the order the header
-          requires, then the instruction. There is no web3.js here and no CDN to load, which is
-          also why the page opens from a file on disk.</p>
+        <p>The page builds Solana's wire format by hand: a compact-u16 signature count, a zeroed
+          64-byte signature, the message header, the account keys in the order the header needs, then
+          the instruction. No web3.js and no CDN, which is also why the page opens straight from a
+          file on disk.</p>
       </div>
       <div class="card">
         <h3>Nothing is signed</h3>
@@ -1400,10 +1395,9 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
       </div>
       <div class="card">
         <h3>Every read is a real answer</h3>
-        <p>The figures on this page are in the markup as their resting state, so the page reads
-          correctly with JavaScript switched off and from a file on disk. The script re-reads
-          devnet and replaces them. If the read fails the page says so and keeps the recorded
-          values rather than showing a blank.</p>
+        <p>Every figure is already in the page, so it reads correctly with JavaScript off or from a
+          file on disk. The script re-reads the chain and swaps in live values. If a read fails,
+          the page says so and keeps the recorded values rather than going blank.</p>
       </div>
     </div>
 
@@ -1435,8 +1429,8 @@ POST api.devnet.solana.com
       <span><b>Captured</b><code>2026-09-17 19:54:30.383 UTC</code></span>
     </div>
     <p style="margin-top:24px;max-width:60em">Record Date, built for Stocklana. The evidence page
-      carries the sourced problem figures and the build checks; this page is the desk that reads
-      the deployed program. Devnet only, and nothing here touches mainnet or moves any value.</p>
+      has the sourced figures and the build checks; this page is the desk that reads the chain and
+      the deployed program. It reads mainnet and devnet, signs nothing and moves no value.</p>
   </div>
 </footer>
 

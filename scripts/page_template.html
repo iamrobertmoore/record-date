@@ -576,19 +576,18 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <div class="hero-rest">
     <div class="hero-copy">
     <p class="lede">The dividend is a number in the mint account, and on {{MINT_LIVE_DIFFERS}} of
-      {{MINT_TOTAL}} mints the obvious field is the previous one. A tokenized US stock pays its
-      dividend by quietly raising a multiplier stored in
-      the token's Token-2022 mint account. The balance does not move, so a reader has to apply the
-      multiplier, and the field named <b>multiplier</b> is the wrong one: it holds the value from
-      before the most recent corporate action. <b>{{TOP_RATE_SYMBOLS}} of the {{RATED_SYMBOLS}}
-      tokenized stocks that publish a withholding rate lose {{TOP_RATE}}% of the dividend before
-      it is reinvested</b>, and about <b>{{ANNUAL_WITHHELD_SHORT}} a year</b> is withheld before
-      the reinvestment, on a surface no holder is shown.</p>
-    <p class="lede">And it lands when no market is open. Counted against the exchange's own
-      calendar, <b>{{TIMING_ON_A_NON_TRADING_DAY}} of the {{TIMING_N}} activations land on a day the
-      market does not trade at all</b>, and {{TIMING_OUTSIDE_CALENDAR}} land outside the session.
-      The issuer asks venues to pause around every one. Record Date is the program a venue asks
-      whether it is safe to settle, and the record it reads.</p>
+      {{MINT_TOTAL}} mints the obvious field shows the old one. A tokenized US stock doesn't pay
+      you cash. It quietly raises a multiplier stored in the token's Token-2022 mint account, and
+      your balance never moves. Whoever reads the balance has to apply the multiplier, and the field
+      named <b>multiplier</b> is the wrong one: it still holds the value from before the last
+      corporate action. <b>{{TOP_RATE_SYMBOLS}} of the {{RATED_SYMBOLS}} tokenized stocks that
+      publish a withholding rate lose {{TOP_RATE}}% of the dividend before it is reinvested</b>,
+      about <b>{{ANNUAL_WITHHELD_SHORT}} a year</b>, and no holder is ever shown it.</p>
+    <p class="lede">And it lands when no market is open. By the exchange's own calendar,
+      <b>{{TIMING_ON_A_NON_TRADING_DAY}} of the {{TIMING_N}} activations land on a day the market
+      does not trade at all</b>, and {{TIMING_OUTSIDE_CALENDAR}} land outside the session. The issuer
+      asks venues to pause around every one. Record Date is the program a venue asks whether it's
+      safe to settle, and the record it checks.</p>
 
     </div>
 
@@ -608,9 +607,9 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <p class="eyebrow"><span class="n">01</span><span class="sep">/</span> the claim, and what was already known</p>
     <div class="head">
       <h2>Four numbers, each from a source you can fetch yourself.</h2>
-      <p>The issuer publishes a corporate-action feed. The chain publishes a multiplier. They are
-        independent records of the same events, and until you put them side by side, neither one
-        tells you what a holder was actually paid.</p>
+      <p>The issuer publishes a feed of corporate actions. The chain publishes a multiplier. They
+        are two independent records of the same events, and until you line them up, neither tells
+        you what a holder was actually paid.</p>
     </div>
 
     <div class="stats">
@@ -640,10 +639,10 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
       </div>
       <div>
         <h3>What this adds</h3>
-        <p>The count: {{TIMING_N}} activations timed against the exchange's own calendar. The record: an
-          ordered, permissionless account of each activation a crank writes, read out of the mint
-          rather than out of an oracle report. And the currency the reference price is quoted in,
-          below.</p>
+        <p>The count: {{TIMING_N}} activations timed against the exchange's own calendar. The record:
+          an ordered, permissionless account of each activation a crank writes, read from the mint
+          itself rather than from an oracle. And, further down, which currency the reference price
+          is really in.</p>
       </div>
     </div>
   </div>
@@ -654,19 +653,18 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <p class="eyebrow"><span class="n">02</span><span class="sep">/</span> what the chain says</p>
     <div class="head">
       <h2>One raw token is not one share, and the obvious field is the previous value.</h2>
-      <p>On EVM chains the contract adjusts balances itself, so <span class="num">balanceOf()</span>
-        is already correct. On Solana the balance stays put and every integrator is individually
-        responsible for applying the multiplier. The extension gives you two candidate values and
-        only one of them is live.</p>
+      <p>On EVM chains the contract adjusts balances for you, so <span class="num">balanceOf()</span>
+        is already right. On Solana the balance stays put and every app has to apply the multiplier
+        itself. The extension hands you two candidate values, and only one of them is live.</p>
     </div>
 
     <div class="pair">
       <div>
         <p class="k">multiplier</p>
         <p class="v wrong">{{EXAMPLE_BASE}}</p>
-        <p class="note">The field a reader reaches for first. It is the value in force
-          <em>before</em> the most recent corporate action. For {{MINT_LIVE_DIFFERS}} of
-          {{MINT_TOTAL}} mints it is not the multiplier.</p>
+        <p class="note">The field you'd reach for first. It holds the value from <em>before</em> the
+          most recent corporate action. For {{MINT_LIVE_DIFFERS}} of {{MINT_TOTAL}} mints it is not
+          the multiplier.</p>
       </div>
       <div class="mid">effective</div>
       <div>
@@ -678,27 +676,27 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
       </div>
     </div>
 
-    <p class="small" style="margin-top:22px">The rule applied here is: the live value is
+    <p class="small" style="margin-top:22px">The rule is simple: the live value is
       <span class="num">new_multiplier</span> once its timestamp has passed, and
-      <span class="num">multiplier</span> otherwise. That is what Token-2022's own
-      <span class="num">process_update_multiplier</span> does, and it is not taken on trust. The
-      issuer publishes its own view of the live value, and the rule was compared against it on
-      every mint rather than a sample: <b>{{READ_RULE_AGREED}} agreed, {{READ_RULE_DISAGREED}}
-      disagreed</b>, {{READ_RULE_NO_VALUE}} publishing nothing to compare against. The comparison
-      is one of the build's own checks and it stops the page if it ever fails.</p>
+      <span class="num">multiplier</span> before that. It's what Token-2022's own
+      <span class="num">process_update_multiplier</span> does, and I didn't take it on trust. The
+      issuer publishes its own view of the live value, and I compared the rule against it on every
+      mint: <b>{{READ_RULE_AGREED}} agreed, {{READ_RULE_DISAGREED}} disagreed</b>,
+      {{READ_RULE_NO_VALUE}} publishing nothing to compare against. Solana's runtime agrees on every
+      mint too. Both comparisons are build checks, so the page won't build if either fails.</p>
 
     <div class="grid g3" style="margin-top:26px">
       <div class="card">
         <h3>Why the balance cannot help you</h3>
-        <p>Token-2022's scaled-ui-amount extension leaves the raw amount alone. A holder's
-          balance is identical before and after a dividend, so a wallet that shows raw amounts
-          shows a position that has not moved when it has.</p>
+        <p>Token-2022's scaled-ui-amount extension never touches the raw amount. Your balance is
+          identical before and after a dividend, so a wallet that shows raw amounts shows a position
+          that hasn't moved when it has.</p>
       </div>
       <div class="card">
         <h3>Why the history is not on chain</h3>
-        <p>A mint keeps the latest two multipliers and nothing before them. There is no event log,
-          no sequence, no account per activation. The record of what a token has paid lives in an
-          HTTP API and in transaction logs.</p>
+        <p>A mint keeps the latest two multipliers and nothing older. No event log, no sequence, no
+          account per activation. The only record of what a token has paid lives in an HTTP API and
+          in transaction logs.</p>
       </div>
       <div class="card">
         <h3>Why the pause needs a number</h3>
@@ -718,50 +716,46 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
 
     <div class="timing">
       <div class="hd">
-        <p><b>When the multiplier actually moves.</b> {{TIMING_N}} activations the issuer has
-          published, counted by the minute of the day they take effect.
+        <p><b>When the multiplier actually moves.</b> Every one of the {{TIMING_N}} activations the
+          issuer has published, counted by the minute of the day it takes effect.
           <b>{{TIMING_OUTSIDE_CALENDAR}} of them, {{TIMING_OUTSIDE_CALENDAR_PCT}}%, fall outside
-          the US regular session</b>, and {{TIMING_TOP_SHARE}}% of the whole sample lands on the
-          four minutes below.</p>
-        <p style="margin-top:10px">That is measured two ways, because one definition of "the
-          market is open" is mine and the other is the exchange's. The first is a fixed UTC window
-          drawn wide at 13:00 to 21:00, which covers the session under both daylight time and
-          standard time and can only make the finding harder to reach: by that definition
-          {{TIMING_OUTSIDE}} of {{TIMING_N}}, or {{TIMING_OUTSIDE_PCT}}%, are outside. The second
-          is the exchange calendar Pyth publishes with its feed directory: {{TIMING_TZ}}, a regular
-          session of {{TIMING_SESSION}}, {{TIMING_OVERRIDES}} date overrides for holidays and half
-          days, and it covers {{TIMING_CALENDAR_FEEDS}} of the {{TIMING_USD_FEEDS}} US equity feeds
-          Pyth carries. Against that, {{TIMING_INSIDE_CALENDAR}} of {{TIMING_N}} fall inside the
-          session, so {{TIMING_OUTSIDE_CALENDAR}} are outside, or
-          {{TIMING_OUTSIDE_CALENDAR_PCT}}%. The two are computed independently and the build
-          requires both to agree the market is shut, so the result is not an artefact of where the
-          window was drawn. Of the ones the calendar puts outside,
-          {{TIMING_OUTSIDE_HOURS_TRADING_DAY}} land on a weekday that trades but outside its hours
-          and {{TIMING_ON_A_NON_TRADING_DAY}} on a day the market does not trade at all.</p>
+          the US regular session</b>, and {{TIMING_TOP_SHARE}}% of them land on the four minutes
+          below.</p>
+        <p style="margin-top:10px">I measured it two ways, so the answer doesn't depend on where I drew
+          the line. The first is a generous UTC window, 13:00 to 21:00, wide enough to cover the
+          session in both summer and winter time: by that measure {{TIMING_OUTSIDE}} of {{TIMING_N}},
+          or {{TIMING_OUTSIDE_PCT}}%, are outside. The second is the exchange calendar Pyth publishes
+          with its feed directory: {{TIMING_TZ}}, a regular session of {{TIMING_SESSION}}, and
+          {{TIMING_OVERRIDES}} holiday and half-day overrides, shared by {{TIMING_CALENDAR_FEEDS}} of
+          the {{TIMING_USD_FEEDS}} US equity feeds Pyth carries. By that calendar
+          {{TIMING_INSIDE_CALENDAR}} of {{TIMING_N}} fall inside the session, so
+          {{TIMING_OUTSIDE_CALENDAR}} are outside, or {{TIMING_OUTSIDE_CALENDAR_PCT}}%. The build
+          computes both separately and requires them to agree. Of the ones outside,
+          {{TIMING_OUTSIDE_HOURS_TRADING_DAY}} land on a trading weekday after hours and
+          {{TIMING_ON_A_NON_TRADING_DAY}} on a day the market doesn't trade at all.</p>
       </div>
       <div class="row">
 {{TIMING_SLOTS}}
       </div>
     </div>
 
-    <p class="small" style="margin-top:18px">This is the part of the story that is not a bug in
-      anyone's code. The issuer schedules activation for 00:30 UTC the day after the ex-date,
-      which is four and a half hours after the US close and thirteen hours before the next open. So
-      the multiplier changes when there is no continuous price to settle against and no closing
-      auction to absorb it, and the fifteen minute pause is what stands in for both. A venue that
-      does not pause is not making a mistake about a number. It is settling against a position
-      whose entitlement moved while it was not looking.</p>
+    <p class="small" style="margin-top:18px">Nobody's code is broken here. The issuer schedules each
+      activation for 00:30 UTC the day after the ex-date: four and a half hours after the US close,
+      thirteen before the next open. So the multiplier changes when there's no live price to settle
+      against and no closing auction to absorb it, and a fifteen-minute pause is all that stands in
+      for both. A venue that doesn't pause isn't getting a number wrong. It's settling against a
+      position whose entitlement moved while it wasn't looking.</p>
 
-    <p class="small">That the token trades while the underlying does not is not an assumption here.
+    <p class="small">The token trading while the stock is shut isn't a guess.
       The <a href="https://solanacompass.com/news/solana-tokenized-stocks-beat-nyse-and-nasdaq-combined-in-volume-with-63-of-trades-after-market-hours"><b>Solana
       Foundation's 13 September newsletter</b></a> reports that <b>63% of tokenized-equity volume
-      settles outside US market hours</b>, and the event brief names it as a theme.
+      settles outside US market hours</b>, and the event brief calls it out as a theme.
       <a href="https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792"><b>Kamino</b></a>,
-      the first major lender to take these as collateral, suspends its price for the 24 hours
+      the first major lender to accept these as collateral, suspends its price for the 24 hours
       before an activation, and
       <a href="https://github.com/Maheshsiddu29/EquityGuard"><b>EquityGuard</b></a>, another entry
-      in this event, turns the timestamp into a guard. This entry publishes the count and the
-      record behind it.</p>
+      in this event, turns the timestamp into a guard. This entry adds the count and the record
+      behind it.</p>
   </div>
 </section>
 
@@ -770,10 +764,10 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <p class="eyebrow"><span class="n">03</span><span class="sep">/</span> what was taken</p>
     <div class="head">
       <h2>The dividend is reinvested net of tax, and the net is {{KEEP_SHARE}}% of the gross.</h2>
-      <p>Across the {{CA_SCHEDULED}} scheduled cash dividends the issuer has published, the
-        arithmetic closes exactly: <span class="num">net = gross × (1 − rate)</span> on all
-        {{CHECKED}} records that carry both figures. The withheld part never reaches the token,
-        so it never reaches the multiplier, so it never appears anywhere a holder would look.</p>
+      <p>Across the {{CA_SCHEDULED}} scheduled cash dividends the issuer has published, the maths
+        closes exactly: <span class="num">net = gross × (1 − rate)</span> on all {{CHECKED}} records
+        that carry both figures. The withheld part never reaches the token, so it never reaches the
+        multiplier, so it never shows up anywhere a holder would look.</p>
     </div>
 
     <div class="meter" role="img"
@@ -796,12 +790,12 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
         order of magnitude out</em></div>
     </div>
 
-    <p class="small" style="margin-top:24px"><b>Method and its limits.</b> Per-unit dividend times
+    <p class="small" style="margin-top:24px"><b>How this is counted.</b> Per-share dividend times
       scaled supply, at today's price, over the window the issuer's feed covers. Supply is today's
-      rather than time-weighted, so a token that minted heavily after its dividend is
-      over-counted. The feed is an upcoming feed, so the window runs a few days past today:
+      rather than averaged over time, so a token that minted heavily after its dividend is
+      over-counted. The feed looks ahead, so the window runs a few days past today:
       <span class="num">${{PAID_GROSS}}</span> of the ${{GROSS}} gross is dated on or before today
-      and <span class="num">${{FORWARD_GROSS}}</span> is still forward. Read the annual figure as
+      and <span class="num">${{FORWARD_GROSS}}</span> is still to come. Treat the annual figure as
       an order of magnitude, not a ledger. The full arithmetic is in
       <span class="num">scripts/fetch.py</span>.</p>
   </div>
@@ -812,26 +806,23 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <p class="eyebrow"><span class="n">04</span><span class="sep">/</span> the proof</p>
     <div class="head">
       <h2>Divide the net dividend by the multiplier step and you get the share price.</h2>
-      <p>The corporate-action feed and the mint account are separate records. If they describe the
-        same event, then <span class="num">net per unit ÷ (new multiplier − previous multiplier)</span>
-        is the price of one share of the underlying on that date, recovered with no oracle and no
-        price feed, from the chain and the issuer's feed alone.</p>
-      <p>That claim makes a prediction you can test. The implied price is fixed on the activation
-        date; the market price is today's. So the gap between them has to be the stock's own
-        movement, which means the gap must <em>grow</em> with the age of the activation. If the
-        identity were an artefact of how the feed is written, the gap would be noise and the same
-        size in every bucket.</p>
+      <p>The issuer's feed and the mint account are separate records. If they describe the same
+        event, then <span class="num">net per unit ÷ (new multiplier − previous multiplier)</span>
+        should be the price of one share on that date, recovered with no oracle and no price feed,
+        from the chain and the issuer's feed alone.</p>
+      <p>That's a prediction you can test. The implied price is fixed on the activation date; the
+        market price is today's. So the gap between them should be the stock's own movement since,
+        which means it should <em>grow</em> as the activation gets older. If it were an accident of
+        how the feed is written, the gap would be random and the same size in every bucket.</p>
       <p>It does: a fresh activation reconciles at {{FRESH_MEDIAN}}% within ten days against
         {{STALE_MEDIAN}}% beyond sixty, and the table below shows every bucket.</p>
-      <p><b>Which figure the chain reinvests is asserted, not assumed.</b> The feed publishes a
-        gross cashflow and a net one, 30% apart, and the whole entry rests on the net being the
-        one that reaches the token. Divide either by the multiplier step and you get a share price.
-        Do it with the net figure and the answer lands on the market at
-        <b>{{NET_OVER_MARKET}}</b>; do it with the gross and it reads <b>{{GROSS_OVER_MARKET}}</b>.
-        The control is the {{ZERO_RATE_EVENTS}} events carrying a 0% rate, where the feed's net and
-        gross are the same number and a test that is measuring the unit rather than the arithmetic
-        must have no preference between them. It does not: both read
-        <b>{{ZERO_RATE_OVER_MARKET}}</b>.</p>
+      <p><b>Which figure the chain reinvests, tested.</b> The feed publishes a gross dividend and a
+        net one, 30% apart, and everything here depends on the net one being what reaches the token.
+        Divide either by the multiplier step and you get a share price. With the net figure it lands
+        on the market at <b>{{NET_OVER_MARKET}}</b>; with the gross it reads
+        <b>{{GROSS_OVER_MARKET}}</b>. The control is the {{ZERO_RATE_EVENTS}} events with a 0% rate,
+        where net and gross are the same number, so a fair test should have no preference between
+        them. It doesn't: both read <b>{{ZERO_RATE_OVER_MARKET}}</b>.</p>
     </div>
 
     <div class="proof">
@@ -847,9 +838,9 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
         </tbody>
       </table>
     </div>
-    <p class="small" style="margin-top:16px">The eight most recent activations, ordered by age and
-      not selected for how well they agree. The market price is the token's quoted price divided by
-      the multiplier the chain reports, which is a third source neither of the other two has seen.</p>
+    <p class="small" style="margin-top:16px">The eight most recent activations, in order of age and not
+      picked for how well they agree. The market price is the token's quoted price divided by the
+      multiplier the chain reports, a third source neither of the other two has seen.</p>
 
     <div class="buckets">
       <table>
@@ -863,11 +854,11 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     </div>
 
     <p class="small" style="margin-top:16px">Across {{RECON_TOTAL}} reconciliations on
-      {{RECON_NAMES}} names the median gap is <b>{{RECON_FRESH}}%</b> where the activation is within
-      ten days ({{RECON_FRESH_N}} events) and <b>{{RECON_STALE}}%</b> where it is more than sixty
-      ({{RECON_STALE_N}}). The arithmetic is identical in both buckets. The only thing that changed
-      is how long the stock has had to move, which is what makes this evidence rather than a
-      coincidence. The overall median is {{RECON_MEDIAN}}%.</p>
+      {{RECON_NAMES}} names, the median gap is <b>{{RECON_FRESH}}%</b> when the activation is under
+      ten days old ({{RECON_FRESH_N}} events) and <b>{{RECON_STALE}}%</b> when it's over sixty
+      ({{RECON_STALE_N}}). Same arithmetic in both buckets. The only difference is how long the stock
+      has had to move, which is what makes this evidence rather than coincidence. The overall median
+      is {{RECON_MEDIAN}}%.</p>
   </div>
 </section>
 
@@ -890,9 +881,9 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <p class="eyebrow"><span class="n">06</span><span class="sep">/</span> the program</p>
     <div class="head">
       <h2>Entitlement, as an account you can read in one call.</h2>
-      <p>A dividend on Solana is a change to the meaning of a balance. This program reads the mint
-        directly, resolves the multiplier correctly, and writes each activation a crank brings it
-        as a permanent, ordered receipt that any protocol can read without an API.</p>
+      <p>On Solana, a dividend changes what a balance means. This program reads the mint directly,
+        picks the right multiplier, and turns each activation a crank brings it into a permanent,
+        ordered receipt any protocol can read without an API.</p>
     </div>
 
     <pre><span class="c">// the whole trap, in one comparison</span>
@@ -930,8 +921,8 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <p class="eyebrow"><span class="n">07</span><span class="sep">/</span> the checks</p>
     <div class="head">
       <h2>What has to be true for this page to be right.</h2>
-      <p>Every figure above is generated by one script that asserts its own claims and refuses to
-        write the page if one fails. These are the assertions, with what they actually found.</p>
+      <p>Every figure on this page comes from one script that checks its own claims and refuses to
+        write the page if any fail. Here are those checks, and what each one found.</p>
     </div>
     <div class="checks">
 {{CHECKS}}
@@ -980,15 +971,14 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
       <p>No API token, no account, no paid feed. Run
         <span class="num">python3 scripts/fetch.py</span> and it re-fetches all of it and
         re-asserts the checks above.</p>
-      <p>One source is used for less than it offers, and it is worth saying which.
-        <b>Pyth's feed directory</b> is public, and the session definition in section 02 is taken
-        from it. Its <b>price values</b> are a different surface, and the distinction is easy to get
-        wrong: the Hermes HTTP endpoint serves equity price updates only to a key carrying a grant,
-        while Pyth also posts every update to Solana as a <span class="num">PriceUpdateV2</span>
-        account owned by its receiver program, and a posted account is public state. Two of those
-        accounts are committed as test fixtures, read with a plain RPC call and no credential, and
-        the program's <span class="num">verify_against_pyth</span> instruction reads one at
-        settlement time.</p>
+      <p>One source is used for less than it offers, so here's which part.
+        <b>Pyth's feed directory</b> is public, and the session definition in section 02 comes from
+        it. Its <b>prices</b> are a different matter: the Hermes HTTP endpoint only serves equity
+        prices to a key with a grant, but Pyth also posts every update to Solana as a
+        <span class="num">PriceUpdateV2</span> account owned by its receiver program, and a posted
+        account is public. Two of those accounts are committed as test fixtures, read with a plain RPC
+        call and no credential, and the program's <span class="num">verify_against_pyth</span>
+        instruction reads one at settlement time.</p>
     </div>
     <div class="srcs">
 {{SOURCES}}
@@ -1008,10 +998,10 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
       </svg>
     </span>
     <div class="txt">
-      <p><b>Record Date.</b> An xStock's dividend is reinvested by raising a multiplier in the
-        Token-2022 mint account. This reads that multiplier, resolves it correctly, and records
-        each activation on chain as a crank writes it, so the entitlement is checkable rather than
-        assumed.</p>
+      <p><b>Record Date.</b> An xStock's dividend is reinvested by raising a multiplier in its
+        Token-2022 mint account. This reads that multiplier, picks the right value, and records
+        each activation on chain as a crank writes it, so what a holder is owed can be checked
+        rather than assumed.</p>
       <div class="links">
         <a href="#claim">The claim</a>
         <a href="#proof">The proof</a>
@@ -1019,8 +1009,8 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
         <a href="https://docs.xstocks.fi/developers/multipliers">Issuer mechanics</a>
       </div>
       <p class="small" style="margin-top:16px">Read {{BUILT}} from Solana mainnet, the issuer's
-        public corporate-action feed and the price API. Figures are the resting state in the
-        markup; the script animates them and is never their source.</p>
+        public corporate-action feed and the price API. Every figure is already in the page; the
+        script only animates it.</p>
     </div>
   </div>
 </footer>
