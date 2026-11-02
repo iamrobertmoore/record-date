@@ -212,7 +212,7 @@ def screen_text_old(script):
     The direction is stated rather than assumed, and it was assumed wrong first. The docstring here
     originally claimed this parser "would pass on a script that had lost it", which is the opposite of
     what a presence check does with text it cannot see. Running it is what corrected the claim, which is
-    the same rule this entry applies to every figure in it.
+    the same rule this project applies to every figure in it.
     """
     screen, current = {}, None
     for line in script.split("\n"):
@@ -374,7 +374,7 @@ def main():
     # ------------------------------------------------------------------ check D
     # The hand-written surfaces. This one differs in kind from A and B: there is no old form to set
     # beside a new one, because the old form was nothing at all. The README, the banner and the
-    # architecture diagram are written by hand, so they are the figures on the surface a judge reads
+    # architecture diagram are written by hand, so they are the figures on the surface a reader reads
     # first that do not follow data.json, and the claim-consistency sweep asserts only that those
     # strings are *present*. A figure that moved would therefore ship and pass every other check in
     # this workspace.
@@ -468,8 +468,7 @@ def main():
         # `stale` checks the allow-list in both directions now, so a fixture README carrying only
         # the build's own figures reports every allowance as dead. The check is right and the
         # fixture is too small, so the fixture carries the allow-listed prose as well, each figure in
-        # a form its scanner reaches: percentages bare, the pair as `27 of the 108` rather than
-        # `27 of 108`, and the duration as `33.6 days`. It lives inside `readme_fixture` rather than
+        # a form its scanner reaches: percentages bare, the pair as `99 of 99 as expected`, and the duration as `33.6 days`. It lives inside `readme_fixture` rather than
         # being appended once at the call site, because most cases below rewrite the README, and a
         # variant that dropped this line would report eight dead allowances instead of the one
         # figure the case is about. The three prose-only percentages are absent on purpose: they are
@@ -481,7 +480,7 @@ def main():
         # directions or the suite reports the fixture rather than the entry, which is what it did
         # when the three new entries were added and this line was not.
         allowances = ("$9,000. 20% or 30% or 63% or 93.5%. $500 a month. "
-                      "99 of 99 as expected. 27 of the 108 repositories. 33.6 days.")
+                      "99 of 99 as expected. 33.6 days.")
 
         def readme_fixture(*replace):
             """The README fixture, deploy block and allow-listed prose included."""
@@ -746,7 +745,7 @@ def main():
              len(published.page_agrees_with_banner("receipt 1.0344000942 only", tmp)), 1)
 
         # Rounding against cutting short, at values where the two actually differ rather than at
-        # ones where they happen to agree. These three are the values this entry's own docstrings
+        # ones where they happen to agree. These three are the values this project's own docstrings
         # named, so the rule is asserted against the examples that were already in the tree.
         boundary = ("1.0216625054701978", "1.0344000941634355", "1.0268028384810615")
         case("a multiplier is rounded, not cut short",
@@ -775,7 +774,7 @@ def main():
 
         # ------------------------------------------------------------- the video script
         #
-        # The recording is the one artefact in this entry that cannot be rebuilt from the tree. The
+        # The recording is the one artefact in this project that cannot be rebuilt from the tree. The
         # script's figures are typed, then read aloud, and nothing before this read the script at
         # all: a figure that moved in the fetch between the script being written and the camera
         # being turned on would be spoken on camera while the build contradicted it, and every other
@@ -877,7 +876,7 @@ def main():
                 "",
                 "**Tags:** `solana`, `token-2022`",
                 "",
-                "**Last thing.** Re-run the fetch on submission day.",
+                "**Last thing.** Re-run the fetch on release day.",
             ])
 
         print()
@@ -989,7 +988,7 @@ def main():
 
         # ------------------------------------------------- the upload notes
         #
-        # The title and the description are the copy a judge reads before the video, and nothing read
+        # The title and the description are the copy a reader reads before the video, and nothing read
         # them until 20 September 2026. Found by mutating one occurrence of a checked figure at a
         # time: with every occurrence moved at once the build refuses on the first problem it can
         # see, so a line no check reaches is never reported and reads as covered.

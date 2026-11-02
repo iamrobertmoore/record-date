@@ -1287,7 +1287,7 @@ table.board tr[data-nopick]{cursor:default}table.board .muted{color:#8a8f96;font
 <span class="c">// A venue holds while either is inside 900.</span></pre>
     </div>
 
-    <div class="note-box"><b>A window that was open.</b> On 2026-09-17 14:10:34.650 UTC the desk was asked about <span class="num">5KLQzvg4…</span> with an activation <span class="num">2 seconds</span> old and nothing staged, and it held. That reading is recorded here because the window is only open for fifteen minutes: a live page cannot be made to show a hold on demand, so one was staged and captured. The activation was written in <a href="https://explorer.solana.com/tx/28PumW49gSYhbagpK4wxVphPceMcNjkioNcjyuWzLLg4AovRXCSaXhTV75eESE8pGHZ4TAjFDt5qnjh9M3eroc21?cluster=devnet">transaction <span class="num">28PumW49gSYhbagp…</span></a>, which a judge can open. Every other number on this page is read live.</div>
+    <div class="note-box"><b>A window that was open.</b> On 2026-09-17 14:10:34.650 UTC the desk was asked about <span class="num">5KLQzvg4…</span> with an activation <span class="num">2 seconds</span> old and nothing staged, and it held. That reading is recorded here because the window is only open for fifteen minutes: a live page cannot be made to show a hold on demand, so one was staged and captured. The activation was written in <a href="https://explorer.solana.com/tx/28PumW49gSYhbagpK4wxVphPceMcNjkioNcjyuWzLLg4AovRXCSaXhTV75eESE8pGHZ4TAjFDt5qnjh9M3eroc21?cluster=devnet">transaction <span class="num">28PumW49gSYhbagp…</span></a>, which a reader can open. Every other number on this page is read live.</div>
   </div>
 </section>
 
@@ -1428,7 +1428,7 @@ POST api.devnet.solana.com
       <span><b>Program</b><code>ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG</code></span>
       <span><b>Captured</b><code>2026-09-17 19:54:30.383 UTC</code></span>
     </div>
-    <p style="margin-top:24px;max-width:60em">Record Date, built for Stocklana. The evidence page
+    <p style="margin-top:24px;max-width:60em">Record Date, by Robert Moore. The evidence page
       has the sourced figures and the build checks; this page is the desk that reads the chain and
       the deployed program. It reads mainnet and devnet, signs nothing and moves no value.</p>
   </div>
@@ -1455,7 +1455,7 @@ POST api.devnet.solana.com
      produces. They are numbered from 3000 and they are not the program's own list. Trimmed to
      the ones this desk can actually provoke. The associated-token-account variant is left out
      on purpose and not named here: its name is exactly 32 characters, so it base58-decodes as
-     a well formed Solana address and the pre-submission sweep correctly flags it as one. */
+     a well formed Solana address and the pre-publish sweep correctly flags it as one. */
   var ANCHOR_ERRORS = {
     3002: "AccountDiscriminatorMismatch", 3003: "AccountDidNotDeserialize",
     3006: "AccountNotMutable", 3007: "AccountOwnedByWrongProgram",
@@ -1791,7 +1791,7 @@ function createPresentation() {
 
   /* The read is the page, and the page says so: the status chip reads `Recorded` the moment the
      read fails, because the figures below it are then the baked capture rather than the chain.
-     A public RPC throttles under load, and a judge arrives behind whoever else is asking, so a
+     A public RPC throttles under load, and a reader arrives behind whoever else is asking, so a
      transient refusal is retried rather than reported. Only a failure that survives the retries
      is, and its reason is what the chip names.
 
@@ -2224,7 +2224,7 @@ function createPresentation() {
      mainnet mint, so there is no `TokenRecord` behind any of this and no `settlement_window` call
      to make. The verdict is the program's rule from `read.rs settlement_window`, applied here to
      the mint's own fields. Calling it "the program's own reason" would be the wrong claim in the
-     one place a judge can check it in a single request.
+     one place a reader can check it in a single request.
   */
 
   var HOLDER = JSON.parse(document.getElementById("holder-state").textContent);

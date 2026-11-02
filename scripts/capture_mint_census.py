@@ -4,7 +4,7 @@
 The Rust TLV walk is asserted on one hand-built account by a unit test, and that is not enough:
 a synthesised account is built from the same understanding of the layout as the parser, so it
 cannot disagree with it. The Python build reads all 927 mints from mainnet and has done since the
-beginning, and that asymmetry was the sharpest hostile question the entry invited: one real mint
+beginning, and that asymmetry was the sharpest hostile question the project invited: one real mint
 in Rust against 927 in Python, which one is the program?
 
 This closes it. The accounts are committed, `walk_census.rs` runs over all of them on a plain

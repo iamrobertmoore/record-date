@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The deepest pool behind the mints this entry prices, measured live.
+"""The deepest pool behind the mints this project prices, measured live.
 
 The README quotes no depth figure, and this script is the evidence for that decision rather than a
 source for a number. An earlier version of the README said "Liquidity behind these tokens is thin.
@@ -23,7 +23,7 @@ made the next point unavoidable rather than theoretical.
 
 **And a depth is a reading of the market at a moment, not a property of a frozen build.** Quoting
 one in a file whose claim is that every figure reproduces from `data.json` would have put the one
-number on the judged surfaces that nothing behind it could check. So the README makes the
+number on the public surfaces that nothing behind it could check. So the README makes the
 thin-pools argument from the two-price divergence instead, which the build does gate, and this
 script stays as the way to check the premise the argument rests on.
 

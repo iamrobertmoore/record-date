@@ -1622,7 +1622,7 @@ def main():
     # The claim underneath every figure on the page is that the multiplier reinvests the NET
     # dividend. If it reinvested the gross instead, the 30% would never reach the token, the
     # withholding would be a number in a feed and nothing more, and this build would be measuring
-    # a loss that does not happen. That is the load-bearing economic claim of the entry, so it is
+    # a loss that does not happen. That is the load-bearing economic claim of the project, so it is
     # asserted rather than described, and it is asserted in a way that can fail.
     #
     # No oracle is needed. Divide the feed's per-unit cashflow by the multiplier step and the
@@ -1982,7 +1982,7 @@ def main():
             "divergent_chosen_median": chosen_error,
             "divergent_alt_median": alt_error,
             # Which of the two published figures the chain actually reinvests. Asserted above
-            # rather than described here, because it is the economic claim the entry rests on.
+            # rather than described here, because it is the economic claim the project rests on.
             "net_over_market": median(rated_net),
             "gross_over_market": median(rated_gross),
             "rated_events": len(rated_net),
@@ -2008,7 +2008,7 @@ def main():
     # them to this file. The claim-consistency sweep asserts those strings are *present*, which is
     # not the same as asserting they are *current*: when a figure moves here, the page follows
     # automatically because it is built from data.json, and the banner does not, because it is
-    # drawn by hand. The sweep passes either way, so a stale number on the surface a judge reads
+    # drawn by hand. The sweep passes either way, so a stale number on the surface a reader reads
     # first is invisible to every check in this workspace.
     #
     # That is the same silent-drift shape as a hand-maintained mirror of an enum, and it gets the

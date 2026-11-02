@@ -1,6 +1,6 @@
 # Corrections
 
-Every correction made to this entry's published claims, with the date it was made and what the
+Every correction made to this project's published claims, with the date it was made and what the
 check now is. The README carries the claims that hold today. This file carries the ones that did
 not, because a retraction belongs in a record rather than on the first screen of a product page.
 
@@ -38,22 +38,22 @@ so a revert cannot restore one.
 **Pyth was described wrongly in the sources section.** An earlier version said Pyth's price values
 "need a key and are not used here". Both halves were wrong. The values reach a Solana program with
 no key because the account is on chain, and they are used, by `verify_against_pyth`. The claim sat
-in the sources section of the published page where a judge would read it, which is why the
+in the sources section of the published page where a reader would read it, which is why the
 correction is recorded rather than quietly applied.
 
 ---
 
 ## 17 September 2026
 
-**The activation timestamp was claimed as this entry's own.** An earlier version said the timestamp
+**The activation timestamp was claimed as this project's own.** An earlier version said the timestamp
 was not readable on chain, and that holding it in an account was the difference between advice and
 a primitive. That was wrong. The mint's `ScaledUiAmountConfig` carries the activation timestamp,
-any program can read it, and EquityGuard branches on it directly with no price feed. What the mint
-does not carry is history, and that is the narrower thing this entry actually adds.
+any program can read it, and other programs already branch on it directly with no price feed. What the mint
+does not carry is history, and that is the narrower thing this project actually adds.
 
 **An on-chain program was called near-unique differentiation.** That was wrong when it was written.
-Of the 75 repositories the event had produced at the time, 19 shipped an on-chain program. The
-count has since moved to 27 of 108 and is measured by a dated sweep rather than by the build.
+A dated sweep of comparable repositories at the time found 19 of 75 shipped an on-chain
+program.
 
 **Kamino's control was described as a price band.** It is not. Scope suspends a price for the 24
 hours before the activation timestamp its Chainlink report carries, and has since November 2025.

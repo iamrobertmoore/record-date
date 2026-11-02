@@ -49,7 +49,7 @@ solana program dump "$ACTUAL" /tmp/record_date-onchain.so --url "$CLUSTER" >/dev
 # by `published.stale_deploy_block`. It was hand-copied into the README once and went stale, so the
 # README quoted a built size and a padding count from a build two deploys earlier while the claim
 # itself stayed true. A figure that only exists in a deploy's terminal output cannot be checked
-# against the surface that quotes it, which is the whole failure this entry documents.
+# against the surface that quotes it, which is the whole failure this project documents.
 python3 - "$ROOT/target/deploy/record_date.so" /tmp/record_date-onchain.so "$CLUSTER" "$ROOT" "$DEPLOY_SLOT" "$DEPLOY_TIME" <<'PY'
 import hashlib, pathlib, sys
 built = pathlib.Path(sys.argv[1]).read_bytes()

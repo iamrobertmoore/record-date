@@ -70,7 +70,7 @@ header.hero{padding:76px 0 8px;border-bottom:1px solid var(--line)}
 .chip b{font-family:var(--mono);font-weight:600;color:var(--ink)}
 .chip.hot{border-color:#eccfc8;background:#fdf6f4;color:var(--withheld)}
 .chip.hot b{color:var(--withheld)}
-/* The one call to action on the first screen: the desk is the only part of this entry a judge
+/* The one call to action on the first screen: the desk is the only part of this project a reader
    can operate, so it gets a filled button rather than another link in the row. */
 .cta{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:var(--r);
   background:var(--ink);color:#fff;font:650 13px/1 var(--sans);letter-spacing:-.005em;
@@ -594,7 +594,7 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <div class="byline">
       <span><b>Read from</b><span>the mint accounts, the issuer's own feed, and the price API</span></span>
       <span><b>Reproduce with</b><span class="num">python3 scripts/fetch.py</span></span>
-      <span><b>Built for</b><span>Stocklana, Solana Foundation</span></span>
+      <span><b>Built by</b><span>Robert Moore</span></span>
     </div>
     </div>
   </div>
@@ -634,8 +634,8 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
         <p>Solana's Token-2022 documentation describes the stale field, and
           <a href="https://github.com/AlperJ/exdate">ExDate</a> published the withholding rate and a
           dollar total on 13 September 2026. Kamino's Scope oracle suspends a price for the 24
-          hours before an activation, and EquityGuard, another entry in this event, refuses
-          execution inside a transition window.</p>
+          hours before an activation, and existing guards refuse execution inside a
+          transition window.</p>
       </div>
       <div>
         <h3>What this adds</h3>
@@ -749,13 +749,11 @@ a.brand{color:inherit;text-decoration:none}a.brand:hover{opacity:.8}
     <p class="small">The token trading while the stock is shut isn't a guess.
       The <a href="https://solanacompass.com/news/solana-tokenized-stocks-beat-nyse-and-nasdaq-combined-in-volume-with-63-of-trades-after-market-hours"><b>Solana
       Foundation's 13 September newsletter</b></a> reports that <b>63% of tokenized-equity volume
-      settles outside US market hours</b>, and the event brief calls it out as a theme.
+      settles outside US market hours</b>.
       <a href="https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792"><b>Kamino</b></a>,
       the first major lender to accept these as collateral, suspends its price for the 24 hours
-      before an activation, and
-      <a href="https://github.com/Maheshsiddu29/EquityGuard"><b>EquityGuard</b></a>, another entry
-      in this event, turns the timestamp into a guard. This entry adds the count and the record
-      behind it.</p>
+      before an activation, and existing guards already turn the timestamp into a refusal.
+      Record Date adds the count and the record behind it.</p>
   </div>
 </section>
 

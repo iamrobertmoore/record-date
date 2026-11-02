@@ -132,7 +132,7 @@ I measured it two ways so the answer doesn't depend on where I drew the line. A 
 
 The sharper number needs neither: **59 activations, 8.9% of the sample, take effect on a day the market does not trade at all.** On those days the stock is shut all day and the token isn't.
 
-Nobody's code is broken here. Activations are scheduled for 00:30 UTC the day after the ex-date: four and a half hours after the US close, thirteen before the next open. The fifteen-minute pause is all that stands in for a market, and it lives in a document, not a program. **A mint account can't enforce it, which is why this entry ships a program instead of a warning.**
+Nobody's code is broken here. Activations are scheduled for 00:30 UTC the day after the ex-date: four and a half hours after the US close, thirteen before the next open. The fifteen-minute pause is all that stands in for a market, and it lives in a document, not a program. **A mint account can't enforce it, which is why this project ships a program instead of a warning.**
 
 ---
 
@@ -178,9 +178,9 @@ The program is live on devnet at `ycg2obpKmccwAz1zGf4QqgV2vnkWd6CQKLdJSGDxtmG`, 
 
 ---
 
-## The Pyth track
+## Why Pyth
 
-This entry is built for **Best use of Pyth market data**. The track asks builders to *"work with both the underlying market and the on-chain asset representing exposure to it"*, and that comparison is what this entry is built on. Both halves are wired up.
+Record Date compares two things: the underlying market, and the on-chain asset that represents exposure to it. Pyth supplies the first and the mint supplies the second. Both halves are wired up.
 
 **The feed is bound on chain.** `bind_pyth_feed` stores the id `Equity.US.AAPL/USD` against a registered mint, and `verify_against_pyth` reads a `PriceUpdateV2` account owned by Pyth's receiver program. Pyth is used inside a Solana program, not next to one. **The other half is the mint itself.** Pyth is checked against the mint's own value, which is what makes the check mean something, because on 386 of the 1,026 mints the field named `multiplier` and the live value disagree.
 
@@ -268,6 +268,4 @@ Pyth shows up twice and neither use needs a key. Its **feed directory** is publi
 
 **Prior art this builds on:** [ExDate](https://github.com/AlperJ/exdate) (the read rule, the withholding rate, the dollar total), [SolanaRWA](https://solanarwa.app) (per-holder dividend records on this chain since May 2026), [Kamino](https://gov.kamino.finance/t/kamino-is-integrating-xstocks-powered-by-the-chainlink-data-standard-to-enable-tokenized-equities-lending/792) (the 24 hour suspension), and [Lido's stETH reward history](https://stake.lido.fi/rewards) (the same mechanic on Ethereum since 2021).
 
-**Neighbours in this event.** When I counted on 20 September, **27 of the 108 repositories** this hackathon had produced shipped an on-chain program. The four closest to this one: [EquityGuard](https://github.com/Maheshsiddu29/EquityGuard) (an `assert_safe_execution` guard reading the mint's activation timestamp, deployed on devnet 13 September), [DividendX](https://github.com/notorious-d-e-v/dividendx-stocklana), [KEEL](https://github.com/Marc-Dvci/KEEL), and [stockcurve](https://github.com/ExpertVagabond/stockcurve) (which reads the same keyless `PriceUpdateV2` account this entry does). **131 projects** had been submitted by 20 September; entries stay hidden until the close.
-
-Built for **Stocklana**, by Robert Moore. MIT licensed.
+Built by Robert Moore. MIT licensed.

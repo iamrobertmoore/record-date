@@ -3,7 +3,7 @@
 // The desk is a static page, so it cannot query anything at build time. This reads the live
 // cluster once, records every account and every answer the deployed program gives, and writes
 // `desk-data.json`. `build_desk.py` bakes that into the page as its resting state, which is
-// what a reader sees with JavaScript stripped and what a judge sees if the RPC is unreachable.
+// what a reader sees with JavaScript stripped and what a reader sees if the RPC is unreachable.
 //
 // The page then re-reads the same things live and replaces them. Both paths ask the same
 // questions of the same accounts, so the recorded state and the live state are comparable

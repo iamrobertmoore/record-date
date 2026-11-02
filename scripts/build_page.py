@@ -55,11 +55,11 @@ def check_published(data, page):
 
     `index.html` is generated from data.json so it cannot disagree with it. The README and the two
     diagrams are written by hand and can. When they do, the page ships with a headline number that
-    contradicts the file it was built from, on the surface a judge reads first, and nothing else in
+    contradicts the file it was built from, on the surface a reader reads first, and nothing else in
     the pipeline notices: the claim-consistency sweep asks whether a figure is *present*, not
     whether it is *current*.
 
-    That is the exact failure this entry documents, and the committed tree was carrying it in two
+    That is the exact failure this project documents, and the committed tree was carrying it in two
     places when this gate was added. Refusing to build is the point.
 
     The third check is the one that was missing rather than wrong. The first two ask whether each
@@ -105,7 +105,7 @@ def script_problems(data):
     Four surfaces, because the script carries figures in four places and each has the same failure
     mode: what is spoken, what is put on screen, what the prep section tells the reader to confirm on
     the page before recording, and what the upload notes carry in the title and the description. The
-    recording is the one artefact in this entry that cannot be rebuilt from the tree, so a figure that
+    recording is the one artefact in this project that cannot be rebuilt from the tree, so a figure that
     moves between the script being written and the camera being turned on is spoken, or shown, or
     printed under the video, while the build contradicts it.
 

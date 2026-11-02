@@ -1009,7 +1009,7 @@ POST {{RPC_HOST}}
       <span><b>Program</b><code>{{PROGRAM_ID}}</code></span>
       <span><b>Captured</b><code>{{CAPTURED}}</code></span>
     </div>
-    <p style="margin-top:24px;max-width:60em">Record Date, built for Stocklana. The evidence page
+    <p style="margin-top:24px;max-width:60em">Record Date, by Robert Moore. The evidence page
       has the sourced figures and the build checks; this page is the desk that reads the chain and
       the deployed program. It reads mainnet and devnet, signs nothing and moves no value.</p>
   </div>
@@ -1036,7 +1036,7 @@ POST {{RPC_HOST}}
      produces. They are numbered from 3000 and they are not the program's own list. Trimmed to
      the ones this desk can actually provoke. The associated-token-account variant is left out
      on purpose and not named here: its name is exactly 32 characters, so it base58-decodes as
-     a well formed Solana address and the pre-submission sweep correctly flags it as one. */
+     a well formed Solana address and the pre-publish sweep correctly flags it as one. */
   var ANCHOR_ERRORS = {
     3002: "AccountDiscriminatorMismatch", 3003: "AccountDidNotDeserialize",
     3006: "AccountNotMutable", 3007: "AccountOwnedByWrongProgram",
@@ -1372,7 +1372,7 @@ function createPresentation() {
 
   /* The read is the page, and the page says so: the status chip reads `Recorded` the moment the
      read fails, because the figures below it are then the baked capture rather than the chain.
-     A public RPC throttles under load, and a judge arrives behind whoever else is asking, so a
+     A public RPC throttles under load, and a reader arrives behind whoever else is asking, so a
      transient refusal is retried rather than reported. Only a failure that survives the retries
      is, and its reason is what the chip names.
 
@@ -1805,7 +1805,7 @@ function createPresentation() {
      mainnet mint, so there is no `TokenRecord` behind any of this and no `settlement_window` call
      to make. The verdict is the program's rule from `read.rs settlement_window`, applied here to
      the mint's own fields. Calling it "the program's own reason" would be the wrong claim in the
-     one place a judge can check it in a single request.
+     one place a reader can check it in a single request.
   */
 
   var HOLDER = JSON.parse(document.getElementById("holder-state").textContent);

@@ -4,7 +4,7 @@
 `data.json` is the build, and `index.html` is generated from it, so the page cannot disagree with
 it. Three surfaces are written by hand and quote figures derived from the same run:
 
-    README.md                      the first screen a judge reads
+    README.md                      the first screen a reader reads
     docs/brand/readme-banner.svg   the image at the top of it
     docs/architecture.svg          the diagram further down
 
@@ -14,7 +14,7 @@ README said `1.479` where its own committed `data.json` said `1.478`, and `1.53%
 said `1.54%`. Every check in the workspace passed, because every check in the workspace was asking
 whether the string was there rather than whether it was right.
 
-That is the failure this entry is about, committed by the entry itself: a hand-maintained copy of a
+That is the failure this project is about, committed by the project itself: a hand-maintained copy of a
 number that moves, drifting away from the thing it copies, with nothing able to notice. So the copies
 are checked here rather than trusted.
 
@@ -36,7 +36,7 @@ stale overnight with nothing else changing, and that is the case worth a check.
 There is a third failure, and it is not the same as either of the two above. A surface can be
 *current* and still disagree with the surface beside it, if the two print the same figure by
 different rules. The banner carried the worked example's two multipliers rounded while the page cut
-them short, so the same pair from one build read two ways on two surfaces a judge reads in sequence,
+them short, so the same pair from one build read two ways on two surfaces a reader reads in sequence,
 and every check passed. `page_agrees_with_banner` is that check, and `to_places` is the single
 definition of how a figure is printed, so the two cannot drift apart again.
 """
@@ -88,7 +88,7 @@ def median_activation_age(data):
     percentage, an `N of M` pair, or a ratio of three decimals and up. `fetch.py` computes the
     figure and says in a comment that this module checks the README against it. This module did
     not, and the key `fetch.py` writes for it is absent from the committed `data.json`, so nothing
-    checked it at all. That is the failure this entry documents, sitting in the sentence about the
+    checked it at all. That is the failure this project documents, sitting in the sentence about the
     mint discarding its own history, and it is the reason this function exists.
 
     Derived here rather than read from a stored field, and from `tokens` rather than from `mints`,
@@ -141,8 +141,8 @@ def to_places(value, places):
     and they disagreed. The banner printed the worked example's two multipliers rounded and the page
     printed them truncated, so the same pair from the same build read 1.0344000942 / 1.0268028385 on
     the banner and 1.0344000941 / 1.0268028384 in the page's receipt and its ledger. Two surfaces a
-    judge reads one after the other, quoting one build, differing in the last digit. That is the
-    failure this entry documents, committed by the entry, and nothing caught it: the banner check
+    reader sees one after the other, quoting one build, differing in the last digit. That is the
+    failure this project documents, committed by the project, and nothing caught it: the banner check
     asked whether its pair was *a* pair in the build, and every other check asked whether a figure
     was present rather than whether two surfaces agreed about it.
 
@@ -330,7 +330,7 @@ def figures(data):
                                            data["withholding"]["rated_symbols"]),
         "lose %d%% of every dividend" % int(Decimal(data["withholding"]["top_rate"]) * 100),
         "%d fall outside the US regular session" % timing["outside_calendar"],
-        # The read rule, which is the claim the entry rests on, and its control.
+        # The read rule, which is the claim the project rests on, and its control.
         "%d agreed, %d disagreed, %d published nothing to compare against"
         % (data["read_rule"]["agreed"], data["read_rule"]["disagreed"], data["read_rule"]["no_value"]),
         "%.3f" % recon["net_over_market"],
@@ -394,7 +394,7 @@ def figures(data):
     # a split after the issuer rewrote its field would fail here rather than stay confidently wrong.
     readme.extend(split_figures(data))
 
-    # The runtime witness over every mint: the claim that the value this entry calls live is the
+    # The runtime witness over every mint: the claim that the value this project calls live is the
     # value the Token-2022 runtime applies, from `getTokenSupply`, which the issuer cannot echo.
     witness = data.get("supply_witness") or {}
     if witness.get("checked"):
@@ -461,7 +461,7 @@ def stale_deploy_block(root):
     `scripts/deploy.sh` writes the three lines it prints to `docs/deploy.txt`, and the README
     quotes them. It did not always: the block was hand-copied, and by 17 September the README
     carried a built size and a padding count from a build two deploys earlier. The claim beside it
-    stayed true the whole time, which is what made it easy to miss, and a judge running `solana
+    stayed true the whole time, which is what made it easy to miss, and a reader running `solana
     program dump` would see numbers the README does not carry. The fix is that the figure now comes
     out of the deploy rather than out of the person who ran it.
     """
@@ -646,10 +646,6 @@ README_ALLOWED = {
                  "400, are both wrong. 377 of 400 is 94.25%.",
     },
     "pair": {
-        "27 of 108": "the competitive field: 27 on-chain programs among the 108 repositories other "
-                     "entries had produced, counted on 20 September 2026 over one dated tree "
-                     "snapshot. Measured by the field sweep, not by this build, which is why no "
-                     "figure in `data.json` stands behind it.",
         "99 of 99": "the verification table's expected output for `scripts/test_checks.py`, which "
                     "is the suite's own pass line rather than a figure from `data.json`. The suite "
                     "is run by a reader and its count is 99 in the stat row, the verification "
@@ -677,13 +673,6 @@ README_ALLOWED = {
 # The three percentages are prose forms the build happens to produce as well, kept so that the next
 # reader asking "why is `0%` on the page" finds an answer.
 #
-# `27 of 108` was `20 of 82` until 20 September 2026, and the move is the reason this set is worth
-# having. `20 of 82` was admitted by coincidence: two unrelated counts in the build happened to be
-# 20 and 82, so the gate never reached the entry, the entry never fired, and it was documentation
-# rather than a guard. `27 of 108` is not derivable at all, measured rather than assumed, so the
-# entry now fires and is the only thing letting the figure through. The comment above predicted
-# exactly this move, and the prediction is why the entry was written down rather than left implicit:
-# the day the two counts moved, the allowance became load-bearing and its explanation became true.
 README_ALLOWED_DOC_ONLY = {
     ("percent", "0%"): "a prose form the build also produces",
     ("percent", "100%"): "a prose form the build also produces",
@@ -956,7 +945,7 @@ def load(root):
 # --- The video script's spoken figures ------------------------------------------------------------
 #
 # The recording is the one artefact here that cannot be rebuilt. Every other surface is either
-# generated from `data.json` or re-verified against a live source on submission day. The video is a
+# generated from `data.json` or re-verified against a live source on release day. The video is a
 # performance: a figure that moves after the take is only fixable with another take, and the take
 # costs the forty-five minutes of prep that precede it. Nothing checked the script's numbers, so on
 # 18 September 2026 it could have been recorded against a build whose figures had already moved, and
@@ -1136,16 +1125,16 @@ PREP = (
 )
 
 # The figures in the upload notes: the watch-back checklist, the title, and the description. Nothing
-# read these lines until 20 September 2026, and they are the most judge-visible lines in the whole
-# script, because the title and the description are what a judge reads before deciding whether to
+# read these lines until 20 September 2026, and they are the most reader-visible lines in the whole
+# script, because the title and the description are what a reader reads before deciding whether to
 # press play at all.
 #
-# The shape of the gap, because it is the entry's own recurring one and worth naming rather than
+# The shape of the gap, because it is the project's own recurring one and worth naming rather than
 # closing quietly. `_script_body` cuts the trailing notes off before the beat checks run, and the
 # reason it gives is right: a figure down there is not in the video. Nothing took over. So the
 # `94.2%` card the checklist tells the reader to look for, and the `370 of 927` that the title and
 # the description each carry, were derived by nothing. The README's copy of `370 of 927` was gated
-# and the script's two were not, which is the two-surfaces-current-and-disagreeing defect this entry
+# and the script's two were not, which is the two-surfaces-current-and-disagreeing defect this project
 # has shipped before, in the page and the banner.
 #
 # The first field is a region rather than a beat, and that is the second half of the same point. The
@@ -1399,7 +1388,7 @@ def after_figures(data, script):
     """Complaints about a figure in the upload notes. Empty is the pass.
 
     The weakest of the four in one sense, because none of it is in the recording, and the strongest
-    in another: the title and the description are the copy a judge reads before the video, and a
+    in another: the title and the description are the copy a reader reads before the video, and a
     stale figure there is read by more people than a stale beat is. That is the argument for checking
     it, and it is not the argument that settled it. The prep section was already checked on the
     weaker ground that a stale instruction costs the reader time, and this section is the same kind

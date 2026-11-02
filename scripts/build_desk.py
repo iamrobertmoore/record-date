@@ -3,7 +3,7 @@
 
 The desk is a static page with no backend, so everything it can say before it talks to the
 chain has to be in the file. This bakes the captured devnet state into the markup, which is
-what a reader sees with JavaScript switched off and what a judge sees if the RPC is
+what a reader sees with JavaScript switched off and what a reader sees if the RPC is
 unreachable. The page's own script then re-reads the same accounts and replaces these values.
 
 Like `build_page.py`, this asserts the claims it is about to publish and refuses to write the
@@ -25,7 +25,7 @@ WINDOW = HERE / "desk-window.json"
 
 # The holder view reads a different chain from the rest of this page, and that difference is the
 # whole reason it needs its own paragraph of prose on the page rather than a line in a table.
-# `desk-data.json` is a capture of devnet, where this entry's program is deployed, and everything
+# `desk-data.json` is a capture of devnet, where this project's program is deployed, and everything
 # the desk asks the program about is a `DEMOx` mint the demo created. `data.json` is the build
 # behind the README and the evidence page: 927 real mainnet xStock mints, read over plain RPC with
 # no key, with the issuer's own feed behind the dividend figures. The program cannot be asked about
@@ -139,7 +139,7 @@ def naive_scaled(raw, multiplier):
     One rounding rule for both, deliberately. The page's `naiveScaled` rounds the multiplier to
     six decimals before multiplying, so a build that used full precision here would bake one
     number and have the live script replace it with a slightly different one, which is the
-    two-surfaces-disagree defect this entry has shipped before.
+    two-surfaces-disagree defect this project has shipped before.
     """
     micro = int(round(float(multiplier) * 1e6))
     return int(raw) * micro // 1000000
@@ -155,7 +155,7 @@ def held_withheld(raw, decimals, withheld_per_unit):
     The first version of this divided by 1e8 twice and returned 0 for every holding of one share,
     which is the figure the section exists to show. It was caught by reading the built page rather
     than by any check: the number is the page's own, it moves with the reader's amount, and nothing
-    in this repository compares it with anything. That is the gap this entry is about, in this
+    in this repository compares it with anything. That is the gap this project is about, in this
     entry's own build, so it is written down rather than quietly fixed.
     """
     if withheld_per_unit is None:
@@ -363,7 +363,7 @@ def main():
     # ---------------------------------------------------------------- the default mint
 
     # Chosen deliberately rather than taken from whatever order the RPC returned. The page a
-    # judge lands on should be the strongest one: a mint where the obvious field is wrong, so
+    # reader lands on should be the strongest one: a mint where the obvious field is wrong, so
     # the money gap is visible, and which carries a Pyth binding, so the reference-price row is
     # not empty. Ties broken by receipt count, then by address, so the build is deterministic.
     disagreeing = [r for r in records if mints[r["mint"]]["fieldDisagrees"]]
@@ -557,7 +557,7 @@ def main():
             f"written in "
             f'<a href="https://explorer.solana.com/tx/{esc(w["signature"])}?cluster=devnet">'
             f'transaction <span class="num">{esc(w["signature"][:16])}\u2026</span></a>, which a '
-            f"judge can open. Every other number on this page is read live."
+            f"reader can open. Every other number on this page is read live."
         )
     else:
         window_note = (
@@ -784,7 +784,7 @@ def main():
     OUT.write_text(html)
     # The byte count, not the character count. `len(html)` counts characters, so on a page carrying
     # 22 non-ASCII characters it printed 75,625 for a 75,656-byte file. A figure labelled with a unit
-    # it does not carry is the defect this entry is built on, and it was sitting in this build's own
+    # it does not carry is the defect this project is built on, and it was sitting in this build's own
     # output. `build_page.py` was already right.
     print(f"wrote {OUT.relative_to(REPO)}  {OUT.stat().st_size:,} bytes")
     print(f"  default mint      {default['symbol']} {dmint}")
